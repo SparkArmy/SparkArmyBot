@@ -32,6 +32,14 @@ public class FileHandler {
         }
     }
 
+    public static boolean createFile(String path, String fileName){
+        try {
+            return new File(path + "/" + fileName).createNewFile();
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     public static File getDirectoryInUserDirectory(String directoryName){
         if (createDirectory(directoryName)){
             return getFile(userDirectory.getAbsolutePath() + "/" + directoryName);

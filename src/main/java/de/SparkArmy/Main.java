@@ -57,6 +57,7 @@ public class Main {
         // Add a static JDA
         MainUtil.jda = jda;
 
+
         // Add CommandListener to JDA
         new CommandListenerRegisterer();
         // Add EventListener to JDA
@@ -73,6 +74,7 @@ public class Main {
         for (Handler f : MainUtil.logger.getHandlers()){
             f.close();
         }
+        if (MainUtil.jda != null) MainUtil.jda.cancelRequests();
         System.exit(code);
     }
 }

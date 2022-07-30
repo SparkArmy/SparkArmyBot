@@ -1,6 +1,6 @@
 package de.SparkArmy.eventListener;
 
-import de.SparkArmy.eventListener.globalEvents.ModmailModal;
+import de.SparkArmy.eventListener.globalEvents.ModmailListener;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -16,7 +16,7 @@ public class EventListenerRegisterer {
 
     private void registerEventListeners(){
         this.events.add(
-                new ModmailModal()
+                new ModmailListener()
         );
 
         events.forEach(jda::addEventListener);

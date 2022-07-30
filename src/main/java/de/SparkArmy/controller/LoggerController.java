@@ -16,21 +16,23 @@ import java.util.logging.Logger;
 
 public class LoggerController {
 
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private final Logger logger;
 
     public LoggerController() {
+        this.logger = Logger.getLogger(this.getClass().getName());
         logger.setLevel(Level.ALL);
         try {
             if (!FileHandler.createDirectory("logs")){
                 Main.systemExit(10);
             }
             File directory = FileHandler.getDirectoryInUserDirectory( "logs");
-            for (File f : directory.listFiles()){
+            for (File f : Objects.requireNonNull(Objects.requireNonNull(directory).listFiles())){
                 if (f.getName().endsWith(".lck")){
                     f.deleteOnExit();
                 }}
             java.util.logging.FileHandler fileHandler = new java.util.logging.FileHandler(directory.getAbsolutePath() + "/BotLog_" +
                      new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date(System.currentTimeMillis())) + ".log");
+            logger.addHandler(fileHandler);
             Handler consoleHandler = new ConsoleHandler();
             consoleHandler.setLevel(Level.CONFIG);
             logger.addHandler(consoleHandler);

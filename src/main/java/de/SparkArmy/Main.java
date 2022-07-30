@@ -1,7 +1,9 @@
 package de.SparkArmy;
 
+import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.LoggerController;
+import de.SparkArmy.eventListener.EventListenerRegisterer;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -16,8 +18,12 @@ import java.util.logging.Logger;
 public class Main {
 
 
+    @SuppressWarnings("FieldCanBeLocal")
     private final LoggerController loggerController;
+    @SuppressWarnings("FieldCanBeLocal")
     private final ConfigController controller;
+
+    private JDA jda;
 
     public Main() {
         // Initialize Logger variables
@@ -41,25 +47,26 @@ public class Main {
         logger.info("JDA-Builder was successful initialized");
 
         try {
-            JDA jda = builder.build();
+            jda = builder.build();
             logger.info("JDA successful build");
         }catch (Exception e){
             logger.severe("Failed to build  - " + e.getMessage());
             System.exit(1);
         }
+
+        // Add a static JDA
+        MainUtil.jda = jda;
+
+        // Add CommandListener to JDA
+        new CommandListenerRegisterer();
+        // Add EventListener to JDA
+        new EventListenerRegisterer();
+
     }
 
     public static void main(String[] args) {
         new Main();
         MainUtil.logger.info("I`m ready.");
-    }
-
-    public LoggerController getLoggerController() {
-        return loggerController;
-    }
-
-    public ConfigController getController() {
-        return controller;
     }
 
     public static void systemExit(Integer code){

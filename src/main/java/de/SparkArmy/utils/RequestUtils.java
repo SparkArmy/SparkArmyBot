@@ -100,6 +100,9 @@ public class RequestUtils {
         return HttpRequest.BodyPublishers.noBody();
     }
 
+    public static void refreshHttpClient(){
+        client = HttpClient.newHttpClient();
+    }
 
     public static HttpRequest.BodyPublisher toParams(Map<Object, Object> data, String boundary) {
         /*

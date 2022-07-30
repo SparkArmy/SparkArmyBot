@@ -12,11 +12,13 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
-public class ModmailListener extends ListenerAdapter implements CustomEventListener {
+public class ModmailListener extends CustomEventListener {
 
     private final Logger logger = MainUtil.logger;
     private final ConfigController controller = MainUtil.controller;
@@ -32,8 +34,9 @@ public class ModmailListener extends ListenerAdapter implements CustomEventListe
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
-
-        List<File> fileList = Arrays.stream(directory.listFiles()).filter(f->f.getName().equals(strings[1] + ".json")).toList();
+        List<File> fileList = new ArrayList<>();
+        if (directory.listFiles()!=null)
+             fileList = Arrays.stream(Objects.requireNonNull(directory.listFiles())).filter(f->f.getName().equals(strings[1] + ".json")).toList();
         if (fileList.isEmpty()){
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;

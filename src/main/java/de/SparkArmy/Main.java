@@ -49,7 +49,7 @@ public class Main {
         try {
             jda = builder.build();
             logger.info("JDA successful build");
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.severe("Failed to build  - " + e.getMessage());
             System.exit(1);
         }
@@ -70,8 +70,9 @@ public class Main {
         MainUtil.logger.info("I`m ready.");
     }
 
-    public static void systemExit(Integer code){
-        for (Handler f : MainUtil.logger.getHandlers()){
+    public static void systemExit(Integer code) {
+        for (Handler f : MainUtil.logger.getHandlers()) {
+            f.flush();
             f.close();
         }
         if (MainUtil.jda != null) MainUtil.jda.cancelRequests();

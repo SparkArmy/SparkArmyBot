@@ -9,22 +9,20 @@ import java.util.logging.Logger;
 
 public class FileHandler {
 
-    private static final Logger logger = MainUtil.logger;
     public static final File userDirectory = new File(System.getProperty("user.dir"));
+    private static final Logger logger = MainUtil.logger;
 
-    public static boolean createDirectory(String path,String directoryName){
+    public static boolean createDirectory(String path, String directoryName) {
         File newDirectory = new File(path + "/" + directoryName);
         if (newDirectory.exists()) return true;
         return newDirectory.mkdirs();
     }
 
-    public static boolean createDirectory(String directoryName){
-        File newDirectory = new File(userDirectory.getAbsolutePath() + "/" + directoryName);
-        if (newDirectory.exists()) return true;
-        return newDirectory.mkdirs();
+    public static boolean createDirectory(String directoryName) {
+        return createDirectory(userDirectory.getAbsolutePath(),directoryName);
     }
 
-    public static boolean createFile(File path, String fileName){
+    public static boolean createFile(File path, String fileName) {
         try {
             return new File(path.getAbsolutePath() + "/" + fileName).createNewFile();
         } catch (IOException e) {
@@ -40,21 +38,20 @@ public class FileHandler {
         }
     }
 
-    public static File getDirectoryInUserDirectory(String directoryName){
-        if (createDirectory(directoryName)){
+    public static File getDirectoryInUserDirectory(String directoryName) {
+        if (createDirectory(directoryName)) {
             return getFile(userDirectory.getAbsolutePath() + "/" + directoryName);
         }
         return null;
     }
 
-    public static File getFileInDirectory(File directory,String filename){
+    public static File getFileInDirectory(File directory, String filename) {
         return getFile(directory.getAbsolutePath() + "/" + filename);
     }
 
-    public static boolean writeValuesInFile(File path,String filename,Object value){
-
+    public static boolean writeValuesInFile(File path, String filename, Object value) {
         try {
-            FileWriter fileWriter = fileWriter(getFileInDirectory(path,filename));
+            FileWriter fileWriter = fileWriter(getFileInDirectory(path, filename));
             if (fileWriter == null) return false;
             fileWriter.write(String.valueOf(value));
             fileWriter.close();
@@ -64,7 +61,7 @@ public class FileHandler {
         }
     }
 
-    public static String getFileContent(File file){
+    public static String getFileContent(File file) {
         try {
             return new String(Files.readAllBytes(Path.of(file.getAbsolutePath())));
         } catch (IOException e) {
@@ -73,7 +70,7 @@ public class FileHandler {
         }
     }
 
-    public static String getFileContent(File path,String filename){
+    public static String getFileContent(File path, String filename) {
         File file = new File(path.getAbsolutePath() + "/" + filename);
         try {
             return new String(Files.readAllBytes(Path.of(file.getAbsolutePath())));
@@ -83,7 +80,7 @@ public class FileHandler {
         }
     }
 
-    public static String getFileContent(String path){
+    public static String getFileContent(String path) {
         File file = new File(path);
         try {
             return new String(Files.readAllBytes(Path.of(file.getAbsolutePath())));
@@ -93,11 +90,11 @@ public class FileHandler {
         }
     }
 
-    private static File getFile(String path){
+    private static File getFile(String path) {
         return new File(path);
     }
 
-    private static FileWriter fileWriter(File path){
+    private static FileWriter fileWriter(File path) {
         try {
             return new FileWriter(path);
         } catch (IOException e) {
@@ -106,12 +103,12 @@ public class FileHandler {
         }
     }
 
-/*
-* Exit-Codes
-* 10 - Can't create Directory
-* 11 - Can't read a Directory
-* 12 - Can't read a File
-* */
+    /*
+     * Exit-Codes
+     * 10 - Can't create Directory
+     * 11 - Can't read a Directory
+     * 12 - Can't read a File
+     * */
 
 
 }

@@ -2,9 +2,7 @@ package de.SparkArmy.commandListener.globalCommands.slashCommands;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
 import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
@@ -14,14 +12,11 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.logging.Logger;
 
-public class ModmailCommand extends ListenerAdapter implements CustomCommandListener {
+public class ModmailCommand extends CustomCommandListener {
 
-    private final Logger logger = MainUtil.logger;
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
@@ -30,8 +25,7 @@ public class ModmailCommand extends ListenerAdapter implements CustomCommandList
         if (!Objects.equals(eventName, rightEventName)) return;
 
 
-
-        @NonNls String idExtension = event.getUser().getId() + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date(System.currentTimeMillis()));
+        @NonNls String idExtension = event.getUser().getId() + LocalDateTime.now();
 
         TextInput topic = TextInput.create("topic;" + idExtension,"Topic", TextInputStyle.SHORT)
                 .setPlaceholder("Your Question")
@@ -43,7 +37,7 @@ public class ModmailCommand extends ListenerAdapter implements CustomCommandList
                 .setMinLength(10)
                 .build();
 
-        Modal modal = Modal.create(rightEventName + ";" + idExtension,"Modmail")
+        Modal modal = Modal.create(rightEventName + idExtension,"Modmail")
                 .addActionRows(ActionRow.of(topic),ActionRow.of(body))
                 .build();
 

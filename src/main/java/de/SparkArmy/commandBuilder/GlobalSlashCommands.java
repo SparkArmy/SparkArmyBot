@@ -8,10 +8,10 @@ import java.util.Collection;
 
 public class GlobalSlashCommands {
 
-    protected static Collection<CommandData> globalSlashCommands(){
-      return new ArrayList<>(){{
-          add(Commands.slash("modmail","Contact to the server team for help"));
-          add(Commands.slash("feedback","Contact for feedback"));
-      }};
+    protected static Collection<CommandData> globalSlashCommands() {
+        return new ArrayList<>() {{
+            add(Commands.slash("modmail", "Contact to the server team for help"));
+            add(Commands.slash("feedback", "Contact for feedback"));
+        }};
     }
 }

@@ -14,7 +14,7 @@ public class EventListenerRegisterer {
         registerEventListeners();
     }
 
-    private void registerEventListeners(){
+    private void registerEventListeners() {
         this.events.add(
                 new ModmailListener()
         );

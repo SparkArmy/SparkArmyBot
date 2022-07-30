@@ -15,7 +15,7 @@ public class CommandListenerRegisterer {
         registerCommandListeners();
     }
 
-    private void registerCommandListeners(){
+    private void registerCommandListeners() {
         this.commands.add(
                 new ModmailCommand()
         );

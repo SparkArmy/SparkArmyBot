@@ -12,14 +12,14 @@ public class CommandListenerRegisterer {
     private final JDA jda = MainUtil.jda;
 
     public CommandListenerRegisterer() {
-        registerCommandListeners();
+        this.registerCommandListeners();
     }
 
     private void registerCommandListeners() {
-        this.commands.add(
+        commands.add(
                 new ModmailCommand()
         );
 
-        commands.forEach(jda::addEventListener);
+        this.commands.forEach(this.jda::addEventListener);
     }
 }

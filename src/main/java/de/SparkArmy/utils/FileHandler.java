@@ -3,10 +3,15 @@ package de.SparkArmy.utils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
+@SuppressWarnings("unused")
 public class FileHandler {
 
     public static final File userDirectory = new File(System.getProperty("user.dir"));
@@ -51,8 +56,20 @@ public class FileHandler {
 
     public static boolean writeValuesInFile(File path, String filename, Object value) {
         try {
-            FileWriter fileWriter = fileWriter(getFileInDirectory(path, filename));
-            if (fileWriter == null) return false;
+            FileWriter fileWriter = FileHandler.fileWriter(getFileInDirectory(path, filename));
+            if (null == fileWriter) return false;
+            fileWriter.write(String.valueOf(value));
+            fileWriter.close();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    public static boolean writeValuesInFile(String path, Object value){
+        try {
+            FileWriter fileWriter = fileWriter(getFile(path));
+            if (null == fileWriter) return false;
             fileWriter.write(String.valueOf(value));
             fileWriter.close();
             return true;
@@ -63,9 +80,9 @@ public class FileHandler {
 
     public static String getFileContent(File file) {
         try {
-            return new String(Files.readAllBytes(Path.of(file.getAbsolutePath())));
+            return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            FileHandler.logger.severe("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
@@ -73,9 +90,9 @@ public class FileHandler {
     public static String getFileContent(File path, String filename) {
         File file = new File(path.getAbsolutePath() + "/" + filename);
         try {
-            return new String(Files.readAllBytes(Path.of(file.getAbsolutePath())));
+            return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            FileHandler.logger.severe("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
@@ -83,11 +100,28 @@ public class FileHandler {
     public static String getFileContent(String path) {
         File file = new File(path);
         try {
-            return new String(Files.readAllBytes(Path.of(file.getAbsolutePath())));
+            return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            FileHandler.logger.severe("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
+    }
+
+    public static List<File> getFilesInDirectory(File path){
+        if (null == path){
+            FileHandler.logger.info("FILEHANDLER: The path is null");
+            return null;
+        }
+
+        if (path.isFile()){
+            FileHandler.logger.info("FILEHANDLER: The path is a file");
+            return null;
+        }
+        if (null == path.listFiles()){
+            FileHandler.logger.info("FILEHANDLER: Error to listFiles");
+            return null;
+        }
+        return Arrays.stream(Objects.requireNonNull(path.listFiles())).toList();
     }
 
     private static File getFile(String path) {
@@ -96,7 +130,7 @@ public class FileHandler {
 
     private static FileWriter fileWriter(File path) {
         try {
-            return new FileWriter(path);
+            return new FileWriter(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
             logger.severe("Can't create a file-writer");
             return null;

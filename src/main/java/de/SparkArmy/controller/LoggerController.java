@@ -19,8 +19,8 @@ public class LoggerController {
     private final Logger logger;
 
     public LoggerController() {
-        this.logger = Logger.getLogger(this.getClass().getName());
-        logger.setLevel(Level.ALL);
+        logger = Logger.getLogger(getClass().getName());
+        this.logger.setLevel(Level.ALL);
         try {
             if (!FileHandler.createDirectory("logs")) {
                 Main.systemExit(10);
@@ -33,21 +33,21 @@ public class LoggerController {
             }
             java.util.logging.FileHandler fileHandler = new java.util.logging.FileHandler(directory.getAbsolutePath() + "/BotLog_" +
                     new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date(System.currentTimeMillis())) + ".log");
-            logger.addHandler(fileHandler);
+            this.logger.addHandler(fileHandler);
             Handler consoleHandler = new ConsoleHandler();
             consoleHandler.setLevel(Level.CONFIG);
-            logger.addHandler(consoleHandler);
-            logger.setUseParentHandlers(false);
-            if (Objects.requireNonNull(directory.listFiles()).length > 11) {
+            this.logger.addHandler(consoleHandler);
+            this.logger.setUseParentHandlers(false);
+            if (11 < Objects.requireNonNull(directory.listFiles()).length) {
                 Arrays.stream(Objects.requireNonNull(directory.listFiles())).toList().get(0).deleteOnExit();
             }
         } catch (IOException e) {
             Main.systemExit(1);
         }
-        logger.info("Logger was successful initialed");
+        this.logger.info("Logger was successful initialed");
     }
 
     public Logger getLogger() {
-        return logger;
+        return this.logger;
     }
 }

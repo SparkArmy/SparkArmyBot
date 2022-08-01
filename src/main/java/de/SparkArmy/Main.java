@@ -1,9 +1,11 @@
 package de.SparkArmy;
 
+import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.LoggerController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
+import de.SparkArmy.timedOperations.TimedOperationsExecutor;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -22,20 +24,29 @@ public class Main {
     private final LoggerController loggerController;
     @SuppressWarnings("FieldCanBeLocal")
     private final ConfigController controller;
+    @SuppressWarnings("FieldCanBeLocal")
+    private final EventWaiter waiter;
+
+    @SuppressWarnings("FieldCanBeLocal")
+    private final TimedOperationsExecutor timedOperations;
 
     private JDA jda;
 
     public Main() {
         // Initialize Logger variables
-        this.loggerController = new LoggerController();
-        Logger logger = loggerController.getLogger();
+        loggerController = new LoggerController();
+        Logger logger = this.loggerController.getLogger();
         MainUtil.logger = logger;
 
         // Initialize ConfigController variables and the mainConfig
-        this.controller = new ConfigController(this);
-        MainUtil.controller = controller;
-        JSONObject mainConfig = controller.getMainConfigFile();
+        controller = new ConfigController(this);
+        MainUtil.controller = this.controller;
+        JSONObject mainConfig = this.controller.getMainConfigFile();
         MainUtil.mainConfig = mainConfig;
+
+        // Initialize TimedOperations
+        this.timedOperations = new TimedOperationsExecutor();
+        MainUtil.timedOperations = timedOperations;
 
         // Start building JDA
         JDABuilder builder = JDABuilder.createDefault(mainConfig.getString("discord-token"));
@@ -47,7 +58,7 @@ public class Main {
         logger.info("JDA-Builder was successful initialized");
 
         try {
-            jda = builder.build();
+            this.jda = builder.build();
             logger.info("JDA successful build");
         } catch (Exception e) {
             logger.severe("Failed to build  - " + e.getMessage());
@@ -55,14 +66,18 @@ public class Main {
         }
 
         // Add a static JDA
-        MainUtil.jda = jda;
+        MainUtil.jda = this.jda;
+
+        // Add a EventWaiter
+        this.waiter = new EventWaiter();
+        MainUtil.waiter = waiter;
+        jda.addEventListener(waiter);
 
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();
         // Add EventListener to JDA
         new EventListenerRegisterer();
-
     }
 
     public static void main(String[] args) {
@@ -75,7 +90,7 @@ public class Main {
             f.flush();
             f.close();
         }
-        if (MainUtil.jda != null) MainUtil.jda.cancelRequests();
+        if (null != MainUtil.jda) MainUtil.jda.cancelRequests();
         System.exit(code);
     }
 }

@@ -9,14 +9,13 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 
 import java.io.File;
-import java.time.LocalDateTime;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 
 public class ModmailCommand extends CustomCommandListener {
-
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
@@ -25,7 +24,7 @@ public class ModmailCommand extends CustomCommandListener {
         if (!Objects.equals(eventName, rightEventName)) return;
 
 
-        @NonNls String idExtension = event.getUser().getId() + LocalDateTime.now();
+        @NonNls String idExtension = event.getUser().getId() + "," + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
 
         TextInput topic = TextInput.create("topic;" + idExtension,"Topic", TextInputStyle.SHORT)
                 .setPlaceholder("Your Question")
@@ -37,24 +36,19 @@ public class ModmailCommand extends CustomCommandListener {
                 .setMinLength(10)
                 .build();
 
-        Modal modal = Modal.create(rightEventName + idExtension,"Modmail")
+        Modal modal = Modal.create(rightEventName + ";" + idExtension,"Modmail")
                 .addActionRows(ActionRow.of(topic),ActionRow.of(body))
                 .build();
 
 
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff/modmail");
-        if (directory == null){
-            logger.warning("MODMAIL: directory from modmail is null");
+        if (null == directory){
+            this.logger.warning("MODMAIL: directory from modmail is null");
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
-        if (!FileHandler.createFile(directory.getAbsolutePath(),idExtension + ".json")){
-            logger.warning("MODMAIL: can't create a file in the modmail-directory");
-            event.reply("Ups something went wrong").setEphemeral(true).queue();
-            return;
-        }
-        if (!FileHandler.writeValuesInFile(directory,idExtension + ".json",new JSONObject().put("user", event.getUser().getId()))){
-            logger.warning("MODMAIL: can't write values in the file");
+        if (!FileHandler.createFile(directory,idExtension + ".json")){
+            this.logger.warning("MODMAIL: can't create a file in the modmail-directory");
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }

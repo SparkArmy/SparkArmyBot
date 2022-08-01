@@ -11,14 +11,14 @@ public class EventListenerRegisterer {
     private final JDA jda = MainUtil.jda;
 
     public EventListenerRegisterer() {
-        registerEventListeners();
+        this.registerEventListeners();
     }
 
     private void registerEventListeners() {
-        this.events.add(
+        events.add(
                 new ModmailListener()
         );
 
-        events.forEach(jda::addEventListener);
+        this.events.forEach(this.jda::addEventListener);
     }
 }

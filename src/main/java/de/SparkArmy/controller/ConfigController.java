@@ -78,9 +78,16 @@ public class ConfigController {
         return List.of(Objects.requireNonNull(directory.listFiles()));
     }
 
-    public JSONObject getSpecificConfig(Guild guild,String name){
+    public JSONObject getSpecificGuildConfig(Guild guild, String name){
         if (MainUtil.mainConfig.getString("storage-server").equals(guild.getId())) return null;
         return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(this.getGuildConfigs(guild).stream().filter(f -> f.getName().equals(name)).toList().get(0).getAbsolutePath())));
+    }
+
+    public void writeInSpecificGuildConfig(Guild guild,String name,JSONObject value){
+        if (MainUtil.mainConfig.getString("storage-server").equals(guild.getId())) return;
+        File configFile = getGuildConfigs(guild).stream().filter(f->f.getName().equals(name)).toList().get(0);
+
+        FileHandler.writeValuesInFile(configFile.getAbsolutePath(),value);
     }
 
     private JSONObject guildConfigBlank(){

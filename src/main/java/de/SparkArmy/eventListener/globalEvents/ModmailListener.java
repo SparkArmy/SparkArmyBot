@@ -18,12 +18,14 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.awt.*;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.*;
@@ -34,10 +36,50 @@ public class ModmailListener extends CustomEventListener {
 
     private final File directory = FileHandler.getDirectoryInUserDirectory("botstuff/modmail");
 
+
+    // Modal Interactions
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
+        if (!event.getModalId().contains(";")) return;
+        String modalId = event.getModalId().split(";")[0];
+        switch (modalId){
+            case "modmail" -> userStartMessage(event);
+            case "modmailReply" -> userReplyMessage(event);
+            default -> {}
+        }
+
+    }
+
+    private void userReplyMessage(@NotNull ModalInteractionEvent event){
+        event.reply("Will you add attachments?").setEphemeral(true).addActionRows(ActionRow.of(
+                        Button.primary("modmailReplyAttachmentsYes","Yes"),
+                        Button.primary("modmailReplyAttachmentsNo","No")))
+                .queue(x->waiter.waitForEvent(ButtonInteractionEvent.class,f-> event.getUser().equals(f.getUser())
+                                && (f.getComponentId().equals("modmailReplyAttachmentsYes") || f.getComponentId().equals("modmailReplyAttachmentsNo")),
+                        f->{
+                            if (f.getComponentId().equals("modmailReplyAttachmentsNo")){
+                                sendReplyEmbed(event);
+                                x.editOriginalComponents().queue();
+                            }else {
+                                x.editOriginalComponents().queue();
+                                f.reply("Push the button when you sent all attachments")
+                                        .addActionRow(Button.success("modmailReplyAttachmentsOk","Ok"))
+                                        .setEphemeral(true).queue(y->
+                                        waiter.waitForEvent(ButtonInteractionEvent.class,g->g.getComponentId().equals("modmailReplyAttachmentsOk") && g.getUser().equals(f.getUser()),g->{
+                                            f.editComponents().queue();
+                                            g.editComponents().queue();
+                                            sendReplyEmbed(event);
+                                        }));
+                            }
+                        },5,TimeUnit.MINUTES,()->{
+                            x.editOriginalComponents().queue();
+                            sendReplyEmbed(event);
+                            event.reply("Your time is over").setEphemeral(true).queue();
+                        }));
+    }
+
+    private void userStartMessage(@NotNull ModalInteractionEvent event){
         String modalId = event.getModalId();
-        if (!modalId.contains(";")) return;
         String[] strings = modalId.split(";");
         if (Arrays.stream(strings).filter("modmail"::equals).toList().isEmpty()) return;
         @NonNls String idExtension = strings[1];
@@ -75,10 +117,15 @@ public class ModmailListener extends CustomEventListener {
                 }
             }
         });
-
+        if (guilds.build().getOptions().isEmpty()){
+            event.reply("All server were you member have disabled the modmail-feature").setEphemeral(true).queue();
+            return;
+        }
         event.reply("Please select the target guild").addActionRow(guilds.build()).setEphemeral(true).queue();
     }
 
+
+    // Select menu interactions
     @Override
     public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
         String menuName = event.getComponentId();
@@ -117,7 +164,7 @@ public class ModmailListener extends CustomEventListener {
                                 x.editOriginal("Your message was sent to the server").queue();
                                 x.editOriginalComponents().queue();
                                 event.editComponents().queue();
-                                sendEmbedToServer(builder, guild, event.getUser(),event);
+                                sendStartEmbedToServer(builder, guild, event.getUser(), event);
                             }
 
                             if (f.getComponentId().equals("modmailYes")) {
@@ -128,7 +175,7 @@ public class ModmailListener extends CustomEventListener {
                                 waiter.waitForEvent(ButtonInteractionEvent.class, g -> g.getUser().getId().equals(event.getUser().getId()), g -> {
                                     if (g.getComponentId().equals("modmailOk")) {
                                         x.editOriginalComponents().queue();
-                                        sendEmbedToServer(builder, guild, event.getUser(),event);
+                                        sendStartEmbedToServer(builder, guild, event.getUser(), event);
                                         event.editComponents().queue();
                                         g.editComponents().queue();
                                     }
@@ -137,82 +184,108 @@ public class ModmailListener extends CustomEventListener {
                         }, 5, TimeUnit.MINUTES, () -> {
                             x.editOriginal("Your time is over, the message will be send to the server").queue();
                             x.editOriginalComponents().queue();
-                            sendEmbedToServer(builder, guild, event.getUser(),event);
+                            sendStartEmbedToServer(builder, guild, event.getUser(), event);
                             event.editComponents().queue();
                         }));
 
     }
 
-    // Method to send Message to specific server
-    private void sendEmbedToServer(EmbedBuilder embedFromUser, Guild guild, User user, SelectMenuInteractionEvent e) {
+    // Button Interactions
+    @Override
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        String buttonId = event.getComponentId();
+        switch (buttonId.split(";")[0]) {
+            case "modmailReply" -> modmailReply(event);
+            case "modmailChannelClose" -> modmailChannelClose(event);
+            default -> {
+            }
+        }
+
+    }
+    private void modmailChannelClose(@NotNull ButtonInteractionEvent event) {
+        String[] buttonId = event.getComponentId().split(";");
+        event.reply("You are sure you want to close this channel")
+                .addActionRows(ActionRow.of(Button.danger("modmailCloseYes", "Yes"), Button.success("modmailCloseNo", "No")))
+                .queue(x -> waiter.waitForEvent(ButtonInteractionEvent.class, f -> {
+                    String id = f.getComponentId();
+                    return id.equals("modmailCloseYes") || id.equals("modmailCloseNo");
+                }, f -> {
+                    String id = f.getComponentId();
+                    if (id.equals("modmailCloseNo")) {
+                        x.editOriginalComponents().queue();
+                        x.deleteOriginal().queue();
+                        return;
+                    }
+
+                    TextInput closeReason = TextInput.create("modmailCloseReason","Reason",TextInputStyle.SHORT)
+                            .setMaxLength(100).build();
+
+                    f.replyModal(Modal.create("modmailCloseModal","Close Channel").addActionRow(closeReason).build()).queue(y-> waiter.waitForEvent(ModalInteractionEvent.class, g->g.getModalId().equals("modmailCloseModal") && f.getUser().equals(g.getUser()), g->{
+                        x.editOriginalComponents().queue();
+                        g.reply("Channel will be deleted, started by " + f.getUser().getAsTag()).queue();
+                        //noinspection ConstantConditions
+                        String reason = g.getValue("modmailCloseReason").getAsString();
+                        saveMessagesFromModmailChannel(event.getGuildChannel().asTextChannel(),jda.getUserById(buttonId[2]),f.getUser(),reason).start();
+
+                        // Send the user a message that the ticket was closed
+                        try {
+                            PrivateChannel privateChannel = Objects.requireNonNull(jda.getUserById(buttonId[2])).openPrivateChannel().complete();
+                            privateChannel.getHistory().retrievePast(100).complete().forEach(m->{
+                                if (m.getAuthor().equals(jda.getSelfUser()) && !m.getEmbeds().isEmpty()){
+                                    m.delete().queue();
+                                }
+                            });
+                            privateChannel.sendMessage("Your ticket was closed").queue();
+                        }catch (NullPointerException | UnsupportedOperationException e){
+                            logger.warning("The user has no permissions");
+                        }
+
+                    }));
+
+                }));
+    }
+
+
+    private void modmailReply(@NotNull ButtonInteractionEvent event) {
+        String[] modmailId = event.getComponentId().split(";");
+        TextInput modmailUserInput = TextInput.create("modmailReply", "Text", TextInputStyle.PARAGRAPH)
+                .setPlaceholder("Your answer or your addition")
+                .setMinLength(10)
+                .build();
+
+        Modal.Builder modmailChannelReply = Modal.create(String.format("modmailReply;%s;%s",modmailId[1],modmailId[2]),"Modmail Reply");
+        event.replyModal(modmailChannelReply.addActionRow(modmailUserInput).build()).queue();
+    }
+
+
+    // Method to send start message to specific server
+    private void sendStartEmbedToServer(EmbedBuilder embedFromUser, Guild guild, User user, SelectMenuInteractionEvent e) {
         JSONObject config = this.controller.getSpecificGuildConfig(guild, "config.json");
         if (config.isNull("modmail")) {
-            Category modmailCategory = guild.createCategory("MODMAIL").complete();
-            // Denied Permissions for public Role
-            // Admin will be change this
-            Collection<Permission> deniedPermissions = new ArrayList<>() {{
-                add(Permission.VIEW_CHANNEL);
-            }};
-            modmailCategory.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue();
-            TextChannel modmailChannel = modmailCategory.createTextChannel("modmail-log").complete();
-            //noinspection ResultOfMethodCallIgnored
-            modmailChannel.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions);
-
-            JSONObject modmail = new JSONObject();
-            modmail.put("category", modmailCategory.getId());
-            modmail.put("log-channel", modmailChannel.getId());
-
-            config.put("modmail", modmail);
-
-            this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
+           config = createConfig(config,guild);
+           if (config == null) return;
         }
         Category modmailCategory;
         TextChannel modmailLogChannel;
 
 
-            modmailCategory = guild.getCategoryById(config.getJSONObject("modmail").getString("category"));
-            if (modmailCategory == null){
-            try {
-                // Try to create a new category
-                modmailCategory = guild.createCategory("MODMAIL").complete();
-
-                Collection<Permission> deniedPermissions = new ArrayList<>() {{
-                    add(Permission.VIEW_CHANNEL);
-                }};
-
-                modmailCategory.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(),null,deniedPermissions).queue();
-                JSONObject modmail = config.getJSONObject("modmail");
-                modmail.put("category", modmailCategory.getId());
-                config.put("modmail", modmail);
-                this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
-            } catch (IllegalArgumentException | InsufficientPermissionException categoryCreateExeption) {
-                logger.config("The bot has no permissions to create a channel");
-                return;
-            }
+        modmailCategory = guild.getCategoryById(config.getJSONObject("modmail").getString("category"));
+        if (modmailCategory == null) {
+            modmailCategory = createModmailCategory(guild,config);
+            if (modmailCategory == null) return;
         }
 
 
-            modmailLogChannel = guild.getTextChannelById(config.getJSONObject("modmail").getString("log-channel"));
-            if (modmailLogChannel == null){
-                try {
-                    // Try to create a new channel
-                    modmailLogChannel = modmailCategory.createTextChannel("modmail-log").complete();
-                    modmailLogChannel.getManager().sync().queue();
-                    JSONObject modmail = config.getJSONObject("modmail");
-                    modmail.put("log-channel", modmailLogChannel.getId());
-                    config.put("modmail", modmail);
-                    this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
-
-                } catch (InsufficientPermissionException | IllegalArgumentException channelCreateExeption) {
-                    // Returns if the bot has no permissions
-                    logger.config("The bot has no permissions to create a channel");
-                    return;
-                }
+        modmailLogChannel = guild.getTextChannelById(config.getJSONObject("modmail").getString("log-channel"));
+        if (modmailLogChannel == null) {
+            modmailLogChannel = createModmailTextChannel(guild,config,modmailCategory,"log");
+            if (modmailLogChannel == null) return;
         }
 
 
         // Embed for logging
         EmbedBuilder loggingEmbed = new EmbedBuilder();
+        loggingEmbed.setTitle("Ticket was opened");
         loggingEmbed.setDescription("A new Ticket was created:\n " + embedFromUser.build().getTitle());
         loggingEmbed.setColor(new Color(0, 255, 0));
         loggingEmbed.setFooter(user.getAsTag(), user.getEffectiveAvatarUrl());
@@ -226,24 +299,18 @@ public class ModmailListener extends CustomEventListener {
         modmailChannel.getManager().setTopic("This is a modmail channel, please not delete it").queue();
 
 
-        // String Builder for MessageAttachments
 
-        StringBuilder attachmentStrings = new StringBuilder();
-        user.openPrivateChannel().complete().getIterableHistory().complete().stream().filter(x->!x.getAttachments().isEmpty()
-                && x.getAuthor().getId().equals(user.getId())
-                && x.getTimeCreated().isAfter(e.getTimeCreated())).forEach(x->{
-            if (!x.getAttachments().isEmpty()){
-                x.getAttachments().forEach(y-> attachmentStrings.append(y.getUrl()).append("\n"));
-            }
-        });
 
         modmailChannel.sendMessageEmbeds(embedFromUser.build()).
                 setActionRows(
-                        ActionRow.of(Button.primary(String.format("modmailChannelReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")),ActionRow.of(Button.danger(String.format("modmailChannelClose;%s;%s", modmailChannel.getId(), user.getId()), "Close")))
-                .queue();
-        if (!attachmentStrings.isEmpty()){
-            modmailChannel.sendMessage(attachmentStrings).queue();
-        }
+                        ActionRow.of(Button.primary(String.format("modmailReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")), ActionRow.of(Button.danger(String.format("modmailChannelClose;%s;%s", modmailChannel.getId(), user.getId()), "Close")))
+                .queue(x->x.pin().queue());
+
+
+        String replyAttachments = getAttachmentStringsFromChannel(e.getMessageChannel(),e.getTimeCreated(),e.getUser()).toString();
+        if (replyAttachments.isEmpty()) return;
+        modmailChannel.sendMessage(replyAttachments).queue();
+
 
 
         // Send the user a message, that the ticket was received
@@ -253,7 +320,7 @@ public class ModmailListener extends CustomEventListener {
                 """;
         try {
             // Try to send a DM to the User
-            user.openPrivateChannel().complete().sendMessage(message).setActionRow(Button.success(String.format("modmailUserReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")).queue();
+            user.openPrivateChannel().complete().sendMessage(message).setActionRow(Button.success(String.format("modmailReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")).queue();
         } catch (InsufficientPermissionException | IllegalArgumentException | UnsupportedOperationException ignored) {
             // Catch has the user disabled the DM from server members
             modmailChannel.delete().reason("The target user has direct-messages from server members disabled").queue();
@@ -265,6 +332,47 @@ public class ModmailListener extends CustomEventListener {
         }
     }
 
+    // Method to send reply message from server to user or in the other direction
+    private void sendReplyEmbed(@NotNull ModalInteractionEvent event){
+        String[] modalIds = event.getModalId().split(";");
+        TextChannel modmailChannel = jda.getTextChannelById(modalIds[1]);
+        if (modmailChannel == null) return;
+        Guild guild = modmailChannel.getGuild();
+        User offender = jda.getUserById(modalIds[2]);
+        if (offender == null ) return;
+        User interactionUser = event.getUser();
+
+        logger.info("Test");
+
+        //noinspection ConstantConditions
+        String replyString = event.getValue("modmailReply").getAsString();
+        String replyAttachments = getAttachmentStringsFromChannel(event.getMessageChannel(),event.getTimeCreated(),interactionUser).toString();
+
+        // Create and send the embed + optional attachments to the server
+        EmbedBuilder modmailServerEmbed = new EmbedBuilder();
+        modmailServerEmbed.setAuthor(interactionUser.getAsTag(),null,interactionUser.getEffectiveAvatarUrl());
+        modmailServerEmbed.setTitle(interactionUser.equals(offender) ? "Reply from " + interactionUser.getAsTag() : "Reply to " + offender.getAsTag());
+        modmailServerEmbed.setDescription(replyString);
+
+        modmailChannel.sendMessageEmbeds(modmailServerEmbed.build()).queue();
+
+
+        // Create and send the embed + optional attachment to the user
+        EmbedBuilder modmailUserEmbed = new EmbedBuilder();
+        modmailUserEmbed.setTitle(interactionUser.equals(offender) ? "Reply to " + guild.getName() : "Reply from " + guild.getName());
+        modmailUserEmbed.setDescription(replyString);
+
+        offender.openPrivateChannel().complete().sendMessageEmbeds(modmailUserEmbed.build()).queue();
+        if (replyAttachments.isEmpty()) return;
+        if (event.getUser().equals(offender)){
+            modmailChannel.sendMessage(replyAttachments).queue();
+        }else {
+            offender.openPrivateChannel().complete().sendMessage(replyAttachments).queue();
+        }
+
+    }
+
+    // Method and Variables to delete old files
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final File staticDirectory = FileHandler.getDirectoryInUserDirectory("botstuff/modmail");
 
@@ -279,76 +387,200 @@ public class ModmailListener extends CustomEventListener {
         });
     }
 
-    @Override
-    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        String buttonId = event.getComponentId();
-        switch (buttonId.split(";")[0]) {
-            case "modmailChannelReply" -> modmailChannelReply(event);
-            case "modmailChannelClose" -> modmailChannelClose(event);
-            case "modmailUserReply" -> modmailUserReply(event);
-            default -> {
-            }
-        }
 
-    }
+    // Helper Methods
 
-    private void modmailUserReply(ButtonInteractionEvent event) {
-        String[] modmailId = event.getComponentId().split(";");
-        TextInput modmailUserInput = TextInput.create("modmailUserReply","Text", TextInputStyle.PARAGRAPH)
-                .setPlaceholder("Your answer or your addition")
-                .setMinLength(10)
-                .build();
-
-        Modal.Builder modmailUserReply = Modal.create("modmailUserReply;" + modmailId[1],"Modmail");
-
-        event.replyModal(modmailUserReply.addActionRow(modmailUserInput).build()).queue();
-    }
-
-    private void modmailChannelClose(ButtonInteractionEvent event) {
-        @SuppressWarnings("unused") String[] buttonId = event.getComponentId().split(";");
-        event.reply("You are sure you want to close this channel")
-                .addActionRows(ActionRow.of(Button.danger("modmailCloseYes","Yes"),Button.success("modmailCloseNo","No")))
-                .queue(x->waiter.waitForEvent(ButtonInteractionEvent.class,f->{
-                    String id = f.getComponentId();
-                    return id.equals("modmailCloseYes") || id.equals("modmailCloseNo");
-                },f->{
-                    String id = f.getComponentId();
-                    if (id.equals("modmailCloseNo")) {
-                        x.editOriginalComponents().queue();
-                        x.deleteOriginal().queue();
-                        return;
-                    }
-                    saveMessagesFromModmailChannel(event.getGuildChannel().asTextChannel()).start();
-                }));
-    }
-
-    @SuppressWarnings("unused")
-    private void modmailChannelReply(ButtonInteractionEvent event) {
-
-    }
-
-    private boolean messagesInTextChannel(TextChannel channel){
+    private boolean messagesInTextChannel(TextChannel channel) {
         return new MessageHistory(channel).retrievePast(100).complete().size() > 0;
     }
 
-    private Thread saveMessagesFromModmailChannel(TextChannel channel){
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss");
-        return new Thread(()->{
-            @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") ArrayList<String> messageHistoryReversed = new ArrayList<>();
-            while (messagesInTextChannel(channel)){
+    private @NotNull Thread saveMessagesFromModmailChannel(TextChannel channel, User modmailUser, User moderator,String reason) {
+        return new Thread(() -> {
+            List<Message> messageList = new ArrayList<>();
+                while (messagesInTextChannel(channel)) {
                     List<Message> messages = new MessageHistory(channel).retrievePast(100).complete().stream().toList();
                     messages.forEach(m -> {
                         try {
-                            messageHistoryReversed.add(String.format("%s | %s / %s",
-                                    m.getTimeCreated().format(timeFormatter), String.format("%s(%s)", m.getAuthor().getName(), m.getAuthor().getId()), m.getContentStripped()));
-
+                            messageList.add(m);
                             m.delete().complete();
-                            TimeUnit.SECONDS.sleep(5);
+                            TimeUnit.SECONDS.sleep(2);
                         } catch (Exception e) {
                             logger.warning(e.getMessage());
                         }
                     });
                 }
+
+            Collections.reverse(messageList);
+
+            // Create and get a archive channel
+            Guild guild = channel.getGuild();
+            JSONObject config = controller.getSpecificGuildConfig(guild, "config.json");
+            // Create a new entry in config if the json object null
+            if (config.isNull("modmail")) {
+                config = createConfig(config, guild);
+                if (config == null) return;
+            }
+
+            JSONObject modmail = config.getJSONObject("modmail");
+
+            Category modmailCategory;
+            TextChannel modmailArchiveChannel;
+            TextChannel modmailLogChannel;
+
+            if (modmail.isNull("category")) {
+                modmailCategory = createModmailCategory(guild, config);
+                if (modmailCategory == null) return;
+            } else {
+                modmailCategory = guild.getCategoryById(modmail.getString("category"));
+                if (modmailCategory == null) {
+                    modmailCategory = createModmailCategory(guild, config);
+                    if (modmailCategory == null) return;
+                }
+            }
+
+            if (modmail.isNull("archive-channel")) {
+                modmailArchiveChannel = createModmailTextChannel(guild, config, modmailCategory, "archive");
+                if (modmailArchiveChannel == null) return;
+            } else {
+                modmailArchiveChannel = guild.getTextChannelById(modmail.getString("archive-channel"));
+                if (modmailArchiveChannel == null) {
+                    modmailArchiveChannel = createModmailTextChannel(guild, config, modmailCategory, "archive");
+                    if (modmailArchiveChannel == null) return;
+                }
+            }
+
+            if (modmail.isNull("log-channel")) {
+                modmailLogChannel = createModmailTextChannel(guild, config, modmailCategory, "log");
+                if (modmailLogChannel == null) return;
+            } else {
+                modmailLogChannel = guild.getTextChannelById(modmail.getString("log-channel"));
+                if (modmailLogChannel == null) {
+                    modmailLogChannel = createModmailTextChannel(guild, config, modmailCategory, "log");
+                    if (modmailLogChannel == null) return;
+                }
+            }
+
+            // Send the messages in a thread in modmail archive
+
+            channel.delete().reason(reason).complete();
+
+            ThreadChannel threadChannel =  modmailArchiveChannel
+                    .createThreadChannel(modmailUser.getAsTag() + "||"
+                            + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date(System.currentTimeMillis()))).complete();
+
+
+            messageList.forEach(m->{
+                if (!m.getEmbeds().isEmpty() || !m.getContentRaw().isEmpty()){
+                    threadChannel.sendMessage(m).queue();
+                    try {
+                        TimeUnit.SECONDS.sleep(2);
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            });
+
+            // Send message in modmail log
+            EmbedBuilder logEmbed = new EmbedBuilder();
+            logEmbed.setTitle(channel.getName() + " was closed");
+            logEmbed.setColor(new Color(255,0,0));
+            logEmbed.setFooter(moderator.getAsTag(),moderator.getEffectiveAvatarUrl());
+            logEmbed.setTimestamp(LocalDateTime.now());
+
+            modmailLogChannel.sendMessageEmbeds(logEmbed.build()).queue();
+            if (reason.isEmpty()){
+                channel.delete().complete();
+                return;
+            }
+
+            threadChannel.getManager().setArchived(true).queue();
         });
     }
+
+
+    private StringBuilder getAttachmentStringsFromChannel(MessageChannel channel, OffsetDateTime timeCreated,User referenceUser){
+        StringBuilder messageAttachmentsAsString = new StringBuilder();
+        channel.getHistory().retrievePast(100).complete().forEach(m->{
+            if (!m.getAttachments().isEmpty() && m.getAuthor().equals(referenceUser) && m.getTimeCreated().isAfter(timeCreated)){
+                m.getAttachments().forEach(x->messageAttachmentsAsString.append(x.getUrl()).append("\n"));
+            }
+        });
+        return messageAttachmentsAsString;
+    }
+
+    private @Nullable JSONObject createConfig(JSONObject config, @NotNull Guild guild){
+        Collection<Permission> deniedPermissions = new ArrayList<>() {{
+            add(Permission.VIEW_CHANNEL);
+        }};
+        Category modmailCategory;
+        TextChannel modmailArchiveChannel;
+        TextChannel modmailLogChannel;
+        try {
+            modmailCategory = guild.createCategory("MODMAIL").complete();
+            modmailCategory.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue();
+            modmailArchiveChannel = modmailCategory.createTextChannel("modmail-archive").complete();
+            modmailLogChannel = modmailCategory.createTextChannel("modmail-log").complete();
+            //noinspection ResultOfMethodCallIgnored
+            modmailArchiveChannel.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions);
+            //noinspection ResultOfMethodCallIgnored
+            modmailLogChannel.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(),null,deniedPermissions);
+        } catch (InsufficientPermissionException | IllegalArgumentException createCategoryExeption) {
+            logger.config("The bot has no permissions to create a channel");
+            return null;
+        }
+
+        JSONObject modmail = new JSONObject();
+        modmail.put("category", modmailCategory.getId());
+        modmail.put("archive-channel", modmailArchiveChannel.getId());
+        modmail.put("log-channel",modmailLogChannel.getId());
+
+        config.put("modmail", modmail);
+        this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
+
+        return config;
+    }
+
+    private @Nullable Category createModmailCategory(@NotNull Guild guild, @NotNull JSONObject config){
+        Category modmailCategory;
+        try {
+            // Try to create a new category
+            modmailCategory = guild.createCategory("MODMAIL").complete();
+
+            Collection<Permission> deniedPermissions = new ArrayList<>() {{
+                add(Permission.VIEW_CHANNEL);
+            }};
+
+            modmailCategory.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).complete();
+            JSONObject modmail = config.getJSONObject("modmail");
+            modmail.put("category", modmailCategory.getId());
+            config.put("modmail", modmail);
+            this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
+            return modmailCategory;
+        } catch (IllegalArgumentException | InsufficientPermissionException categoryCreateExeption) {
+            logger.config("The bot has no permissions to create a channel");
+            return null;
+        }
+    }
+
+    private @Nullable TextChannel createModmailTextChannel(@NotNull Guild guild, @NotNull JSONObject config, @NotNull Category modmailCategory, String name){
+        TextChannel modmailChannel;
+        try {
+            Collection<Permission> deniedPermissions = new ArrayList<>() {{
+                add(Permission.VIEW_CHANNEL);
+            }};
+            // Try to create a new channel
+            modmailChannel = modmailCategory.createTextChannel("modmail-" + name).complete();
+            modmailChannel.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(),null,deniedPermissions).queue();
+            JSONObject modmail = config.getJSONObject("modmail");
+            modmail.put(name + "-channel", modmailChannel.getId());
+            config.put("modmail", modmail);
+            this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
+            return modmailChannel;
+        } catch (InsufficientPermissionException | IllegalArgumentException channelCreateExeption) {
+            // Returns if the bot has no permissions
+            logger.config("The bot has no permissions to create a channel");
+            return null;
+        }
+    }
+
+
 }

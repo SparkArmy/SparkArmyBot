@@ -1,5 +1,6 @@
 package de.SparkArmy.eventListener.globalEvents;
 
+import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
@@ -109,7 +110,7 @@ public class ModmailListener extends CustomEventListener {
         SelectMenu.Builder guilds = SelectMenu.create("modmailGuildPicker;" + idExtension);
 
         event.getJDA().getGuilds().forEach(g -> {
-            JSONObject guildConfig = this.controller.getSpecificGuildConfig(g, "config.json");
+            JSONObject guildConfig = this.controller.getSpecificGuildConfig(g, GuildConfigType.MAIN);
             if (null != guildConfig) {
                 if (!guildConfig.keySet().contains("command-permissions")) return;
                 if (guildConfig.getJSONObject("command-permissions").getBoolean("modmail")) {
@@ -260,7 +261,7 @@ public class ModmailListener extends CustomEventListener {
 
     // Method to send start message to specific server
     private void sendStartEmbedToServer(EmbedBuilder embedFromUser, Guild guild, User user, SelectMenuInteractionEvent e) {
-        JSONObject config = this.controller.getSpecificGuildConfig(guild, "config.json");
+        JSONObject config = this.controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
         if (config.isNull("modmail")) {
            config = createConfig(config,guild);
            if (config == null) return;
@@ -308,8 +309,9 @@ public class ModmailListener extends CustomEventListener {
 
 
         String replyAttachments = getAttachmentStringsFromChannel(e.getMessageChannel(),e.getTimeCreated(),e.getUser()).toString();
-        if (replyAttachments.isEmpty()) return;
-        modmailChannel.sendMessage(replyAttachments).queue();
+        if (!replyAttachments.isEmpty()) {
+            modmailChannel.sendMessage(replyAttachments).queue();
+        }
 
 
 
@@ -414,7 +416,7 @@ public class ModmailListener extends CustomEventListener {
 
             // Create and get a archive channel
             Guild guild = channel.getGuild();
-            JSONObject config = controller.getSpecificGuildConfig(guild, "config.json");
+            JSONObject config = controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
             // Create a new entry in config if the json object null
             if (config.isNull("modmail")) {
                 config = createConfig(config, guild);
@@ -534,7 +536,7 @@ public class ModmailListener extends CustomEventListener {
         modmail.put("log-channel",modmailLogChannel.getId());
 
         config.put("modmail", modmail);
-        this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
+        this.controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, config);
 
         return config;
     }
@@ -553,7 +555,7 @@ public class ModmailListener extends CustomEventListener {
             JSONObject modmail = config.getJSONObject("modmail");
             modmail.put("category", modmailCategory.getId());
             config.put("modmail", modmail);
-            this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
+            this.controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, config);
             return modmailCategory;
         } catch (IllegalArgumentException | InsufficientPermissionException categoryCreateExeption) {
             logger.config("The bot has no permissions to create a channel");
@@ -573,7 +575,7 @@ public class ModmailListener extends CustomEventListener {
             JSONObject modmail = config.getJSONObject("modmail");
             modmail.put(name + "-channel", modmailChannel.getId());
             config.put("modmail", modmail);
-            this.controller.writeInSpecificGuildConfig(guild, "config.json", config);
+            this.controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, config);
             return modmailChannel;
         } catch (InsufficientPermissionException | IllegalArgumentException channelCreateExeption) {
             // Returns if the bot has no permissions

@@ -16,4 +16,5 @@ public enum MainUtil {
     public static JDA jda;
     public static EventWaiter waiter;
     public static TimedOperationsExecutor timedOperations;
+
 }

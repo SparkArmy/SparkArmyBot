@@ -1,6 +1,7 @@
 package de.SparkArmy.commandListener;
 
 import de.SparkArmy.commandListener.globalCommands.slashCommands.ModmailCommand;
+import de.SparkArmy.commandListener.guildCommands.slashCommands.Warn;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -16,9 +17,9 @@ public class CommandListenerRegisterer {
     }
 
     private void registerCommandListeners() {
-        commands.add(
-                new ModmailCommand()
-        );
+        commands.add(new ModmailCommand());
+        commands.add(new Warn());
+
 
         this.commands.forEach(this.jda::addEventListener);
     }

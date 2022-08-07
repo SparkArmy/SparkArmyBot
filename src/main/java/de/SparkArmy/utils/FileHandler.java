@@ -35,6 +35,7 @@ public class FileHandler {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public static boolean createFile(String path, String fileName){
         try {
             return new File(path + "/" + fileName).createNewFile();
@@ -66,6 +67,19 @@ public class FileHandler {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
+    public static boolean writeValuesInFile(File file, Object value){
+        try {
+        FileWriter fileWriter = fileWriter(file);
+        if (null == fileWriter) return false;
+        fileWriter.write(String.valueOf(value));
+        fileWriter.close();
+        return true;
+    } catch (IOException e) {
+        return false;
+    }
+    }
+
     public static boolean writeValuesInFile(String path, Object value){
         try {
             FileWriter fileWriter = fileWriter(getFile(path));
@@ -82,7 +96,7 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            FileHandler.logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            logger.severe("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
@@ -92,7 +106,7 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            FileHandler.logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            logger.severe("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }

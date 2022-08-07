@@ -4,6 +4,9 @@ import de.SparkArmy.Main;
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.Guild;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 import org.json.JSONObject;
 
 import java.awt.*;
@@ -33,13 +36,31 @@ public class ConfigController {
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
             this.logger.config("The main-config.json-file not exist, we will created a new");
             JSONObject blankConfig = new JSONObject();
-            blankConfig.put("discord-token","Write here your Discord-Bot-Token");
-            blankConfig.put("discord-client-id","Write here your Discord-Bot-ClientId");
-            blankConfig.put("twitch-client-secret","[Optional] Write here your Twitch-Client-Secret");
-            blankConfig.put("twitch-client-id","[Optional] Write here your Twitch-Client-Id");
-            blankConfig.put("virustotal-api-key","[Optional] Write here your API-Key from VirusTotal");
-            blankConfig.put("youtube-api-key","[Optional] Write here your API-Key from YouTube");
-            blankConfig.put("storage-server","948898866009362433");
+            JSONObject discord = new JSONObject(){{
+                put("discord-token","Write here your Discord-Bot-Token");
+                put("discord-client-id","Write here your Discord-Bot-ClientId");
+            }};
+            blankConfig.put("discord",discord);
+            JSONObject twitch = new JSONObject(){{
+                put("twitch-client-secret","[Optional] Write here your Twitch-Client-Secret");
+                put("twitch-client-id","[Optional] Write here your Twitch-Client-Id");
+            }};
+            blankConfig.put("twitch",twitch);
+            JSONObject youtube = new JSONObject(){{
+                put("youtube-api-key","[Optional] Write here your API-Key from YouTube");
+            }};
+            blankConfig.put("youtube",youtube);
+            JSONObject mariadb = new JSONObject(){{
+                put("url","The url for the databases (//127.0.0.1/ -> standard for localhost)");
+                put("user","Database-User");
+                put("password","User-Password");
+            }};
+            blankConfig.put("mariaDbConnection",mariadb);
+            JSONObject otherKeys = new JSONObject(){{
+                put("virustotal-api-key","[Optional] Write here your API-Key from VirusTotal");
+            }};
+            blankConfig.put("otherKeys",otherKeys);
+
             if(FileHandler.writeValuesInFile(this.configFolder,"main-config.json",blankConfig)){
                 this.logger.info("main-config.json was successful created");
                 this.logger.config("Please finish your configuration");
@@ -62,7 +83,7 @@ public class ConfigController {
         return new JSONObject(mainConfigAsString);
     }
 
-    private Collection<File> getGuildConfigs(Guild guild){
+    private @Unmodifiable Collection<File> getGuildConfigs(@NotNull Guild guild){
         File directory = FileHandler.getDirectoryInUserDirectory("configs/" + guild.getId());
         assert directory != null;
         if (0 == Objects.requireNonNull(directory.listFiles()).length){
@@ -78,19 +99,20 @@ public class ConfigController {
         return List.of(Objects.requireNonNull(directory.listFiles()));
     }
 
-    public JSONObject getSpecificGuildConfig(Guild guild, String name){
+    public JSONObject getSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type){
         if (MainUtil.mainConfig.getString("storage-server").equals(guild.getId())) return null;
-        return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(this.getGuildConfigs(guild).stream().filter(f -> f.getName().equals(name)).toList().get(0).getAbsolutePath())));
+        return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(this.getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0).getAbsolutePath())));
     }
 
-    public void writeInSpecificGuildConfig(Guild guild,String name,JSONObject value){
+    public void writeInSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type, JSONObject value){
         if (MainUtil.mainConfig.getString("storage-server").equals(guild.getId())) return;
-        File configFile = getGuildConfigs(guild).stream().filter(f->f.getName().equals(name)).toList().get(0);
+        File configFile = getGuildConfigs(guild).stream().filter(f->f.getName().equals(type.getName())).toList().get(0);
 
         FileHandler.writeValuesInFile(configFile.getAbsolutePath(),value);
     }
 
-    private JSONObject guildConfigBlank(){
+    @Contract(" -> new")
+    private @NotNull JSONObject guildConfigBlank(){
         return new JSONObject(){{
             this.put("command-permissions",new JSONObject());
 

@@ -49,7 +49,7 @@ public class Main {
         MainUtil.timedOperations = timedOperations;
 
         // Start building JDA
-        JDABuilder builder = JDABuilder.createDefault(mainConfig.getString("discord-token"));
+        JDABuilder builder = JDABuilder.createDefault(mainConfig.getJSONObject("discord").getString("discord-token"));
         builder.enableIntents(GatewayIntent.GUILD_MEMBERS);
         builder.enableIntents(GatewayIntent.GUILD_PRESENCES);
         builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
@@ -73,6 +73,12 @@ public class Main {
         MainUtil.waiter = waiter;
         jda.addEventListener(waiter);
 
+        try{
+            jda.awaitReady();
+        } catch (InterruptedException e) {
+            logger.severe(e.getMessage());
+            Main.systemExit(1);
+        }
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();

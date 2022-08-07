@@ -23,6 +23,11 @@ public class ModmailCommand extends CustomCommandListener {
         String rightEventName = "modmail";
         if (!Objects.equals(eventName, rightEventName)) return;
 
+        if (event.isFromGuild()){
+            event.reply("Please use this command in aprivate channel with the bot").setEphemeral(true).queue();
+            return;
+        }
+
 
         @NonNls String idExtension = event.getUser().getId() + "," + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
 

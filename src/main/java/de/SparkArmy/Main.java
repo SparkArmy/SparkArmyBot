@@ -80,6 +80,8 @@ public class Main {
             Main.systemExit(1);
         }
 
+//        CommandRegisterer.registerGuildSlashCommands(jda.getGuildById("890674837461278730"));
+
         // Add CommandListener to JDA
         new CommandListenerRegisterer();
         // Add EventListener to JDA

@@ -24,7 +24,7 @@ public class ModmailCommand extends CustomCommandListener {
         if (!Objects.equals(eventName, rightEventName)) return;
 
         if (event.isFromGuild()){
-            event.reply("Please use this command in aprivate channel with the bot").setEphemeral(true).queue();
+            event.reply("Please use this command in a private channel with the bot").setEphemeral(true).queue();
             return;
         }
 

@@ -1,5 +1,6 @@
 package de.SparkArmy.commandBuilder;
 
+import de.SparkArmy.utils.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -51,8 +52,18 @@ public enum SlashCommands {
                             new Command.Choice("y","years")
                     )));
 
-            // Kick command
-//            add(Commands.slash("kick",""));
+
+            // Punishment command to change the punishment roles and activate/deactivate the role give function
+            add(Commands.slash("punishment","Change the punishment roles and activate/deactivate the role-give function").addOptions(
+                    new OptionData(OptionType.STRING,"punishment","The target punishment").addChoices(
+                            new Command.Choice("Warn",PunishmentType.WARN.getName()),
+                            new Command.Choice("Mute",PunishmentType.MUTE.getName()),
+                            new Command.Choice("Kick",PunishmentType.KICK.getName()),
+                            new Command.Choice("Ban",PunishmentType.BAN.getName()),
+                            new Command.Choice("Timeout",PunishmentType.TIMEOUT.getName())
+                    ),
+                    new OptionData(OptionType.ROLE,"punishment-role","Only available for Warn and Mute")
+            ));
         }};
     }
 }

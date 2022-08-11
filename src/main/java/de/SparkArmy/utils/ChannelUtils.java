@@ -133,22 +133,21 @@ public class ChannelUtils {
         }
 
 
-        TextChannel textChannel;
+        GuildChannel guildChannel;
         if (logChannel.isNull(String.valueOf(channelName))) {
-           textChannel = createTextChannel(category, String.valueOf(channelName));
-           textChannel.getManager().sync().queue();
-           logChannel.put(String.valueOf(channelName),textChannel.getId());
-           writeNewLogChannelsInConfig(guild,logChannel);
-        }
-        textChannel = guild.getTextChannelById(logChannel.getString(String.valueOf(channelName)));
-        if (textChannel == null) {
-           textChannel = createTextChannel(category, String.valueOf(channelName));
-           textChannel.getManager().sync().queue();
-           logChannel.put(String.valueOf(channelName),textChannel.getId());
+           guildChannel = createTextChannel(category, String.valueOf(channelName));
+           logChannel.put(String.valueOf(channelName),guildChannel.getId());
            writeNewLogChannelsInConfig(guild,logChannel);
         }
 
-       sendMessageInRightChannel(value,guild.getGuildChannelById(logChannel.getString(String.valueOf(channelName))));
+        guildChannel = guild.getGuildChannelById(logChannel.getString(channelName));
+        if (guildChannel == null){
+            guildChannel = createTextChannel(category,String.valueOf(channelName));
+            logChannel.put(String.valueOf(channelName),guildChannel.getId());
+            writeNewLogChannelsInConfig(guild,logChannel);
+        }
+
+       sendMessageInRightChannel(value,guildChannel);
     }
 
 

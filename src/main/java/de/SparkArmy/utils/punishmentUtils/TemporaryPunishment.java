@@ -1,8 +1,7 @@
-package de.SparkArmy.timedOperations;
+package de.SparkArmy.utils.punishmentUtils;
 
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
-import de.SparkArmy.utils.PunishmentType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.Nullable;
@@ -54,7 +53,7 @@ public class TemporaryPunishment {
         FileHandler.writeValuesInFile(file,entrys);
     }
 
-    protected static @Nullable JSONObject getTimedPunishmentsFromPunishmentFile(){
+    public static @Nullable JSONObject getTimedPunishmentsFromPunishmentFile(){
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff/timed-punishments");
         if (directory == null){
             MainUtil.logger.info("Can't create/ get a directory for timed-punishments");

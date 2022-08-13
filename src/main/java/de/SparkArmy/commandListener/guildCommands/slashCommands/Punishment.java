@@ -3,7 +3,7 @@ package de.SparkArmy.commandListener.guildCommands.slashCommands;
 import de.SparkArmy.commandListener.CustomCommandListener;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.utils.punishmentUtils.PunishmentType;
-import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
+import de.SparkArmy.utils.punishmentUtils.PunishmentUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -92,7 +92,7 @@ public class Punishment extends CustomCommandListener {
 
         OptionMapping punishmentRole = event.getOption("punishment-role");
         if (punishmentRole == null){
-            PunishmentUtil.sendPunishmentParamEmbed(event,punishment, punishmentConfig);
+            PunishmentUtils.sendPunishmentParamEmbed(event,punishment, punishmentConfig);
             return;
         }
 

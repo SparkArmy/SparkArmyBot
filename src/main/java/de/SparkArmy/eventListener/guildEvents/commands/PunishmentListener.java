@@ -1,9 +1,9 @@
-package de.SparkArmy.eventListener.guildEvents.Commands;
+package de.SparkArmy.eventListener.guildEvents.commands;
 
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.punishmentUtils.PunishmentType;
-import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
+import de.SparkArmy.utils.punishmentUtils.PunishmentUtils;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -24,7 +24,7 @@ public class PunishmentListener extends CustomEventListener {
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         String id = event.getComponentId();
         if (id.split(";").length > 1 && id.split(";")[2].split(",")[0].equals("punishment")) {
-            PunishmentUtil.sendPunishmentParamEmbed(event, event.getGuild());
+            PunishmentUtils.sendPunishmentParamEmbed(event, event.getGuild());
             return;
         }
         String punishment = id.split(";")[2].split(",")[0];

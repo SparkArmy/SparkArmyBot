@@ -4,7 +4,6 @@ import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -46,19 +45,11 @@ public class TemporaryPunishment {
             put("user",offender.getId());
             put("type",punishment.getName());
             put("guild",guild.getId());
-            put("expirationTime",expirationTime.format(DateTimeFormatter.ofPattern("yyyyMMddhhmmss")));
+            put("expirationTime",expirationTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
         }};
 
         entrys.put(offender.getId() + ";" + punishment,entry);
         FileHandler.writeValuesInFile(file,entrys);
     }
 
-    public static @Nullable JSONObject getTimedPunishmentsFromPunishmentFile(){
-        File directory = FileHandler.getDirectoryInUserDirectory("botstuff/timed-punishments");
-        if (directory == null){
-            MainUtil.logger.info("Can't create/ get a directory for timed-punishments");
-            return null;
-        }
-        return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(directory, "entrys.json")));
-    }
 }

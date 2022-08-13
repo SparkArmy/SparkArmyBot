@@ -12,18 +12,36 @@ import java.time.OffsetDateTime;
 public class PunishmentEmbeds{
 
     public static @NotNull EmbedBuilder punishmentUserEmbed(@NotNull Guild guild, @NotNull String reason, @NotNull PunishmentType type){
+        String action;
+        switch (type){
+            case BAN -> action = "banned";
+            case KICK -> action = "kicked";
+            case MUTE -> action = "muted";
+            case WARN -> action = "warned";
+            case TIMEOUT -> action = "timeout";
+            default -> action = "unknown";
+        }
         return new EmbedBuilder()
                 .setTitle(type.getName())
-                .setDescription("You was warned on " + guild.getName())
+                .setDescription("You was " + action +  " on " + guild.getName())
                 .setColor(new Color(255,0,0))
                 .addField("Reason", reason,false)
                 .setTimestamp(OffsetDateTime.now());
     }
 
     public static @NotNull EmbedBuilder punishmentUserEmbed(@NotNull Guild guild, @NotNull String reason, @NotNull OffsetDateTime removeTime, @NotNull PunishmentType type){
+        String action;
+        switch (type){
+            case BAN -> action = "banned";
+            case KICK -> action = "kicked";
+            case MUTE -> action = "muted";
+            case WARN -> action = "warned";
+            case TIMEOUT -> action = "timeout";
+            default -> action = "unknown";
+        }
         return new EmbedBuilder()
                 .setTitle(type.getName())
-                .setDescription("You was warned on " + guild.getName())
+                .setDescription("You was " + action +  " on " + guild.getName())
                 .setColor(new Color(255,0,0))
                 .addField("Reason", reason,false)
                 .addField("Date of removal", MessageUtils.discordTimestamp(removeTime,"R"),false)

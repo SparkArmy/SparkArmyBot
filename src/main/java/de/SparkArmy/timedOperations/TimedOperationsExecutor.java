@@ -7,19 +7,22 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("unused")
 public class TimedOperationsExecutor {
     public TimedOperationsExecutor() {
-        new ScheduledThreadPoolExecutor(20).scheduleAtFixedRate(tenSeconds(),0,10, TimeUnit.SECONDS);
+        ScheduledThreadPoolExecutor execute = new ScheduledThreadPoolExecutor(2);
+        execute.scheduleAtFixedRate(tenSeconds(),1,10, TimeUnit.SECONDS);
+        execute.scheduleAtFixedRate(twoSeconds(),1,2,TimeUnit.SECONDS);
     }
 
     @Contract(pure = true)
-    private @NotNull Runnable tenSeconds() {
+    private static @NotNull Runnable twoSeconds(){
+        return TimedOperations::removeOldTemporaryPunishments;
+    }
+
+    @Contract(pure = true)
+    private static @NotNull Runnable tenSeconds() {
        return ModmailListener::deleteOldFiles;
     }
 
-    @Contract(pure = true)
-    private @NotNull Runnable twentySeconds(){
-        return TimedOperations::removeOldTemporaryPunishments;
-    }
+
 }

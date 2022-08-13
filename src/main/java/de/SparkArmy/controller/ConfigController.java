@@ -58,6 +58,7 @@ public class ConfigController {
             blankConfig.put("mariaDbConnection",mariadb);
             JSONObject otherKeys = new JSONObject(){{
                 put("virustotal-api-key","[Optional] Write here your API-Key from VirusTotal");
+                put("storage-server","Please setup a new server and delete all included channels");
             }};
             blankConfig.put("otherKeys",otherKeys);
 
@@ -100,12 +101,12 @@ public class ConfigController {
     }
 
     public JSONObject getSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type){
-        if (MainUtil.mainConfig.getString("storage-server").equals(guild.getId())) return null;
+        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId())) return null;
         return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(this.getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0).getAbsolutePath())));
     }
 
     public void writeInSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type, JSONObject value){
-        if (MainUtil.mainConfig.getString("storage-server").equals(guild.getId())) return;
+        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId())) return;
         File configFile = getGuildConfigs(guild).stream().filter(f->f.getName().equals(type.getName())).toList().get(0);
 
         FileHandler.writeValuesInFile(configFile.getAbsolutePath(),value);

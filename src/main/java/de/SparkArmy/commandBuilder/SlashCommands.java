@@ -64,6 +64,25 @@ public enum SlashCommands {
                     ),
                     new OptionData(OptionType.ROLE,"punishment-role","Only available for Warn and Mute")
             ));
+
+            // Ban command
+            add(Commands.slash("ban","Ban a user").addOptions(
+                    new OptionData(OptionType.USER,"target_user","The targeted user").setRequired(true),
+                    new OptionData(OptionType.STRING,"reason","The Reason for the punishment").setRequired(true),
+                    new OptionData(OptionType.INTEGER,"duration","The duration of the ban (Default unit of time is minutes)"),
+                    new OptionData(OptionType.STRING,"time_unit","The time unit from the duration (Default duration is 1 time unit)").addChoices(
+                            new Command.Choice("min","minuets"),
+                            new Command.Choice("h","hours"),
+                            new Command.Choice("d","days"),
+                            new Command.Choice("M","months"),
+                            new Command.Choice("y","years")
+            )));
+
+            // Kick command
+            add(Commands.slash("kick","Kick a user").addOptions(
+                    new OptionData(OptionType.USER,"target_user","The targeted user").setRequired(true),
+                    new OptionData(OptionType.STRING,"reason","The Reason for the punishment").setRequired(true)
+            ));
         }};
     }
 }

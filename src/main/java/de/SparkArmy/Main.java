@@ -44,10 +44,6 @@ public class Main {
         JSONObject mainConfig = this.controller.getMainConfigFile();
         MainUtil.mainConfig = mainConfig;
 
-        // Initialize TimedOperations
-        this.timedOperations = new TimedOperationsExecutor();
-        MainUtil.timedOperations = timedOperations;
-
         // Start building JDA
         JDABuilder builder = JDABuilder.createDefault(mainConfig.getJSONObject("discord").getString("discord-token"));
         builder.enableIntents(GatewayIntent.GUILD_MEMBERS);
@@ -65,9 +61,6 @@ public class Main {
             System.exit(1);
         }
 
-        // Add a static JDA
-        MainUtil.jda = this.jda;
-
         // Add a EventWaiter
         this.waiter = new EventWaiter();
         MainUtil.waiter = waiter;
@@ -78,6 +71,19 @@ public class Main {
         } catch (InterruptedException e) {
             logger.severe(e.getMessage());
             Main.systemExit(1);
+        }
+
+        // Add a static JDA
+        MainUtil.jda = this.jda;
+
+        // Initialize TimedOperations
+        this.timedOperations = new TimedOperationsExecutor();
+        MainUtil.timedOperations = timedOperations;
+
+        // Get StorageServer
+        MainUtil.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
+        if (MainUtil.storageServer == null){
+            logger.warning("No storage-server registered or The bot is not on storage-server");
         }
 
 //        CommandRegisterer.registerGuildSlashCommands(jda.getGuildById("890674837461278730"));

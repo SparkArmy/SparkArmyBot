@@ -470,10 +470,21 @@ public class ReactionRolesListener extends CustomEventListener {
         content.put("description",description.getAsString());
         content.put("color",color.getAsString());
 
+
+
+
         EmbedBuilder editHeaderEmbed = new EmbedBuilder();
         editHeaderEmbed.setTitle(title.getAsString());
         editHeaderEmbed.setDescription(description.getAsString());
         editHeaderEmbed.setColor(new Color(r,g,b));
+
+        if (!content.isNull("fields") || !content.getJSONObject("fields").isEmpty()){
+            JSONObject fields = content.getJSONObject("fields");
+            fields.keySet().forEach(x->{
+                JSONObject field = fields.getJSONObject(x);
+                editHeaderEmbed.addField(field.getString("roleName"),field.getString("roleDescription"),field.getBoolean("inline"));
+            });
+        }
 
         FileHandler.writeValuesInFile(file,content);
         event.editMessageEmbeds(editHeaderEmbed.build()).queue();

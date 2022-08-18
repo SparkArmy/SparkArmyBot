@@ -288,12 +288,15 @@ public class ReactionRoleUtlis {
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
+        SelectMenu menu = event.getSelectMenu().createCopy().build();
         if (!member.getRoles().contains(role)){
             event.getGuild().addRoleToMember(member,role).reason("Add role from reaction-role-embed").queue();
             event.reply("You have the role \"" + role.getName() + "\" now").setEphemeral(true).queue();
+            event.editSelectMenu(menu).queue();
         }else {
             event.getGuild().removeRoleFromMember(member,role).reason("Add role from reaction-role-embed").queue();
             event.reply("You have the role \"" + role.getName() + "\" removed").setEphemeral(true).queue();
+            event.editSelectMenu(menu).queue();
         }
     }
 

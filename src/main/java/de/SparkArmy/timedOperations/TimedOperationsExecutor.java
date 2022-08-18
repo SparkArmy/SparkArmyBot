@@ -1,6 +1,7 @@
 package de.SparkArmy.timedOperations;
 
 import de.SparkArmy.eventListener.globalEvents.ModmailListener;
+import de.SparkArmy.utils.reactionRoleUtils.ReactionRoleUtlis;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +22,10 @@ public class TimedOperationsExecutor {
 
     @Contract(pure = true)
     private static @NotNull Runnable tenSeconds() {
-       return ModmailListener::deleteOldFiles;
+       return ()->{
+           ModmailListener.deleteOldFiles();
+           ReactionRoleUtlis.deleteOldTempFiles();
+       };
     }
 
 

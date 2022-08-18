@@ -23,6 +23,7 @@ public class CommandListenerRegisterer {
         commands.add(new Punishment());
         commands.add(new Ban());
         commands.add(new Kick());
+        commands.add(new ReactionRoles());
 
         this.commands.forEach(this.jda::addEventListener);
     }

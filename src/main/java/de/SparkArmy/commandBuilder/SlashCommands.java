@@ -19,7 +19,6 @@ public enum SlashCommands {
     static @NotNull Collection<CommandData> globalSlashCommands() {
         return new ArrayList<>() {{
             this.add(Commands.slash("modmail", "Contact to the server team for help"));
-            this.add(Commands.slash("feedback", "Contact for feedback"));
         }};
     }
 
@@ -82,6 +81,16 @@ public enum SlashCommands {
             add(Commands.slash("kick","Kick a user").addOptions(
                     new OptionData(OptionType.USER,"target_user","The targeted user").setRequired(true),
                     new OptionData(OptionType.STRING,"reason","The Reason for the punishment").setRequired(true)
+            ));
+
+            // ReactionRoles command
+            add(Commands.slash("reactionroles","Create/Edit/Delete ReactionRoles").addOptions(
+                    new OptionData(OptionType.STRING,"action","The provided action").addChoices(
+                            new Command.Choice("Create","create"),
+                            new Command.Choice("Edit","edit"),
+                            new Command.Choice("Delete","delete")
+                    ),
+                    new OptionData(OptionType.STRING,"message","The target reaction-role-embed (Works only with Edit/Delete)")
             ));
         }};
     }

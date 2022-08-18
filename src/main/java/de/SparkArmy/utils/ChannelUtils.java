@@ -37,7 +37,7 @@ public class ChannelUtils {
         }
     }
 
-    private static @Nullable MessageChannel rightChannel(@NotNull Channel channel){
+    public static @Nullable MessageChannel rightChannel(@NotNull Channel channel){
         String channelId = channel.getId();
         switch (channel.getType()){
             case NEWS ->{

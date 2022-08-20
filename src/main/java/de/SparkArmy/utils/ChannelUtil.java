@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @SuppressWarnings("unused")
-public class ChannelUtils {
+public class ChannelUtil {
     private static final JDA jda = MainUtil.jda;
     private static final ConfigController controller = MainUtil.controller;
 

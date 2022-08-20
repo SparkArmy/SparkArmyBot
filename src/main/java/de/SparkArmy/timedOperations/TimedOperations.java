@@ -4,7 +4,7 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
-import de.SparkArmy.utils.punishmentUtils.PunishmentUtils;
+import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -42,7 +42,7 @@ public class TimedOperations {
             if (entrys.isEmpty()) return;
             entrys.keySet().forEach(key -> {
                 JSONObject entry = entrys.getJSONObject(key);
-                DateTimeFormatter formatter = PunishmentUtils.punishmentFormatter;
+                DateTimeFormatter formatter = PunishmentUtil.punishmentFormatter;
                 String time = entry.getString("expirationTime");
                 String timeNow = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
                 boolean timeReached = LocalDateTime.parse(timeNow, formatter).isAfter(LocalDateTime.parse(time, formatter));

@@ -86,7 +86,6 @@ public class Main {
             logger.warning("No storage-server registered or The bot is not on storage-server");
         }
 
-//        CommandRegisterer.registerGuildSlashCommands(jda.getGuildById("890674837461278730"));
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();

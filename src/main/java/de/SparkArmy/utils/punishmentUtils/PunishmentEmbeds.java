@@ -1,6 +1,6 @@
 package de.SparkArmy.utils.punishmentUtils;
 
-import de.SparkArmy.utils.MessageUtils;
+import de.SparkArmy.utils.MessageUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -44,7 +44,7 @@ public class PunishmentEmbeds{
                 .setDescription("You was " + action +  " on " + guild.getName())
                 .setColor(new Color(255,0,0))
                 .addField("Reason", reason,false)
-                .addField("Date of removal", MessageUtils.discordTimestamp(removeTime,"R"),false)
+                .addField("Date of removal", MessageUtil.discordTimestamp(removeTime,"R"),false)
                 .setTimestamp(OffsetDateTime.now());
     }
 
@@ -65,7 +65,7 @@ public class PunishmentEmbeds{
                 .setFooter(guild.getJDA().getSelfUser().getAsTag(),guild.getJDA().getSelfUser().getEffectiveAvatarUrl())
                 .addField("Offender",String.format("%s (%s)",offender.getAsTag(),offender.getId()),false)
                 .addField("Reason",reason,false)
-                .addField("Expired time",MessageUtils.discordTimestamp(removeTime,"R"),false);
+                .addField("Expired time", MessageUtil.discordTimestamp(removeTime,"R"),false);
     }
 
     public static EmbedBuilder punishmentStates(@NotNull PunishmentType type, @NotNull JSONObject config){

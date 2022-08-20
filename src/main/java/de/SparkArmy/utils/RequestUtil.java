@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
-public enum RequestUtils {
+public enum RequestUtil {
     ;
     public static final String BOUNDARY = "8721656041911415653955004498";
     public static HttpClient client = HttpClient.newHttpClient();
@@ -24,35 +24,35 @@ public enum RequestUtils {
      * This should just help making requests in Java as I learned programming with Python and find requests in Java a bit too much
      */
     public static JSONObject get(String url, JSONObject headers, HttpRequest.BodyPublisher body) {
-        return RequestUtils.httpRequestToJsonObject(
-                RequestUtils.prepareRequest(url, headers, body, "GET")
+        return RequestUtil.httpRequestToJsonObject(
+                RequestUtil.prepareRequest(url, headers, body, "GET")
         );
     }
 
     public static JSONObject get(String url){
-        return RequestUtils.get(url, new JSONObject(), RequestUtils.noParams());
+        return RequestUtil.get(url, new JSONObject(), RequestUtil.noParams());
     }
 
     public static JSONObject get(String url, JSONObject headers){
-        return RequestUtils.get(url, headers, RequestUtils.noParams());
+        return RequestUtil.get(url, headers, RequestUtil.noParams());
     }
 
     public static JSONObject get(String url, HttpRequest.BodyPublisher body){
-        return RequestUtils.get(url, new JSONObject(), body);
+        return RequestUtil.get(url, new JSONObject(), body);
     }
 
     public static JSONObject post(String url, JSONObject headers, HttpRequest.BodyPublisher body){
-        return RequestUtils.httpRequestToJsonObject(
-                RequestUtils.prepareRequest(url, headers, body, "POST")
+        return RequestUtil.httpRequestToJsonObject(
+                RequestUtil.prepareRequest(url, headers, body, "POST")
         );
     }
 
     public static JSONObject post(String url, JSONObject headers){
-        return RequestUtils.post(url, headers, RequestUtils.noParams());
+        return RequestUtil.post(url, headers, RequestUtil.noParams());
     }
 
     public static JSONObject post(String url, HttpRequest.BodyPublisher body){
-        return RequestUtils.post(url, new JSONObject(), body);
+        return RequestUtil.post(url, new JSONObject(), body);
     }
 
     /**
@@ -72,14 +72,14 @@ public enum RequestUtils {
     }
 
     public static JSONObject httpRequestToJsonObject(HttpRequest request) {
-        HttpResponse<String> response = RequestUtils.httpRequestToResponse(request);
-        return RequestUtils.responseToJson(response);
+        HttpResponse<String> response = RequestUtil.httpRequestToResponse(request);
+        return RequestUtil.responseToJson(response);
     }
 
     public static HttpResponse<String> httpRequestToResponse(HttpRequest request) {
         HttpResponse<String> response = null;
         try {
-            CompletableFuture<HttpResponse<String>> futureResponse = RequestUtils.client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+            CompletableFuture<HttpResponse<String>> futureResponse = RequestUtil.client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
             response = futureResponse.get();
         } catch (Exception e) {
             e.printStackTrace();
@@ -103,7 +103,7 @@ public enum RequestUtils {
     }
 
     public static void refreshHttpClient(){
-        RequestUtils.client = HttpClient.newHttpClient();
+        RequestUtil.client = HttpClient.newHttpClient();
     }
 
     public static HttpRequest.BodyPublisher toParams(Map<Object, Object> data, String boundary) {

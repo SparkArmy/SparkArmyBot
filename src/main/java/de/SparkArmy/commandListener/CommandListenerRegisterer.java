@@ -24,6 +24,8 @@ public class CommandListenerRegisterer {
         commands.add(new Ban());
         commands.add(new Kick());
         commands.add(new ReactionRoles());
+        commands.add(new MediaOnly());
+
 
         this.commands.forEach(this.jda::addEventListener);
     }

@@ -1,10 +1,10 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.AuditLogUtils;
-import de.SparkArmy.utils.ChannelUtils;
+import de.SparkArmy.utils.AuditLogUtil;
+import de.SparkArmy.utils.ChannelUtil;
 import de.SparkArmy.utils.LogChannelType;
-import de.SparkArmy.utils.punishmentUtils.PunishmentUtils;
+import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
 import net.dv8tion.jda.api.entities.Guild;
@@ -23,16 +23,16 @@ public class GuildMemberLeaveLogging extends CustomEventListener {
         User user = event.getUser();
 
         eventGuild.retrieveAuditLogs().queueAfter(3, TimeUnit.SECONDS,list-> {
-            AuditLogEntry lastKickEntry = AuditLogUtils.getAuditLogEntryByUser(user,ActionType.KICK,list);
-            AuditLogEntry lastBanEntry = AuditLogUtils.getAuditLogEntryByUser(user,ActionType.BAN,list);
+            AuditLogEntry lastKickEntry = AuditLogUtil.getAuditLogEntryByUser(user,ActionType.KICK,list);
+            AuditLogEntry lastBanEntry = AuditLogUtil.getAuditLogEntryByUser(user,ActionType.BAN,list);
                 if (lastBanEntry != null && lastBanEntry.getType().equals(ActionType.BAN) && lastBanEntry.getTimeCreated().isAfter(OffsetDateTime.now().minusSeconds(4))) {
-                    ChannelUtils.logInLogChannel(user.getAsTag() + " bannend", eventGuild, LogChannelType.LEAVE);
-                    PunishmentUtils.sendBanOrKickEmbed(lastBanEntry,user);
+                    ChannelUtil.logInLogChannel(user.getAsTag() + " bannend", eventGuild, LogChannelType.LEAVE);
+                    PunishmentUtil.sendBanOrKickEmbed(lastBanEntry,user);
                 } else if (lastKickEntry != null && lastKickEntry.getType().equals(ActionType.KICK) && lastKickEntry.getTimeCreated().isAfter(OffsetDateTime.now().minusSeconds(4))) {
-                    ChannelUtils.logInLogChannel(user.getAsTag() + " kicked", eventGuild, LogChannelType.LEAVE);
-                    PunishmentUtils.sendBanOrKickEmbed(lastKickEntry,user);
+                    ChannelUtil.logInLogChannel(user.getAsTag() + " kicked", eventGuild, LogChannelType.LEAVE);
+                    PunishmentUtil.sendBanOrKickEmbed(lastKickEntry,user);
                 } else {
-                    ChannelUtils.logInLogChannel(user.getAsTag() + " leaved", eventGuild, LogChannelType.LEAVE);
+                    ChannelUtil.logInLogChannel(user.getAsTag() + " leaved", eventGuild, LogChannelType.LEAVE);
                 }
 
         });

@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.OffsetDateTime;
 
 @SuppressWarnings("unused")
-public class MessageUtils {
+public class MessageUtil {
     private static @NotNull String timeToEpochSecond(@NotNull OffsetDateTime parsedTime){
         return String.valueOf(parsedTime.toEpochSecond());
     }

@@ -2,7 +2,8 @@ package de.SparkArmy.eventListener.guildEvents.commands;
 
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.reactionRoleUtils.ReactionRoleUtlis;
+
+import de.SparkArmy.utils.ReactionRoleUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Role;
@@ -34,7 +35,7 @@ public class ReactionRolesListener extends CustomEventListener {
             editNewEmbeds(event);
             finishReactionRoles(event);
         }
-        ReactionRoleUtlis.giveOrRemoveMemberRole(event);
+        ReactionRoleUtil.giveOrRemoveMemberRole(event);
     }
 
     @Override
@@ -60,7 +61,7 @@ public class ReactionRolesListener extends CustomEventListener {
     public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
         editRolesList(event);
         deleteSelectRoleFromReactionRole(event);
-        ReactionRoleUtlis.giveOrRemoveMemberRole(event);
+        ReactionRoleUtil.giveOrRemoveMemberRole(event);
 
     }
 
@@ -72,7 +73,7 @@ public class ReactionRolesListener extends CustomEventListener {
             if (event.getValues().isEmpty()) return;
             String id = event.getValues().get(0);
 
-            File file = ReactionRoleUtlis.getReactionRoleFileOrTempFile(splitMenuId[1],splitMenuId[0].split(",")[1],event.getGuild());
+            File file = ReactionRoleUtil.getReactionRoleFileOrTempFile(splitMenuId[1],splitMenuId[0].split(",")[1],event.getGuild());
             if (file == null) {
                 event.reply("Ups something went wrong").setEphemeral(true).queue();
                 return;
@@ -82,7 +83,7 @@ public class ReactionRolesListener extends CustomEventListener {
                 return;
             }
 
-            JSONObject content = ReactionRoleUtlis.getContent(file);
+            JSONObject content = ReactionRoleUtil.getContent(file);
 
             if (content == null){
                 event.reply("Ups something went wrong").setEphemeral(true).queue();
@@ -91,7 +92,7 @@ public class ReactionRolesListener extends CustomEventListener {
 
             switch (id) {
                 case "deleteRole" ->
-                        ReactionRoleUtlis.deleteRoleFromEmbed(event, splitMenuId[0].split(",")[1], splitMenuId[1]);
+                        ReactionRoleUtil.deleteRoleFromEmbed(event, splitMenuId[0].split(",")[1], splitMenuId[1]);
                 case "return" -> {
                     if (event.getValues().isEmpty()) return;
                     String suffix = splitMenuId[1];
@@ -129,7 +130,7 @@ public class ReactionRolesListener extends CustomEventListener {
                     }
                     event.editMessageEmbeds(reactionRoleEmbed.build()).setActionRows(ActionRow.of(buttons)).queue();
                 }
-                default -> ReactionRoleUtlis.createEditRolesEmbedOrModal(content, event, splitMenuId[0].split(",")[1]);
+                default -> ReactionRoleUtil.createEditRolesEmbedOrModal(content, event, splitMenuId[0].split(",")[1]);
             }
         }
     }
@@ -142,7 +143,7 @@ public class ReactionRolesListener extends CustomEventListener {
             String id = event.getValues().get(0);
             String suffix = splitMenuId[1];
 
-            File file = ReactionRoleUtlis.getReactionRoleFileOrTempFile(splitMenuId[1], splitMenuId[0].split(",")[1], event.getGuild());
+            File file = ReactionRoleUtil.getReactionRoleFileOrTempFile(splitMenuId[1], splitMenuId[0].split(",")[1], event.getGuild());
             if (file == null) {
                 event.reply("Ups something went wrong").setEphemeral(true).queue();
                 return;
@@ -152,7 +153,7 @@ public class ReactionRolesListener extends CustomEventListener {
                 return;
             }
 
-            JSONObject content = ReactionRoleUtlis.getContent(file);
+            JSONObject content = ReactionRoleUtil.getContent(file);
 
             if (content == null) {
                 event.reply("Ups something went wrong").setEphemeral(true).queue();
@@ -232,9 +233,9 @@ public class ReactionRolesListener extends CustomEventListener {
         switch (id[0]) {
             case "reactionRolesStart" -> {
                 switch (id[1]) {
-                    case "create" -> ReactionRoleUtlis.createEmbedOrModalByAction("create", event.getUser(), event);
-                    case "edit" -> ReactionRoleUtlis.createEmbedOrModalByAction("edit", event.getUser(), event);
-                    case "delete" -> ReactionRoleUtlis.createEmbedOrModalByAction("delete", event.getUser(), event);
+                    case "create" -> ReactionRoleUtil.createEmbedOrModalByAction("create", event.getUser(), event);
+                    case "edit" -> ReactionRoleUtil.createEmbedOrModalByAction("edit", event.getUser(), event);
+                    case "delete" -> ReactionRoleUtil.createEmbedOrModalByAction("delete", event.getUser(), event);
                     default -> {
                     }
                 }
@@ -272,12 +273,12 @@ public class ReactionRolesListener extends CustomEventListener {
         if (user == null || !user.equals(event.getUser())) return;
         File file;
         if (!splitComponentId[0].equals("editNewHeader") && !splitComponentId[0].equals("editNewRoles")){
-            file = ReactionRoleUtlis.getReactionRoleFileOrTempFile(suffix,"edit",event.getGuild());
+            file = ReactionRoleUtil.getReactionRoleFileOrTempFile(suffix,"edit",event.getGuild());
         }else {
-            file = ReactionRoleUtlis.getReactionRoleFileOrTempFile(suffix,"create",event.getGuild());
+            file = ReactionRoleUtil.getReactionRoleFileOrTempFile(suffix,"create",event.getGuild());
         }
 
-        JSONObject content = ReactionRoleUtlis.getContent(file);
+        JSONObject content = ReactionRoleUtil.getContent(file);
         if (content == null){
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
@@ -285,13 +286,13 @@ public class ReactionRolesListener extends CustomEventListener {
 
 
         if (splitComponentId[0].equals("editNewHeader")){
-            ReactionRoleUtlis.createEditHeaderModal(content, event, "create");
+            ReactionRoleUtil.createEditHeaderModal(content, event, "create");
         }else if (splitComponentId[0].equals("editNewRoles")) {
-            ReactionRoleUtlis.createEditRolesEmbedOrModal(content, event, "create");
+            ReactionRoleUtil.createEditRolesEmbedOrModal(content, event, "create");
         } if (splitComponentId[0].equals("editHeader")){
-            ReactionRoleUtlis.createEditHeaderModal(content, event, "edit");
+            ReactionRoleUtil.createEditHeaderModal(content, event, "edit");
         }else if (splitComponentId[0].equals("editRoles")) {
-            ReactionRoleUtlis.createEditRolesEmbedOrModal(content, event, "edit");
+            ReactionRoleUtil.createEditRolesEmbedOrModal(content, event, "edit");
         }
     }
     private void finishReactionRoles(@NotNull ButtonInteractionEvent event){
@@ -304,15 +305,15 @@ public class ReactionRolesListener extends CustomEventListener {
 
         File file;
         if (message.length() == 17){
-            file = ReactionRoleUtlis.getReactionRoleFileOrTempFile(splitComponentId[1],"create",event.getGuild());
+            file = ReactionRoleUtil.getReactionRoleFileOrTempFile(splitComponentId[1],"create",event.getGuild());
         }else {
-            file = ReactionRoleUtlis.getReactionRoleFileOrTempFile(splitComponentId[1],"edit",event.getGuild());
+            file = ReactionRoleUtil.getReactionRoleFileOrTempFile(splitComponentId[1],"edit",event.getGuild());
         }
         if (file == null){
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
-        JSONObject content = ReactionRoleUtlis.getContent(file);
+        JSONObject content = ReactionRoleUtil.getContent(file);
         if (content == null){
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
@@ -405,9 +406,9 @@ public class ReactionRolesListener extends CustomEventListener {
         }
         String messageId = message.getAsString();
         if (choiceId.equals("Edit")) {
-            ReactionRoleUtlis.sendEditEmbed(messageId, channelId, event);
+            ReactionRoleUtil.sendEditEmbed(messageId, channelId, event);
         } else {
-            ReactionRoleUtlis.deleteReactionRoleEmbed(channelId, messageId, event);
+            ReactionRoleUtil.deleteReactionRoleEmbed(channelId, messageId, event);
         }
     }
     private void modalActionForEditHeaderModal(@NotNull ModalInteractionEvent event, String @NotNull [] splitModalId){
@@ -495,7 +496,7 @@ public class ReactionRolesListener extends CustomEventListener {
         User user = jda.getUserById(suffix.split(",")[1]);
         if (user == null || !user.equals(event.getUser()) || event.getGuild() == null) return;
 
-        File file = ReactionRoleUtlis.getReactionRoleFileOrTempFile(suffix,action,event.getGuild());
+        File file = ReactionRoleUtil.getReactionRoleFileOrTempFile(suffix,action,event.getGuild());
 
         if (file == null){
             event.reply("Ups something went wrong").setEphemeral(true).queue();

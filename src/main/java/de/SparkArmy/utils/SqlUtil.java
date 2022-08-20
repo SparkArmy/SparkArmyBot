@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import java.sql.*;
 
 @SuppressWarnings("unused")
-public class SqlUtils{
+public class SqlUtil {
 
 
     private static java.sql.@Nullable Connection connection(String database){
@@ -38,12 +38,12 @@ public class SqlUtils{
         return c;
     }
 
-    @SuppressWarnings("ConstantConditions")
+    @SuppressWarnings({"ConstantConditions", "resource"})
     private static Statement statement() throws SQLException,NullPointerException {
         return connection().createStatement();
     }
 
-    @SuppressWarnings("ConstantConditions")
+    @SuppressWarnings({"ConstantConditions", "resource"})
     private static Statement statement(@NotNull Guild guild) throws SQLException,NullPointerException {
         return connection(guild.getId()).createStatement();
     }

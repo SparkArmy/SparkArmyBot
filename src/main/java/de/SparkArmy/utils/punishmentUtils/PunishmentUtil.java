@@ -2,7 +2,7 @@ package de.SparkArmy.utils.punishmentUtils;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
-import de.SparkArmy.utils.ChannelUtils;
+import de.SparkArmy.utils.ChannelUtil;
 import de.SparkArmy.utils.LogChannelType;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-public class PunishmentUtils {
+public class PunishmentUtil {
 
     private static final ConfigController controller = MainUtil.controller;
     public static final DateTimeFormatter punishmentFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -69,7 +69,7 @@ public class PunishmentUtils {
     public static boolean giveUserPunishment(Member offender, Guild guild, PunishmentType type,String reason) {
         JSONObject config = controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
         if (config.isNull("punishments")) {
-            ChannelUtils.logInLogChannel(guild.getPublicRole().getAsMention() + " Please set punishment-parameters", guild, LogChannelType.SERVER);
+            ChannelUtil.logInLogChannel(guild.getPublicRole().getAsMention() + " Please set punishment-parameters", guild, LogChannelType.SERVER);
             return false;
         }
         JSONObject punishment = config.getJSONObject("punishments").getJSONObject(type.getName());
@@ -79,7 +79,7 @@ public class PunishmentUtils {
                 if (!punishment.optBoolean("active")) return true;
                 punishmentRole = guild.getRoleById(punishment.getString("role-id"));
                 if (punishmentRole == null) {
-                    ChannelUtils.logInLogChannel(guild.getPublicRole().getAsMention() + " Please set a warn-role", guild, LogChannelType.SERVER);
+                    ChannelUtil.logInLogChannel(guild.getPublicRole().getAsMention() + " Please set a warn-role", guild, LogChannelType.SERVER);
                     return false;
                 }
                 guild.addRoleToMember(offender, punishmentRole).reason(reason).queue();
@@ -89,7 +89,7 @@ public class PunishmentUtils {
                 if (!punishment.optBoolean("active")) return true;
                 punishmentRole = guild.getRoleById(punishment.getString("role-id"));
                 if (punishmentRole == null) {
-                    ChannelUtils.logInLogChannel(guild.getPublicRole().getAsMention() + " Please set a mute-role", guild, LogChannelType.SERVER);
+                    ChannelUtil.logInLogChannel(guild.getPublicRole().getAsMention() + " Please set a mute-role", guild, LogChannelType.SERVER);
                     return false;
                 }
                 guild.addRoleToMember(offender, punishmentRole).reason(reason).queue();
@@ -144,7 +144,7 @@ public class PunishmentUtils {
         OptionMapping duration = event.getOption("duration");
         OptionMapping timeUnit = event.getOption("time_unit");
         if (duration != null || timeUnit != null) {
-            removeTime = PunishmentUtils.getRemoveTime(duration, timeUnit);
+            removeTime = PunishmentUtil.getRemoveTime(duration, timeUnit);
             if (removeTime == null) {
                 event.reply("Please check the time_unit parameter").setEphemeral(true).queue();
                 return;
@@ -166,13 +166,13 @@ public class PunishmentUtils {
                 userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reasonString, removeTime, PunishmentType.getByName(eventName));
                 serverEmbed = PunishmentEmbeds.punishmentLogEmbed(guild, reasonString, offender.getUser(), moderator.getUser(), removeTime, PunishmentType.getByName(eventName));
             }
-        ChannelUtils.logInLogChannel(serverEmbed, guild, LogChannelType.MOD);
+        ChannelUtil.logInLogChannel(serverEmbed, guild, LogChannelType.MOD);
         try {
             offender.getUser().openPrivateChannel().complete().sendMessageEmbeds(userEmbed.build()).queue();
         } catch (Exception ignored) {
         }
 
-        if (!PunishmentUtils.giveUserPunishment(offender, guild,PunishmentType.getByName(eventName),reasonString)) {
+        if (!PunishmentUtil.giveUserPunishment(offender, guild,PunishmentType.getByName(eventName),reasonString)) {
             event.reply("User have not the punishment. Please give it manual").setEphemeral(true).queue();
             return;
         }
@@ -223,7 +223,7 @@ public class PunishmentUtils {
                 }else {
                     reason = punishments.getJSONObject("kick").getString("standard-reason");
                 }
-                ChannelUtils.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender,moderator,PunishmentType.KICK), entry.getGuild(),LogChannelType.MOD);
+                ChannelUtil.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender,moderator,PunishmentType.KICK), entry.getGuild(),LogChannelType.MOD);
             }
             case BAN -> {
                 if (config.isNull("punishments")){
@@ -231,7 +231,7 @@ public class PunishmentUtils {
                 }else {
                     reason = punishments.getJSONObject("ban").getString("standard-reason");
                 }
-                ChannelUtils.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender,moderator,PunishmentType.BAN), entry.getGuild(),LogChannelType.MOD);
+                ChannelUtil.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender,moderator,PunishmentType.BAN), entry.getGuild(),LogChannelType.MOD);
             }
         }
     }

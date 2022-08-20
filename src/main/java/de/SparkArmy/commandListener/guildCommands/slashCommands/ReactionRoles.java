@@ -1,7 +1,7 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.reactionRoleUtils.ReactionRoleUtlis;
+import de.SparkArmy.utils.ReactionRoleUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -45,7 +45,7 @@ public class ReactionRoles extends CustomCommandListener {
         String actionString = action.getAsString();
         OptionMapping message = event.getOption("message");
         if (message == null){
-            ReactionRoleUtlis.createEmbedOrModalByAction(actionString,user,event);
+            ReactionRoleUtil.createEmbedOrModalByAction(actionString,user,event);
             return;
         }
 
@@ -55,8 +55,8 @@ public class ReactionRoles extends CustomCommandListener {
         }
 
         switch (actionString){
-            case "edit" -> ReactionRoleUtlis.sendEditEmbed(message.getAsString(), event.getChannel().getId(), event);
-            case "delete" -> ReactionRoleUtlis.deleteReactionRoleEmbed(event.getChannel().getId(),message.getAsString(),event);
+            case "edit" -> ReactionRoleUtil.sendEditEmbed(message.getAsString(), event.getChannel().getId(), event);
+            case "delete" -> ReactionRoleUtil.deleteReactionRoleEmbed(event.getChannel().getId(),message.getAsString(),event);
             default -> {}
         }
 

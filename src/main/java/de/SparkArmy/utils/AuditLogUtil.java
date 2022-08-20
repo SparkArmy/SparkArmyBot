@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuditLogUtils {
+public class AuditLogUtil {
 
     private static List<AuditLogEntry> getAuditLogEntryList(@NotNull List<AuditLogEntry> auditLogEntries, ActionType actionType){
        return auditLogEntries.stream().filter(x->x.getType().equals(actionType)).toList();

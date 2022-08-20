@@ -92,6 +92,16 @@ public enum SlashCommands {
                     ),
                     new OptionData(OptionType.STRING,"message","The target reaction-role-embed (Works only with Edit/Delete)")
             ));
+
+            // MediaOnly command
+            add(Commands.slash("media-only","Edit MediaOnlyChannel").addOptions(
+                    new OptionData(OptionType.STRING,"action","The provided action").addChoices(
+                            new Command.Choice("Add","add"),
+                            new Command.Choice("Edit","edit"),
+                            new Command.Choice("Remove","remove")
+                    ),
+                    new OptionData(OptionType.CHANNEL,"channel","The provided channel")
+            ));
         }};
     }
 }

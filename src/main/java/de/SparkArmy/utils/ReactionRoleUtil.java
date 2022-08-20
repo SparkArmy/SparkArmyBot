@@ -1,8 +1,5 @@
-package de.SparkArmy.utils.reactionRoleUtils;
+package de.SparkArmy.utils;
 
-import de.SparkArmy.utils.ChannelUtils;
-import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
@@ -28,7 +25,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class ReactionRoleUtlis {
+public class ReactionRoleUtil {
 
     public static void createEmbedOrModalByAction(@NotNull String action, User user, Event event){
         switch (action) {
@@ -108,7 +105,7 @@ public class ReactionRoleUtlis {
     public static void sendEditEmbed(String messageId, String channelId, @NotNull Event event){
         if (event.getClass().equals(SlashCommandInteractionEvent.class)) {
             SlashCommandInteractionEvent slashEvent = new SlashCommandInteractionEvent(event.getJDA(), event.getResponseNumber(), ((SlashCommandInteractionEvent) event).getInteraction());
-            MessageChannel messageChannel = ChannelUtils.rightChannel(slashEvent.getChannel());
+            MessageChannel messageChannel = ChannelUtil.rightChannel(slashEvent.getChannel());
             if (messageChannel == null) {
                 slashEvent.reply("Please execute this command in a message channel").setEphemeral(true).queue();
                 return;
@@ -167,7 +164,7 @@ public class ReactionRoleUtlis {
                 modalEvent.reply("This is not a guild-channel").setEphemeral(true).queue();
                 return;
             }
-            MessageChannel messageChannel = ChannelUtils.rightChannel(guildChannel);
+            MessageChannel messageChannel = ChannelUtil.rightChannel(guildChannel);
             if (messageChannel == null) {
                 modalEvent.reply("Please execute this command in a message channel").setEphemeral(true).queue();
                 return;
@@ -305,7 +302,7 @@ public class ReactionRoleUtlis {
     public static void deleteReactionRoleEmbed(String channelId, String messageId, @NotNull Event event) {
         if (event.getClass().equals(SlashCommandInteractionEvent.class)) {
             SlashCommandInteractionEvent slashEvent = new SlashCommandInteractionEvent(event.getJDA(), event.getResponseNumber(), ((SlashCommandInteractionEvent) event).getInteraction());
-            MessageChannel messageChannel = ChannelUtils.rightChannel(slashEvent.getChannel());
+            MessageChannel messageChannel = ChannelUtil.rightChannel(slashEvent.getChannel());
 
             if (messageChannel == null) {
                 slashEvent.reply("Please execute this command in a message channel").setEphemeral(true).queue();
@@ -356,7 +353,7 @@ public class ReactionRoleUtlis {
                 modalEvent.reply("This is not a guild-channel").setEphemeral(true).queue();
                 return;
             }
-            MessageChannel messageChannel = ChannelUtils.rightChannel(guildChannel);
+            MessageChannel messageChannel = ChannelUtil.rightChannel(guildChannel);
             if (messageChannel == null) {
                 modalEvent.reply("Please execute this command in a message channel").setEphemeral(true).queue();
                 return;

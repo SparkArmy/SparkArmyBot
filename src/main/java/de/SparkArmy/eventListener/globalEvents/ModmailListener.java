@@ -207,6 +207,7 @@ public class ModmailListener extends CustomEventListener {
         String[] buttonId = event.getComponentId().split(";");
         event.reply("You are sure you want to close this channel")
                 .addActionRows(ActionRow.of(Button.danger("modmailCloseYes", "Yes"), Button.success("modmailCloseNo", "No")))
+                .setEphemeral(true)
                 .queue(x -> waiter.waitForEvent(ButtonInteractionEvent.class, f -> {
                     String id = f.getComponentId();
                     return id.equals("modmailCloseYes") || id.equals("modmailCloseNo");
@@ -230,15 +231,18 @@ public class ModmailListener extends CustomEventListener {
 
                         // Send the user a message that the ticket was closed
                         try {
+                            logger.info(buttonId[2]);
                             PrivateChannel privateChannel = Objects.requireNonNull(jda.getUserById(buttonId[2])).openPrivateChannel().complete();
-                            privateChannel.getHistory().retrievePast(100).complete().forEach(m->{
-                                if (m.getAuthor().equals(jda.getSelfUser()) && !m.getEmbeds().isEmpty()){
-                                    m.delete().queue();
+                            new Thread(()-> privateChannel.getHistory().retrievePast(30).complete().forEach(m->{
+                                if (m.getAuthor().equals(jda.getSelfUser()) && m.getEmbeds().isEmpty()){
+                                    m.editMessageComponents().complete();
+                                    try {
+                                        TimeUnit.SECONDS.sleep(3);
+                                    } catch (InterruptedException ignored) {}
                                 }
-                            });
+                            })).start();
                             privateChannel.sendMessage("Your ticket was closed").queue();
-                        }catch (NullPointerException | UnsupportedOperationException e){
-                            logger.warning("The user has no permissions");
+                        }catch (NullPointerException | UnsupportedOperationException ignored){
                         }
 
                     }));
@@ -321,8 +325,10 @@ public class ModmailListener extends CustomEventListener {
                 Please use the button under this message to reply or adding a text.
                 """;
         try {
+            PrivateChannel privateChannel =  user.openPrivateChannel().complete();
             // Try to send a DM to the User
-            user.openPrivateChannel().complete().sendMessage(message).setActionRow(Button.success(String.format("modmailReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")).queue();
+            privateChannel.sendMessage(message).setActionRow(Button.success(String.format("modmailReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")).queue();
+            privateChannel.sendMessageEmbeds((embedFromUser.build())).queue();
         } catch (InsufficientPermissionException | IllegalArgumentException | UnsupportedOperationException ignored) {
             // Catch has the user disabled the DM from server members
             modmailChannel.delete().reason("The target user has direct-messages from server members disabled").queue();

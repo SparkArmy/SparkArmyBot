@@ -1,4 +1,4 @@
-package de.SparkArmy.eventListener.guildEvents.member;
+package de.SparkArmy.eventListener.guildEvents.eventLogging;
 
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.AuditLogUtil;

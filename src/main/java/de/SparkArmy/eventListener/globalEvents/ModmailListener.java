@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +53,7 @@ public class ModmailListener extends CustomEventListener {
     }
 
     private void userReplyMessage(@NotNull ModalInteractionEvent event){
-        event.reply("Will you add attachments?").setEphemeral(true).addActionRows(ActionRow.of(
+        event.reply("Will you add attachments?").setEphemeral(true).setComponents(ActionRow.of(
                         Button.primary("modmailReplyAttachmentsYes","Yes"),
                         Button.primary("modmailReplyAttachmentsNo","No")))
                 .queue(x->waiter.waitForEvent(ButtonInteractionEvent.class,f-> event.getUser().equals(f.getUser())
@@ -206,7 +207,7 @@ public class ModmailListener extends CustomEventListener {
     private void modmailChannelClose(@NotNull ButtonInteractionEvent event) {
         String[] buttonId = event.getComponentId().split(";");
         event.reply("You are sure you want to close this channel")
-                .addActionRows(ActionRow.of(Button.danger("modmailCloseYes", "Yes"), Button.success("modmailCloseNo", "No")))
+                .addComponents(ActionRow.of(Button.danger("modmailCloseYes", "Yes"), Button.success("modmailCloseNo", "No")))
                 .setEphemeral(true)
                 .queue(x -> waiter.waitForEvent(ButtonInteractionEvent.class, f -> {
                     String id = f.getComponentId();
@@ -231,7 +232,6 @@ public class ModmailListener extends CustomEventListener {
 
                         // Send the user a message that the ticket was closed
                         try {
-                            logger.info(buttonId[2]);
                             PrivateChannel privateChannel = Objects.requireNonNull(jda.getUserById(buttonId[2])).openPrivateChannel().complete();
                             new Thread(()-> privateChannel.getHistory().retrievePast(30).complete().forEach(m->{
                                 if (m.getAuthor().equals(jda.getSelfUser()) && m.getEmbeds().isEmpty()){
@@ -307,7 +307,7 @@ public class ModmailListener extends CustomEventListener {
 
 
         modmailChannel.sendMessageEmbeds(embedFromUser.build()).
-                setActionRows(
+                setComponents(
                         ActionRow.of(Button.primary(String.format("modmailReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")), ActionRow.of(Button.danger(String.format("modmailChannelClose;%s;%s", modmailChannel.getId(), user.getId()), "Close")))
                 .queue(x->x.pin().queue());
 
@@ -349,8 +349,6 @@ public class ModmailListener extends CustomEventListener {
         User offender = jda.getUserById(modalIds[2]);
         if (offender == null ) return;
         User interactionUser = event.getUser();
-
-        logger.info("Test");
 
         //noinspection ConstantConditions
         String replyString = event.getValue("modmailReply").getAsString();
@@ -479,7 +477,7 @@ public class ModmailListener extends CustomEventListener {
 
             messageList.forEach(m->{
                 if (!m.getEmbeds().isEmpty() || !m.getContentRaw().isEmpty()){
-                    threadChannel.sendMessage(m).queue();
+                    threadChannel.sendMessage(MessageCreateData.fromMessage(m)).queue();
                     try {
                         TimeUnit.SECONDS.sleep(2);
                     } catch (InterruptedException ignored) {
@@ -505,7 +503,7 @@ public class ModmailListener extends CustomEventListener {
     }
 
 
-    private StringBuilder getAttachmentStringsFromChannel(MessageChannel channel, OffsetDateTime timeCreated,User referenceUser){
+    private @NotNull StringBuilder getAttachmentStringsFromChannel(@NotNull MessageChannel channel, OffsetDateTime timeCreated, User referenceUser){
         StringBuilder messageAttachmentsAsString = new StringBuilder();
         channel.getHistory().retrievePast(100).complete().forEach(m->{
             if (!m.getAttachments().isEmpty() && m.getAuthor().equals(referenceUser) && m.getTimeCreated().isAfter(timeCreated)){

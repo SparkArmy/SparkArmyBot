@@ -4,9 +4,10 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +29,8 @@ public class ChannelUtil {
         if (EmbedBuilder.class.equals(targetClass)) {
             MessageEmbed embed = ((EmbedBuilder) value).build();
             messageChannel.sendMessageEmbeds(embed).queue();
-        } else if (MessageBuilder.class.equals(targetClass)) {
-            Message message = ((MessageBuilder) value).build();
+        } else if (MessageCreateBuilder.class.equals(targetClass)) {
+            MessageCreateData message = ((MessageCreateBuilder) value).build();
             messageChannel.sendMessage(message).queue();
         } else if (String.class.equals(targetClass)) {
             String string = (String) value;

@@ -1,4 +1,4 @@
-package de.SparkArmy.eventListener.guildEvents.commands;
+package de.SparkArmy.eventListener.guildEvents.eventLogging;
 
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.ChannelUtil;
@@ -10,6 +10,7 @@ public class SlashCommandListener extends CustomEventListener {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        ChannelUtil.logInLogChannel(event.getUser().getAsTag() + " use " + event.getCommandString(),event.getGuild(), LogChannelType.SERVER);
+        String user = String.format("%s (%s)",event.getUser().getAsTag(),event.getUser().getId());
+        ChannelUtil.logInLogChannel(user + " use " + event.getCommandString(),event.getGuild(), LogChannelType.SERVER);
     }
 }

@@ -34,7 +34,7 @@ public class ReactionRoles extends CustomCommandListener {
             startEmbed.addField("Edit","Edit a Reaction-Role-Embed",false);
             startEmbed.addField("Delete","Delete a Reaction-Role-Embed",false);
             startEmbed.setColor(new Color(0x941D9E));
-            event.replyEmbeds(startEmbed.build()).setEphemeral(true).addActionRows(ActionRow.of(
+            event.replyEmbeds(startEmbed.build()).setEphemeral(true).setComponents(ActionRow.of(
                     Button.primary(String.format("reactionRolesStart,create;%s",user.getId()),"Create"),
                     Button.primary(String.format("reactionRolesStart,edit;%s",user.getId()),"Edit"),
                     Button.primary(String.format("reactionRolesStart,delete;%s",user.getId()),"Delete")

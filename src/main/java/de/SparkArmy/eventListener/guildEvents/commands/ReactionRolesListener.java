@@ -2,10 +2,8 @@ package de.SparkArmy.eventListener.guildEvents.commands;
 
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.FileHandler;
-
 import de.SparkArmy.utils.ReactionRoleUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -18,6 +16,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -128,7 +127,7 @@ public class ReactionRolesListener extends CustomEventListener {
                             add(Button.success(String.format("finishRoles;%s", suffix), "Finish"));
                         }};
                     }
-                    event.editMessageEmbeds(reactionRoleEmbed.build()).setActionRows(ActionRow.of(buttons)).queue();
+                    event.editMessageEmbeds(reactionRoleEmbed.build()).setComponents(ActionRow.of(buttons)).queue();
                 }
                 default -> ReactionRoleUtil.createEditRolesEmbedOrModal(content, event, splitMenuId[0].split(",")[1]);
             }
@@ -218,7 +217,7 @@ public class ReactionRolesListener extends CustomEventListener {
             }
 
             FileHandler.writeValuesInFile(file,content);
-            event.editMessageEmbeds(reactionRoleEmbed.build()).setActionRows(ActionRow.of(buttons)).queue();
+            event.editMessageEmbeds(reactionRoleEmbed.build()).setComponents(ActionRow.of(buttons)).queue();
 
 
         }
@@ -362,7 +361,7 @@ public class ReactionRolesListener extends CustomEventListener {
 
 
         if (message.length() == 17) {
-            event.getChannel().sendMessageEmbeds(finalReactionRoleEmbed.build()).setActionRows(actionRows).queue(x -> {
+            event.getChannel().sendMessageEmbeds(finalReactionRoleEmbed.build()).setComponents(actionRows).queue(x -> {
                 String messageId = x.getId() + ".json";
                 File directory = FileHandler.getDirectoryInUserDirectory("botstuff/reactionRoles/" + event.getGuild().getId());
                 if (directory == null) {
@@ -376,7 +375,7 @@ public class ReactionRolesListener extends CustomEventListener {
                 event.reply("Embed was edit").setEphemeral(true).queue();
             });
         }else {
-            event.getChannel().retrieveMessageById(message).complete().editMessageEmbeds(finalReactionRoleEmbed.build()).setActionRows(actionRows).queue(x->{
+            event.getChannel().retrieveMessageById(message).complete().editMessageEmbeds(finalReactionRoleEmbed.build()).setComponents(actionRows).queue(x->{
                 String messageId = x.getId() + ".json";
                 File directory = FileHandler.getDirectoryInUserDirectory("botstuff/reactionRoles/" + event.getGuild().getId());
                 if (directory == null) {
@@ -472,21 +471,19 @@ public class ReactionRolesListener extends CustomEventListener {
         content.put("color",color.getAsString());
 
 
-
-
         EmbedBuilder editHeaderEmbed = new EmbedBuilder();
         editHeaderEmbed.setTitle(title.getAsString());
         editHeaderEmbed.setDescription(description.getAsString());
         editHeaderEmbed.setColor(new Color(r,g,b));
 
-        if (!content.isNull("fields") || !content.getJSONObject("fields").isEmpty()){
+
+        if (!content.isNull("fields") && !content.getJSONObject("fields").isEmpty()){
             JSONObject fields = content.getJSONObject("fields");
             fields.keySet().forEach(x->{
                 JSONObject field = fields.getJSONObject(x);
                 editHeaderEmbed.addField(field.getString("roleName"),field.getString("roleDescription"),field.getBoolean("inline"));
             });
         }
-
         FileHandler.writeValuesInFile(file,content);
         event.editMessageEmbeds(editHeaderEmbed.build()).queue();
     }
@@ -583,7 +580,7 @@ public class ReactionRolesListener extends CustomEventListener {
         }
 
 
-        event.editMessageEmbeds(reactionRoleEmbed.build()).setActionRows(ActionRow.of(buttons)).queue();
+        event.editMessageEmbeds(reactionRoleEmbed.build()).setComponents(ActionRow.of(buttons)).queue();
     }
     private void modalActionForCreateModal(@NotNull ModalInteractionEvent event, String @NotNull [] splitModalId){
         String idExtension = splitModalId[1].split(",")[0];
@@ -629,8 +626,8 @@ public class ReactionRolesListener extends CustomEventListener {
         createReactionRole.setDescription(description.getAsString());
         createReactionRole.setColor(new Color(r,g,b));
 
-        MessageBuilder createReactionRoleMessage = new MessageBuilder();
-        createReactionRoleMessage.append("Use the buttons below to edit this embed and add roles");
+        MessageCreateBuilder createReactionRoleMessage = new MessageCreateBuilder();
+        createReactionRoleMessage.addContent("Use the buttons below to edit this embed and add roles");
         createReactionRoleMessage.setEmbeds(createReactionRole.build());
 
         Collection<Button> buttons = new ArrayList<>(){{
@@ -639,6 +636,6 @@ public class ReactionRolesListener extends CustomEventListener {
         }};
 
         FileHandler.writeValuesInFile(tempFile,content);
-        event.reply(createReactionRoleMessage.build()).addActionRows(ActionRow.of(buttons)).setEphemeral(true).queue();
+        event.reply(createReactionRoleMessage.build()).setComponents(ActionRow.of(buttons)).setEphemeral(true).queue();
     }
 }

@@ -78,7 +78,7 @@ public class Punishment extends CustomCommandListener {
             If you push a button under this embed you can change the parameters of this punishment
             """);
 
-            event.replyEmbeds(embedForStateOverview.build()).setEphemeral(true).addActionRows(ActionRow.of(
+            event.replyEmbeds(embedForStateOverview.build()).setEphemeral(true).setComponents(ActionRow.of(
                     Button.primary(String.format("%s;%s;punishment,ban",guild.getId(),executedMember.getId()),"Ban"),
                     Button.primary(String.format("%s;%s;punishment,kick",guild.getId(),executedMember.getId()),"Kick"),
                     Button.primary(String.format("%s;%s;punishment,timeout",guild.getId(),executedMember.getId()),"Timeout"),

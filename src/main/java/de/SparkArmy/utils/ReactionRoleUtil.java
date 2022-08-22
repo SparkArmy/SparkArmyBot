@@ -1,7 +1,6 @@
 package de.SparkArmy.utils;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -14,6 +13,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -75,10 +76,10 @@ public class ReactionRoleUtil {
 
                 if (event.getClass().equals(SlashCommandInteractionEvent.class)) {
                     new SlashCommandInteractionEvent(event.getJDA(), event.getResponseNumber(), ((SlashCommandInteractionEvent) event).getInteraction())
-                            .replyEmbeds(editEmbed.build()).addActionRows(ActionRow.of(Button.primary("reactionRolesNext,Edit;" + user.getId(), "Next"))).setEphemeral(true).queue();
+                            .replyEmbeds(editEmbed.build()).addComponents(ActionRow.of(Button.primary("reactionRolesNext,Edit;" + user.getId(), "Next"))).setEphemeral(true).queue();
                 }else if (event.getClass().equals(ButtonInteractionEvent.class)){
                     new ButtonInteractionEvent(event.getJDA(), event.getResponseNumber(),((ButtonInteractionEvent) event).getInteraction())
-                            .editMessageEmbeds(editEmbed.build()).setActionRows(ActionRow.of(Button.primary("reactionRolesNext,Edit;" + user.getId(), "Next"))).queue();
+                            .editMessageEmbeds(editEmbed.build()).setComponents(ActionRow.of(Button.primary("reactionRolesNext,Edit;" + user.getId(), "Next"))).queue();
                     ((ButtonInteractionEvent) event).editComponents().queue();
                 }
             }
@@ -92,10 +93,10 @@ public class ReactionRoleUtil {
 
                     if (event.getClass().equals(SlashCommandInteractionEvent.class)) {
                         new SlashCommandInteractionEvent(event.getJDA(), event.getResponseNumber(), ((SlashCommandInteractionEvent) event).getInteraction())
-                                .replyEmbeds(deleteEmbed.build()).addActionRows(ActionRow.of(Button.danger("reactionRolesNext,Delete;" + user.getId(), "Next"))).setEphemeral(true).queue();
+                                .replyEmbeds(deleteEmbed.build()).addComponents(ActionRow.of(Button.danger("reactionRolesNext,Delete;" + user.getId(), "Next"))).setEphemeral(true).queue();
                     }else if (event.getClass().equals(ButtonInteractionEvent.class)){
                         new ButtonInteractionEvent(event.getJDA(), event.getResponseNumber(),((ButtonInteractionEvent) event).getInteraction())
-                                .editMessageEmbeds(deleteEmbed.build()).setActionRows(ActionRow.of(Button.danger("reactionRolesNext,Delete;" + user.getId(), "Next"))).queue();
+                                .editMessageEmbeds(deleteEmbed.build()).setComponents(ActionRow.of(Button.danger("reactionRolesNext,Delete;" + user.getId(), "Next"))).queue();
                         ((ButtonInteractionEvent) event).editComponents().queue();
                     }
             }
@@ -151,10 +152,10 @@ public class ReactionRoleUtil {
 
 
             MessageEmbed reactionRoleEmbed = message.getEmbeds().get(0);
-            MessageBuilder editMessage = new MessageBuilder();
-            editMessage.append("This is the reaction-role-embed, you can edit this with the buttons below");
+            MessageCreateBuilder editMessage = new MessageCreateBuilder();
+            editMessage.addContent("This is the reaction-role-embed, you can edit this with the buttons below");
             editMessage.setEmbeds(reactionRoleEmbed);
-            slashEvent.reply(editMessage.build()).addActionRows(ActionRow.of(buttons)).setEphemeral(true).queue();
+            slashEvent.reply(editMessage.build()).addComponents(ActionRow.of(buttons)).setEphemeral(true).queue();
             return;
         }
         if (event.getClass().equals(ModalInteractionEvent.class)){
@@ -202,8 +203,8 @@ public class ReactionRoleUtil {
 
 
             MessageEmbed reactionRoleEmbed = message.getEmbeds().get(0);
-            MessageBuilder editMessage = new MessageBuilder();
-            editMessage.append("This is the reaction-role-embed, you can edit this with the buttons below");
+            MessageCreateBuilder editMessage = new MessageCreateBuilder();
+            editMessage.addContent("This is the reaction-role-embed, you can edit this with the buttons below");
             editMessage.setEmbeds(reactionRoleEmbed);
 
             String id = modalEvent.getModalId().split(";")[1];
@@ -214,7 +215,7 @@ public class ReactionRoleUtil {
                 add(Button.success(String.format("finishRoles;%s,%s",messageId,id),"Finish"));
             }};
 
-            modalEvent.editMessage(editMessage.build()).setActionRows(ActionRow.of(buttons)).queue();
+            modalEvent.editMessage(MessageEditData.fromCreateData(editMessage.build())).setComponents(ActionRow.of(buttons)).queue();
         }
     }
 
@@ -491,7 +492,7 @@ public class ReactionRoleUtil {
                 roles.addOption("Add Role","addRole");
             }
 
-            buttonEvent.editMessageEmbeds(roleEditChoiceEmbed.build()).setActionRows(ActionRow.of(roles.build())).queue();
+            buttonEvent.editMessageEmbeds(roleEditChoiceEmbed.build()).setComponents(ActionRow.of(roles.build())).queue();
         }else if (event.getClass().equals(SelectMenuInteractionEvent.class)) {
             SelectMenuInteractionEvent selectEvent;
             selectEvent = new SelectMenuInteractionEvent(event.getJDA(), event.getResponseNumber(), ((SelectMenuInteractionEvent) event).getInteraction());
@@ -597,6 +598,6 @@ public class ReactionRoleUtil {
         selectRoleForDelete.setTitle("Delete ReactionRole from embed");
         selectRoleForDelete.setDescription("Select on reaction-role below or return with the value \"Return\"");
 
-        event.editMessageEmbeds(selectRoleForDelete.build()).setActionRows(ActionRow.of(selectRole.build())).queue();
+        event.editMessageEmbeds(selectRoleForDelete.build()).setComponents(ActionRow.of(selectRole.build())).queue();
     }
 }

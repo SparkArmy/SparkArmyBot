@@ -186,7 +186,7 @@ public class PunishmentUtil {
         String buttonPrefix = String.format("%s;%s;", Objects.requireNonNull(event.getGuild()).getId(), Objects.requireNonNull(event.getMember()).getId());
         buttons.add(Button.danger(String.format("%s%s,Edit", buttonPrefix, type.getName()), "Edit"));
         buttons.add(Button.success(String.format("%s%s,Exit", buttonPrefix, type.getName()), "Exit"));
-        event.replyEmbeds(embed.build()).addActionRows(ActionRow.of(buttons)).setEphemeral(true).queue();
+        event.replyEmbeds(embed.build()).addComponents(ActionRow.of(buttons)).setEphemeral(true).queue();
     }
 
     public static void sendPunishmentParamEmbed(@NotNull ButtonInteractionEvent event, Guild guild) {
@@ -197,7 +197,7 @@ public class PunishmentUtil {
         String buttonPrefix = String.format("%s;%s;", Objects.requireNonNull(event.getGuild()).getId(), Objects.requireNonNull(event.getMember()).getId());
         buttons.add(Button.danger(String.format("%s%s,Edit", buttonPrefix, type.getName()), "Edit"));
         buttons.add(Button.success(String.format("%s%s,Exit", buttonPrefix, type.getName()), "Exit"));
-        event.replyEmbeds(embed.build()).addActionRows(ActionRow.of(buttons)).setEphemeral(true).queue();
+        event.replyEmbeds(embed.build()).addComponents(ActionRow.of(buttons)).setEphemeral(true).queue();
     }
 
     public static final List<String> bannedOrKickedUsers = new ArrayList<>();

@@ -92,7 +92,7 @@ public class MediaOnlyUtil {
 
                 //noinspection ConstantConditions
                 event.editMessageEmbeds(MediaOnlyBuilder.channelEmbed(channel,MediaOnlyChannelActions.getActionByName(actionString),content))
-                        .setActionRows(MediaOnlyBuilder.actionRowForChannelEmbed(channel, event.getUser(), content)).queue();
+                        .setComponents(MediaOnlyBuilder.actionRowForChannelEmbed(channel, event.getUser(), content)).queue();
             }
         }
     }
@@ -107,7 +107,7 @@ public class MediaOnlyUtil {
             channelId = channel.getAsChannel().getId();
         }
         event.replyEmbeds(MediaOnlyBuilder.overviewEmbed(channelName))
-                .addActionRows(MediaOnlyBuilder.actionRowOfOverviewEmbed(channelId,event.getUser()))
+                .setComponents(MediaOnlyBuilder.actionRowOfOverviewEmbed(channelId,event.getUser()))
                 .setEphemeral(true).queue();
     }
 
@@ -118,14 +118,14 @@ public class MediaOnlyUtil {
             slashEvent.replyEmbeds(MediaOnlyBuilder
                     .actionEmbed(MediaOnlyChannelActions.getActionByName(
                             slashEvent.getOption("action").getAsString())))
-                    .addActionRows(MediaOnlyBuilder.actionRowForActionEmbed(slashEvent.getUser()))
+                    .setComponents(MediaOnlyBuilder.actionRowForActionEmbed(slashEvent.getUser()))
                     .setEphemeral(true).queue();
         } else if (event.getClass().equals(ButtonInteractionEvent.class)) {
             ButtonInteractionEvent buttonEvent = getButtonEvent(event);
             String buttonId = buttonEvent.getComponentId();
             if (!buttonId.contains(";") || !buttonId.contains(",")) return;
             buttonEvent.editMessageEmbeds(MediaOnlyBuilder.actionEmbed(MediaOnlyChannelActions.getActionByName(buttonEvent.getComponent().getLabel().toLowerCase(Locale.ROOT))))
-                    .setActionRows(MediaOnlyBuilder.actionRowForActionEmbed(buttonEvent.getUser()))
+                    .setComponents(MediaOnlyBuilder.actionRowForActionEmbed(buttonEvent.getUser()))
                     .queue();
         }
     }
@@ -171,7 +171,7 @@ public class MediaOnlyUtil {
                     JSONObject channelConfig = mediaOnlyConfig.getJSONObject(targetChannel.getId());
 
                     slashEvent.replyEmbeds(MediaOnlyBuilder.channelEmbed(targetChannel, type, channelConfig))
-                            .addActionRows(MediaOnlyBuilder.actionRowForChannelEmbed(targetChannel, slashEvent.getUser(), channelConfig))
+                            .addComponents(MediaOnlyBuilder.actionRowForChannelEmbed(targetChannel, slashEvent.getUser(), channelConfig))
                             .setEphemeral(true).queue();
                 }
                 case REMOVE -> {
@@ -226,7 +226,7 @@ public class MediaOnlyUtil {
                     JSONObject channelConfig = mediaOnlyConfig.getJSONObject(targetChannel.getId());
 
                     buttonEvent.editMessageEmbeds(MediaOnlyBuilder.channelEmbed(targetChannel, type, channelConfig))
-                            .setActionRows(MediaOnlyBuilder.actionRowForChannelEmbed(targetChannel, buttonEvent.getUser(), channelConfig))
+                            .setComponents(MediaOnlyBuilder.actionRowForChannelEmbed(targetChannel, buttonEvent.getUser(), channelConfig))
                             .queue();
                 }
                 case REMOVE -> {
@@ -284,7 +284,7 @@ public class MediaOnlyUtil {
                     JSONObject channelConfig = mediaOnlyConfig.getJSONObject(targetChannel.getId());
 
                     modalEvent.editMessageEmbeds(MediaOnlyBuilder.channelEmbed(targetChannel, type, channelConfig))
-                            .setActionRows(MediaOnlyBuilder.actionRowForChannelEmbed(targetChannel, modalEvent.getUser(), channelConfig))
+                            .setComponents(MediaOnlyBuilder.actionRowForChannelEmbed(targetChannel, modalEvent.getUser(), channelConfig))
                             .queue();
                 }
                 case REMOVE -> {

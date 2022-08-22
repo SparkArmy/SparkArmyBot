@@ -58,7 +58,8 @@ public class ConfigController {
             blankConfig.put("mariaDbConnection",mariadb);
             JSONObject otherKeys = new JSONObject(){{
                 put("virustotal-api-key","[Optional] Write here your API-Key from VirusTotal");
-                put("storage-server","Please setup a new server and delete all included channels");
+                put("storage-server","Please setup a new server, delete all included channels and put the id in this field");
+                put("twitter_bearer","Please copy the twitter bearer in this field");
             }};
             blankConfig.put("otherKeys",otherKeys);
 

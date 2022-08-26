@@ -10,9 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 public class TimedOperationsExecutor {
     public TimedOperationsExecutor() {
-        ScheduledThreadPoolExecutor execute = new ScheduledThreadPoolExecutor(2);
+        ScheduledThreadPoolExecutor execute = new ScheduledThreadPoolExecutor(20);
         execute.scheduleAtFixedRate(tenSeconds(),1,10, TimeUnit.SECONDS);
         execute.scheduleAtFixedRate(twoSeconds(),1,2,TimeUnit.SECONDS);
+        execute.scheduleAtFixedRate(ninetySeconds(),2,90,TimeUnit.SECONDS);
     }
 
     @Contract(pure = true)
@@ -26,6 +27,12 @@ public class TimedOperationsExecutor {
            ModmailListener.deleteOldFiles();
            ReactionRoleUtil.deleteOldTempFiles();
        };
+    }
+    @Contract(pure = true)
+    private static @NotNull Runnable ninetySeconds(){
+        // Rate Limit from Twitter 104 requests per 90 seconds (100.000 per 24h)
+        // Rate Limit from Twitch 800 requests per 60 seconds
+        return TimedOperations::checkForNotificationUpdates;
     }
 
 

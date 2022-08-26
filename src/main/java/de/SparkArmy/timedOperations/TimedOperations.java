@@ -2,6 +2,7 @@ package de.SparkArmy.timedOperations;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
+import de.SparkArmy.notifications.NotificationUtil;
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
@@ -22,7 +23,7 @@ public class TimedOperations {
     private static final JDA jda = MainUtil.jda;
     private static final ConfigController controller = MainUtil.controller;
 
-    public static void removeOldTemporaryPunishments() {
+    protected static void removeOldTemporaryPunishments() {
         try {
 
             File directory = FileHandler.getDirectoryInUserDirectory("botstuff/timed-punishments");
@@ -100,5 +101,33 @@ public class TimedOperations {
         }catch (Exception e){
         e.printStackTrace();
         }
+    }
+
+    protected static void checkForNotificationUpdates() {
+        File directory = FileHandler.getDirectoryInUserDirectory("botstuff/notifications");
+        if (directory == null) return;
+        List<File> files = FileHandler.getFilesInDirectory(directory);
+        if (files == null) return;
+        files.forEach(file->{
+          Guild guild = MainUtil.jda.getGuildById(file.getName().replace(".json",""));
+          if (guild == null || guild.equals(MainUtil.storageServer)) return;
+
+          String fileContentString = FileHandler.getFileContent(file);
+          if (fileContentString == null) return;
+
+          JSONObject fileContent = new JSONObject(fileContentString);
+
+          if (fileContent.isEmpty()) return;
+          if (!fileContent.isNull("twitch")){
+              JSONObject twitchWatchlist = fileContent.getJSONObject("twitch");
+              NotificationUtil.checkForTwitchStreams(twitchWatchlist,guild);
+          }
+
+            if (!fileContent.isNull("twitter")){
+                JSONObject twitterWatchlist = fileContent.getJSONObject("twitter");
+                    NotificationUtil.checkForTweets(twitterWatchlist,guild);
+            }
+
+        });
     }
 }

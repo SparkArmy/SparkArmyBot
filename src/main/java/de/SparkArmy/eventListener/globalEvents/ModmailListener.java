@@ -112,8 +112,8 @@ public class ModmailListener extends CustomEventListener {
 
         event.getJDA().getGuilds().forEach(g -> {
             JSONObject guildConfig = this.controller.getSpecificGuildConfig(g, GuildConfigType.MAIN);
-            if (null != guildConfig) {
-                if (!guildConfig.keySet().contains("command-permissions")) return;
+            if (guildConfig != null) {
+                if (guildConfig.isNull("command-permissions")) return;
                 if (guildConfig.getJSONObject("command-permissions").getBoolean("modmail")) {
                     guilds.addOption(g.getName(), g.getId());
                 }
@@ -216,7 +216,6 @@ public class ModmailListener extends CustomEventListener {
                     String id = f.getComponentId();
                     if (id.equals("modmailCloseNo")) {
                         x.editOriginalComponents().queue();
-                        x.deleteOriginal().queue();
                         return;
                     }
 
@@ -477,7 +476,7 @@ public class ModmailListener extends CustomEventListener {
 
             messageList.forEach(m->{
                 if (!m.getEmbeds().isEmpty() || !m.getContentRaw().isEmpty()){
-                    threadChannel.sendMessage(MessageCreateData.fromMessage(m)).queue();
+                    threadChannel.sendMessage(MessageCreateData.fromMessage(m)).queue(x->x.editMessageComponents().queue());
                     try {
                         TimeUnit.SECONDS.sleep(2);
                     } catch (InterruptedException ignored) {

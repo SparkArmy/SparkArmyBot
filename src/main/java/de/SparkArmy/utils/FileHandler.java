@@ -121,23 +121,23 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            FileHandler.logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            logger.severe("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
 
     public static @Nullable List<File> getFilesInDirectory(File path){
         if (null == path){
-            FileHandler.logger.info("FILEHANDLER: The path is null");
+            logger.info("FILEHANDLER: The path is null");
             return null;
         }
 
         if (path.isFile()){
-            FileHandler.logger.info("FILEHANDLER: The path is a file");
+            logger.info("FILEHANDLER: The path is a file");
             return null;
         }
         if (null == path.listFiles()){
-            FileHandler.logger.info("FILEHANDLER: Error to listFiles");
+            logger.info("FILEHANDLER: Error to listFiles");
             return null;
         }
         return Arrays.stream(Objects.requireNonNull(path.listFiles())).toList();

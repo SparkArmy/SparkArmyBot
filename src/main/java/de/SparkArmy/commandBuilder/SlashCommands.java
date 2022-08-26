@@ -94,13 +94,27 @@ public enum SlashCommands {
             ));
 
             // MediaOnly command
-            add(Commands.slash("media-only","Edit MediaOnlyChannel").addOptions(
+            add(Commands.slash("media-only","Add/Edit/Remove MediaOnlyChannel").addOptions(
                     new OptionData(OptionType.STRING,"action","The provided action").addChoices(
                             new Command.Choice("Add","add"),
                             new Command.Choice("Edit","edit"),
                             new Command.Choice("Remove","remove")
                     ),
                     new OptionData(OptionType.CHANNEL,"channel","The provided channel")
+            ));
+
+            // NotificationCommand
+            add(Commands.slash("notifications","Add/Edit/Remove Notifications").addOptions(
+                    new OptionData(OptionType.STRING,"notification","The provided action").addChoices(
+                            new Command.Choice("Twitter","twitter"),
+                            new Command.Choice("YouTube","youtube"),
+                            new Command.Choice("Twitch","twitch")
+                    ),
+                    new OptionData(OptionType.STRING,"action","The provided action").addChoices(
+                            new Command.Choice("Add","add"),
+                            new Command.Choice("Edit","edit"),
+                            new Command.Choice("Remove","remove")
+                    )
             ));
         }};
     }

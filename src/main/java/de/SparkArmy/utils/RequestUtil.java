@@ -1,5 +1,6 @@
 package de.SparkArmy.utils;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -60,7 +61,7 @@ public enum RequestUtil {
      * */
 
 
-    public static HttpRequest prepareRequest(String url, JSONObject headers, HttpRequest.BodyPublisher body, String mode){
+    public static HttpRequest prepareRequest(@NotNull String url, @NotNull JSONObject headers, HttpRequest.BodyPublisher body, String mode){
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url.replace(" ", "%20")))
                 .method(mode, body);

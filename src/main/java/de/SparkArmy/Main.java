@@ -5,6 +5,7 @@ import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.LoggerController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
+import de.SparkArmy.springBoot.SpringApp;
 import de.SparkArmy.timedOperations.TimedOperationsExecutor;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
@@ -13,6 +14,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.json.JSONObject;
+import org.springframework.boot.SpringApplication;
 
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -86,6 +88,7 @@ public class Main {
             logger.warning("No storage-server registered or The bot is not on storage-server");
         }
 
+//        CommandRegisterer.registerGuildSlashCommands(jda.getGuildById("890674837461278730"));
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();
@@ -94,6 +97,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        SpringApplication.run(SpringApp.class,"");
         new Main();
         MainUtil.logger.info("I`m ready.");
     }
@@ -106,4 +110,5 @@ public class Main {
         if (null != MainUtil.jda) MainUtil.jda.cancelRequests();
         System.exit(code);
     }
+
 }

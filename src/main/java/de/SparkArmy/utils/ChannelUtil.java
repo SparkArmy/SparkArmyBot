@@ -54,7 +54,6 @@ public class ChannelUtil {
                 return jda.getThreadChannelById(channelId);
             }
             default -> {
-                MainUtil.logger.info("The current Channel is from type:\n" + channel.getType());
                 return null;
             }
         }

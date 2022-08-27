@@ -27,8 +27,10 @@ public class PunishmentListener extends CustomEventListener {
             PunishmentUtil.sendPunishmentParamEmbed(event, event.getGuild());
             return;
         }
+        if (id.split(";").length < 2) return;
         String punishment = id.split(";")[2].split(",")[0];
         PunishmentType type = PunishmentType.getByName(punishment);
+        if (type.equals(PunishmentType.UNKNOW)) return;
         JSONObject config = controller.getSpecificGuildConfig(Objects.requireNonNull(event.getGuild()), GuildConfigType.MAIN);
         JSONObject psm = config.getJSONObject("punishments").getJSONObject(type.getName());
         if (id.split(";")[2].split(",")[1].equals("Edit")) {

@@ -10,6 +10,7 @@ public class SlashCommandListener extends CustomEventListener {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        if (!event.isFromGuild()) return;
         String user = String.format("%s (%s)",event.getUser().getAsTag(),event.getUser().getId());
         ChannelUtil.logInLogChannel(user + " use " + event.getCommandString(),event.getGuild(), LogChannelType.SERVER);
     }

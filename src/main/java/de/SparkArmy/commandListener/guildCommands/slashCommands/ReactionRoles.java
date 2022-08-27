@@ -16,13 +16,12 @@ public class ReactionRoles extends CustomCommandListener {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        String eventName = event.getName();
+        if (!eventName.equals("reactionroles")) return;
         if (!event.isFromGuild()){
             event.reply("Please execute this command in a guild channel").setEphemeral(true).queue();
             return;
         }
-        String eventName = event.getName();
-        if (!eventName.equals("reactionroles")) return;
-
         User user = event.getUser();
 
         OptionMapping action = event.getOption("action");

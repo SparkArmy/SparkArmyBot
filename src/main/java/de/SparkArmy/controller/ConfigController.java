@@ -49,7 +49,7 @@ public class ConfigController {
             blankConfig.put("twitch",twitch);
             JSONObject youtube = new JSONObject(){{
                 put("youtube-api-key","[Optional] Write here your API-Key from YouTube");
-                put("spring-callback-domain","[Optional] Your callback domain");
+                put("spring-callback-url","[Optional] Your callback domain");
             }};
             blankConfig.put("youtube",youtube);
             JSONObject mariadb = new JSONObject(){{

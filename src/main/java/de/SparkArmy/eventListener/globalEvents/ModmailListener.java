@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Modal;
@@ -18,6 +19,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -69,7 +71,6 @@ public class ModmailListener extends CustomEventListener {
                                         .addActionRow(Button.success("modmailReplyAttachmentsOk","Ok"))
                                         .setEphemeral(true).queue(y->
                                         waiter.waitForEvent(ButtonInteractionEvent.class,g->g.getComponentId().equals("modmailReplyAttachmentsOk") && g.getUser().equals(f.getUser()),g->{
-                                            f.editComponents().queue();
                                             g.editComponents().queue();
                                             sendReplyEmbed(event);
                                         }));
@@ -163,7 +164,6 @@ public class ModmailListener extends CustomEventListener {
                             if (f.getComponentId().equals("modmailNo")) {
                                 x.editOriginal("Your message was sent to the server").queue();
                                 x.editOriginalComponents().queue();
-                                event.editComponents().queue();
                                 sendStartEmbedToServer(builder, guild, event.getUser(), event);
                             }
 
@@ -238,7 +238,8 @@ public class ModmailListener extends CustomEventListener {
                                     } catch (InterruptedException ignored) {}
                                 }
                             })).start();
-                            privateChannel.sendMessage("Your ticket was closed").queue();
+                            privateChannel.sendMessage("Your ticket was closed").queue(null,new ErrorHandler()
+                                    .ignore(ErrorResponse.CANNOT_SEND_TO_USER));
                         }catch (NullPointerException | UnsupportedOperationException ignored){
                         }
 
@@ -357,7 +358,10 @@ public class ModmailListener extends CustomEventListener {
         modmailServerEmbed.setTitle(interactionUser.equals(offender) ? "Reply from " + interactionUser.getAsTag() : "Reply to " + offender.getAsTag());
         modmailServerEmbed.setDescription(replyString);
 
-        modmailChannel.sendMessageEmbeds(modmailServerEmbed.build()).queue();
+        var ref = new Object() {
+            String message;
+        };
+        modmailChannel.sendMessageEmbeds(modmailServerEmbed.build()).queue(x-> ref.message = x.getId());
 
 
         // Create and send the embed + optional attachment to the user
@@ -365,14 +369,27 @@ public class ModmailListener extends CustomEventListener {
         modmailUserEmbed.setTitle(interactionUser.equals(offender) ? "Reply to " + guild.getName() : "Reply from " + guild.getName());
         modmailUserEmbed.setDescription(replyString);
 
-        offender.openPrivateChannel().complete().sendMessageEmbeds(modmailUserEmbed.build()).queue();
+        PrivateChannel privateChannel =  offender.openPrivateChannel().complete();
+        privateChannel.sendMessageEmbeds(modmailUserEmbed.build()).queue(null,new ErrorHandler()
+                .handle(ErrorResponse.CANNOT_SEND_TO_USER,e->{
+                    modmailChannel.deleteMessageById(ref.message).queue();
+                    modmailChannel.sendMessage("This user had disabled private messages, channel will be closed").queue();
+                    saveMessagesFromModmailChannel(modmailChannel,offender,interactionUser,"User has disabled DM's").start();
+                    new Thread(()-> privateChannel.getHistory().retrievePast(30).complete().forEach(m->{
+                        if (m.getAuthor().equals(jda.getSelfUser()) && m.getEmbeds().isEmpty()){
+                            m.editMessageComponents().complete();
+                            try {
+                                TimeUnit.SECONDS.sleep(3);
+                            } catch (InterruptedException ignored) {}
+                        }
+                    })).start();
+                }));
         if (replyAttachments.isEmpty()) return;
         if (event.getUser().equals(offender)){
-            modmailChannel.sendMessage(replyAttachments).queue();
+            modmailChannel.sendMessage(replyAttachments).complete();
         }else {
-            offender.openPrivateChannel().complete().sendMessage(replyAttachments).queue();
+            offender.openPrivateChannel().complete().sendMessage(replyAttachments).queue(null,new ErrorHandler().ignore(ErrorResponse.CANNOT_SEND_TO_USER));
         }
-
     }
 
     // Method and Variables to delete old files
@@ -484,16 +501,12 @@ public class ModmailListener extends CustomEventListener {
             // Send message in modmail log
             EmbedBuilder logEmbed = new EmbedBuilder();
             logEmbed.setTitle(channel.getName() + " was closed");
+            logEmbed.setDescription("Reason: " + reason);
             logEmbed.setColor(new Color(255,0,0));
             logEmbed.setFooter(moderator.getAsTag(),moderator.getEffectiveAvatarUrl());
             logEmbed.setTimestamp(LocalDateTime.now());
 
             modmailLogChannel.sendMessageEmbeds(logEmbed.build()).queue();
-            if (reason.isEmpty()){
-                channel.delete().complete();
-                return;
-            }
-
             threadChannel.getManager().setArchived(true).queue();
         });
     }

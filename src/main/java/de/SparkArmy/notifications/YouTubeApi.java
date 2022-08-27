@@ -22,7 +22,7 @@ public class YouTubeApi {
     public static boolean subscribeOrUnsubscribeToPubSubHubBub(String userId, String mode){
         String targetUrl = String.format("https://www.youtube.com/xml/feeds/videos.xml?channel_id=%s",userId);
         String url = String.format("https://pubsubhubbub.appspot.com/subscribe?hub.callback=%s&hub.mode=%s&hub.topic=%s&hub.verify=async",
-                MainUtil.mainConfig.getJSONObject("youtube").getString("spring-callback-domain"),
+                MainUtil.mainConfig.getJSONObject("youtube").getString("spring-callback-url"),
                 mode,
                 targetUrl);
            HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.noBody();

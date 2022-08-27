@@ -80,7 +80,6 @@ public class ReactionRoleUtil {
                 }else if (event.getClass().equals(ButtonInteractionEvent.class)){
                     new ButtonInteractionEvent(event.getJDA(), event.getResponseNumber(),((ButtonInteractionEvent) event).getInteraction())
                             .editMessageEmbeds(editEmbed.build()).setComponents(ActionRow.of(Button.primary("reactionRolesNext,Edit;" + user.getId(), "Next"))).queue();
-                    ((ButtonInteractionEvent) event).editComponents().queue();
                 }
             }
             case "delete" -> {

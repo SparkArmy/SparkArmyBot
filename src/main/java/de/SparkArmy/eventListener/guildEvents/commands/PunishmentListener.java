@@ -23,11 +23,13 @@ public class PunishmentListener extends CustomEventListener {
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         String id = event.getComponentId();
-        if (id.split(";").length > 1 && id.split(";")[2].split(",")[0].equals("punishment")) {
+        if (!id.contains(";")) return;
+        if (id.split(";").length > 2 && id.split(";")[2].split(",")[0].equals("punishment")) {
             PunishmentUtil.sendPunishmentParamEmbed(event, event.getGuild());
             return;
         }
-        if (id.split(";").length < 2) return;
+        if (!id.contains(",")) return;
+        if (id.split(";").length < 3) return;
         String punishment = id.split(";")[2].split(",")[0];
         PunishmentType type = PunishmentType.getByName(punishment);
         if (type.equals(PunishmentType.UNKNOW)) return;

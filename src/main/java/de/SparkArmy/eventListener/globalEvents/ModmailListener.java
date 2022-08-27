@@ -3,6 +3,7 @@ package de.SparkArmy.eventListener.globalEvents;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.FileHandler;
+import de.SparkArmy.utils.LogMarker;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -86,7 +87,6 @@ public class ModmailListener extends CustomEventListener {
         if (Arrays.stream(strings).filter("modmail"::equals).toList().isEmpty()) return;
         @NonNls String idExtension = strings[1];
         if (null == directory) {
-            this.logger.warning("MODMAIL-ModalInteraction: directory is null");
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
@@ -102,7 +102,6 @@ public class ModmailListener extends CustomEventListener {
             put("body", Objects.requireNonNull(event.getValue("body;" + idExtension)).getAsString());
         }};
         if (!FileHandler.writeValuesInFile(fileList.get(0).getAbsolutePath(), modalData)) {
-            this.logger.warning("MODMAIL-ModalInteraction: can#t write values in file");
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
@@ -135,7 +134,6 @@ public class ModmailListener extends CustomEventListener {
         String[] strings = menuName.split(";");
         if (Arrays.stream(strings).filter("modmailGuildPicker"::equals).toList().isEmpty()) return;
         if (null == directory) {
-            this.logger.warning("MODMAIL-SelectMenuInteraction: directory is null");
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
@@ -409,8 +407,7 @@ public class ModmailListener extends CustomEventListener {
                             messageList.add(m);
                             m.delete().complete();
                             TimeUnit.SECONDS.sleep(2);
-                        } catch (Exception e) {
-                            logger.warning(e.getMessage());
+                        } catch (Exception ignored) {
                         }
                     });
                 }
@@ -529,7 +526,7 @@ public class ModmailListener extends CustomEventListener {
             //noinspection ResultOfMethodCallIgnored
             modmailLogChannel.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(),null,deniedPermissions);
         } catch (InsufficientPermissionException | IllegalArgumentException createCategoryExeption) {
-            logger.config("The bot has no permissions to create a channel");
+            logger.warn(LogMarker.CONFIG,"The bot has no permissions to create a channel");
             return null;
         }
 
@@ -561,7 +558,7 @@ public class ModmailListener extends CustomEventListener {
             this.controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, config);
             return modmailCategory;
         } catch (IllegalArgumentException | InsufficientPermissionException categoryCreateExeption) {
-            logger.config("The bot has no permissions to create a channel");
+            logger.warn(LogMarker.CONFIG,"The bot has no permissions to create a channel");
             return null;
         }
     }
@@ -582,7 +579,7 @@ public class ModmailListener extends CustomEventListener {
             return modmailChannel;
         } catch (InsufficientPermissionException | IllegalArgumentException channelCreateExeption) {
             // Returns if the bot has no permissions
-            logger.config("The bot has no permissions to create a channel");
+            logger.warn(LogMarker.CONFIG,"The bot has no permissions to create a channel");
             return null;
         }
     }

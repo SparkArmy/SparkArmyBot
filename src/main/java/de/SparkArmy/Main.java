@@ -3,8 +3,9 @@ package de.SparkArmy;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.controller.LoggerController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
+import de.SparkArmy.notifications.YouTubeApi;
+import de.SparkArmy.springBoot.LoggingController;
 import de.SparkArmy.springBoot.SpringApp;
 import de.SparkArmy.timedOperations.TimedOperationsExecutor;
 import de.SparkArmy.utils.MainUtil;
@@ -14,16 +15,11 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
-
-import java.util.logging.Handler;
-import java.util.logging.Logger;
 
 public class Main {
 
-
-    @SuppressWarnings("FieldCanBeLocal")
-    private final LoggerController loggerController;
     @SuppressWarnings("FieldCanBeLocal")
     private final ConfigController controller;
     @SuppressWarnings("FieldCanBeLocal")
@@ -36,8 +32,7 @@ public class Main {
 
     public Main() {
         // Initialize Logger variables
-        loggerController = new LoggerController();
-        Logger logger = this.loggerController.getLogger();
+        Logger logger = LoggingController.logger;
         MainUtil.logger = logger;
 
         // Initialize ConfigController variables and the mainConfig
@@ -59,7 +54,7 @@ public class Main {
             this.jda = builder.build();
             logger.info("JDA successful build");
         } catch (Exception e) {
-            logger.severe("Failed to build  - " + e.getMessage());
+            logger.error("Failed to build  - " + e.getMessage());
             System.exit(1);
         }
 
@@ -71,7 +66,7 @@ public class Main {
         try{
             jda.awaitReady();
         } catch (InterruptedException e) {
-            logger.severe(e.getMessage());
+            logger.error(e.getMessage());
             Main.systemExit(1);
         }
 
@@ -85,7 +80,7 @@ public class Main {
         // Get StorageServer
         MainUtil.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
         if (MainUtil.storageServer == null){
-            logger.warning("No storage-server registered or The bot is not on storage-server");
+            logger.warn("No storage-server registered or The bot is not on storage-server");
         }
 
 //        CommandRegisterer.registerGuildSlashCommands(jda.getGuildById("890674837461278730"));
@@ -100,13 +95,11 @@ public class Main {
         SpringApplication.run(SpringApp.class,"");
         new Main();
         MainUtil.logger.info("I`m ready.");
+        MainUtil.logger.info(String.valueOf(YouTubeApi.subscribeOrUnsubscribeToPubSubHubBub("UCwl446ypHa5u3YMRqHE81Ng","subsribe")));
+
     }
 
     public static void systemExit(Integer code) {
-        for (Handler f : MainUtil.logger.getHandlers()) {
-            f.flush();
-            f.close();
-        }
         if (null != MainUtil.jda) MainUtil.jda.cancelRequests();
         System.exit(code);
     }

@@ -2,6 +2,7 @@ package de.SparkArmy.commandListener.globalCommands.slashCommands;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
 import de.SparkArmy.utils.FileHandler;
+import de.SparkArmy.utils.LogMarker;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Modal;
@@ -48,12 +49,12 @@ public class ModmailCommand extends CustomCommandListener {
 
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff/modmail");
         if (null == directory){
-            this.logger.warning("MODMAIL: directory from modmail is null");
+            this.logger.warn(LogMarker.MODMAIL,"directory from modmail is null");
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }
         if (!FileHandler.createFile(directory,idExtension + ".json")){
-            this.logger.warning("MODMAIL: can't create a file in the modmail-directory");
+            this.logger.warn(LogMarker.MODMAIL,"can't create a file in the modmail-directory");
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
         }

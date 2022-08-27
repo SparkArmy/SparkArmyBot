@@ -3,6 +3,7 @@ package de.SparkArmy.utils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -13,7 +14,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
 public class FileHandler {
@@ -101,7 +101,7 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            logger.error("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
@@ -111,7 +111,7 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            logger.error(LogMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
@@ -121,23 +121,23 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.severe("Can't read the File content from " + file.getAbsolutePath());
+            logger.error(LogMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
 
     public static @Nullable List<File> getFilesInDirectory(File path){
         if (null == path){
-            logger.info("FILEHANDLER: The path is null");
+            logger.info(LogMarker.FILHANDLER,"FILEHANDLER: The path is null");
             return null;
         }
 
         if (path.isFile()){
-            logger.info("FILEHANDLER: The path is a file");
+            logger.info(LogMarker.FILHANDLER,"FILEHANDLER: The path is a file");
             return null;
         }
         if (null == path.listFiles()){
-            logger.info("FILEHANDLER: Error to listFiles");
+            logger.info(LogMarker.FILHANDLER,"FILEHANDLER: Error to listFiles");
             return null;
         }
         return Arrays.stream(Objects.requireNonNull(path.listFiles())).toList();
@@ -152,7 +152,7 @@ public class FileHandler {
         try {
             return new FileWriter(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            logger.severe("Can't create a file-writer");
+            logger.error(LogMarker.FILHANDLER,"Can't create a file-writer");
             return null;
         }
     }

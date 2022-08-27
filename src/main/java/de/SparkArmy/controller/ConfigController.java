@@ -2,19 +2,20 @@ package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.utils.FileHandler;
+import de.SparkArmy.utils.LogMarker;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 
 import java.awt.*;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 @SuppressWarnings("unused")
 public class ConfigController {
@@ -34,7 +35,7 @@ public class ConfigController {
     public JSONObject getMainConfigFile(){
         assert this.configFolder != null;
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
-            this.logger.config("The main-config.json-file not exist, we will created a new");
+            this.logger.warn(LogMarker.CONFIG,"The main-config.json-file not exist, we will created a new");
             JSONObject blankConfig = new JSONObject();
             JSONObject discord = new JSONObject(){{
                 put("discord-token","Write here your Discord-Bot-Token");
@@ -48,6 +49,7 @@ public class ConfigController {
             blankConfig.put("twitch",twitch);
             JSONObject youtube = new JSONObject(){{
                 put("youtube-api-key","[Optional] Write here your API-Key from YouTube");
+                put("spring-callback-domain","[Optional] Your callback domain");
             }};
             blankConfig.put("youtube",youtube);
             JSONObject mariadb = new JSONObject(){{
@@ -64,21 +66,21 @@ public class ConfigController {
             blankConfig.put("otherKeys",otherKeys);
 
             if(FileHandler.writeValuesInFile(this.configFolder,"main-config.json",blankConfig)){
-                this.logger.info("main-config.json was successful created");
-                this.logger.config("Please finish your configuration");
+                this.logger.info(LogMarker.CONFIG,"main-config.json was successful created");
+                this.logger.warn(LogMarker.CONFIG,"Please finish your configuration");
                 try {
                    Desktop.getDesktop().open(FileHandler.getFileInDirectory(this.configFolder, "main-config.json"));
                 } catch (Exception ignored) {
                 }
                 Main.systemExit(0);
             }else {
-                this.logger.severe("Can't create a main-config.json");
+                this.logger.error(LogMarker.CONFIG,"Can't create a main-config.json");
                 Main.systemExit(1);
             }
         }
         String mainConfigAsString = FileHandler.getFileContent(this.configFolder,"main-config.json");
         if (mainConfigAsString == null){
-            this.logger.severe("The main-config.json is null");
+            this.logger.error(LogMarker.CONFIG,"The main-config.json is null");
             Main.systemExit(12);
         }
         assert mainConfigAsString != null;
@@ -114,11 +116,8 @@ public class ConfigController {
     }
 
     @Contract(" -> new")
-    private @NotNull JSONObject guildConfigBlank(){
-        return new JSONObject(){{
-            this.put("command-permissions",new JSONObject());
-
-        }};
+    private @NotNull JSONObject guildConfigBlank() {
+            return new JSONObject();
     }
 
 }

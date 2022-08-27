@@ -8,8 +8,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 
 @SuppressWarnings("unused")
 public abstract class CustomCommandListener extends ListenerAdapter {

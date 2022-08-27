@@ -6,8 +6,7 @@ import de.SparkArmy.timedOperations.TimedOperationsExecutor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import org.json.JSONObject;
-
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 
 public enum MainUtil {
     ;

@@ -4,7 +4,6 @@ import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
-import de.SparkArmy.notifications.YouTubeApi;
 import de.SparkArmy.springBoot.LoggingController;
 import de.SparkArmy.springBoot.SpringApp;
 import de.SparkArmy.timedOperations.TimedOperationsExecutor;
@@ -83,7 +82,7 @@ public class Main {
             logger.warn("No storage-server registered or The bot is not on storage-server");
         }
 
-//        CommandRegisterer.registerGuildSlashCommands(jda.getGuildById("890674837461278730"));
+
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();
@@ -95,8 +94,6 @@ public class Main {
         SpringApplication.run(SpringApp.class,"");
         new Main();
         MainUtil.logger.info("I`m ready.");
-        MainUtil.logger.info(String.valueOf(YouTubeApi.subscribeOrUnsubscribeToPubSubHubBub("UCwl446ypHa5u3YMRqHE81Ng","subsribe")));
-
     }
 
     public static void systemExit(Integer code) {

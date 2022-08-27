@@ -1,16 +1,13 @@
 package de.SparkArmy.notifications;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.RequestUtil;
 import org.json.JSONObject;
 
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.Map;
 
+@SuppressWarnings("unused")
 public class YouTubeApi {
 
     private static final String apiKey = MainUtil.mainConfig.getJSONObject("youtube").getString("youtube-api-key");
@@ -24,27 +21,16 @@ public class YouTubeApi {
 
     public static boolean subscribeOrUnsubscribeToPubSubHubBub(String userId, String mode){
         String targetUrl = String.format("https://www.youtube.com/xml/feeds/videos.xml?channel_id=%s",userId);
-        String url = "https://pubsubhubbub.appspot.com/subscribe";
-
-        Map<String,String> form = new HashMap<>();
-        form.put("hub.callback",MainUtil.mainConfig.getJSONObject("youtube").getString("spring-callback-domain"));
-        form.put("hub.mode",mode);
-        form.put("hub.topic",targetUrl);
-        form.put("hub.verify","async");
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            String requestBody = objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                            .writeValueAsString(form);
-           HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(requestBody);
-
+        String url = String.format("https://pubsubhubbub.appspot.com/subscribe?hub.callback=%s&hub.mode=%s&hub.topic=%s&hub.verify=async",
+                MainUtil.mainConfig.getJSONObject("youtube").getString("spring-callback-domain"),
+                mode,
+                targetUrl);
+           HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.noBody();
            HttpRequest request = RequestUtil.prepareRequest(url,new JSONObject(),body,"POST");
            HttpResponse<String> response = RequestUtil.httpRequestToResponse(request);
+           MainUtil.logger.info(String.valueOf(response.statusCode()));
            return response.statusCode() == 202;
-        } catch (JsonProcessingException e) {
-            return false;
-        }
+
     }
 
 }

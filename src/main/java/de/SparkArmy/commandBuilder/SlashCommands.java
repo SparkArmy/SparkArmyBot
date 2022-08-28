@@ -22,6 +22,7 @@ public enum SlashCommands {
             add(Commands.slash("feedback", "Feedback to Videos, Streams, Server,...").addOptions(
                     new OptionData(OptionType.STRING, "feedback-category", "The feedback category")
                             .setRequired(true)
+                            .setMinValue(4)
                             .setAutoComplete(true)
             ));
         }};

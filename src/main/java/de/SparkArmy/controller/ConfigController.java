@@ -77,17 +77,6 @@ public class ConfigController {
                 Main.systemExit(1);
             }
 
-            String propertiesString = """
-                    #server.port= Your server port
-                    #server.ssl.key-store=Your key-store for https
-                    #server.ssl.key-store-password=your key-store password
-                    #
-                    ## JKS or PKCS12
-                    #server.ssl.keyStoreType= your key-store-type
-                    """;
-
-            FileHandler.writeValuesInFile(configFolder,"spring.properties",propertiesString);
-
             Main.systemExit(0);
         }
         String mainConfigAsString = FileHandler.getFileContent(this.configFolder,"main-config.json");

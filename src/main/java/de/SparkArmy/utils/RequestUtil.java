@@ -83,7 +83,7 @@ public enum RequestUtil {
             CompletableFuture<HttpResponse<String>> futureResponse = RequestUtil.client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
             response = futureResponse.get();
         } catch (Exception e) {
-            e.printStackTrace();
+            refreshHttpClient();
         }
         return response;
     }

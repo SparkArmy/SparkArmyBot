@@ -2,17 +2,15 @@ package de.SparkArmy.eventListener;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 
-@SuppressWarnings("unused")
+
 public abstract class CustomEventListener extends ListenerAdapter {
     public ConfigController controller = MainUtil.controller;
     public Logger logger = MainUtil.logger;
@@ -21,18 +19,11 @@ public abstract class CustomEventListener extends ListenerAdapter {
     public Guild storageServer = MainUtil.storageServer;
 
 
-    @Override
-    public void onModalInteraction(@NotNull ModalInteractionEvent event) {
-        super.onModalInteraction(event);
+    public JSONObject getGuildMainConfig(Guild guild){
+      return controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
     }
 
-    @Override
-    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
-        super.onSelectMenuInteraction(event);
-    }
-
-    @Override
-    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        super.onButtonInteraction(event);
+    public void writeInGuildMainConfig(Guild guild, JSONObject config){
+        controller.writeInSpecificGuildConfig(guild,GuildConfigType.MAIN,config);
     }
 }

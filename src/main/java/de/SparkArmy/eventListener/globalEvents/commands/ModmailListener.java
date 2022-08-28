@@ -1,4 +1,4 @@
-package de.SparkArmy.eventListener.globalEvents;
+package de.SparkArmy.eventListener.globalEvents.commands;
 
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
@@ -110,15 +110,7 @@ public class ModmailListener extends CustomEventListener {
 
         SelectMenu.Builder guilds = SelectMenu.create("modmailGuildPicker;" + idExtension);
 
-        event.getJDA().getGuilds().forEach(g -> {
-            JSONObject guildConfig = this.controller.getSpecificGuildConfig(g, GuildConfigType.MAIN);
-            if (guildConfig != null) {
-                if (guildConfig.isNull("command-permissions")) return;
-                if (guildConfig.getJSONObject("command-permissions").getBoolean("modmail")) {
-                    guilds.addOption(g.getName(), g.getId());
-                }
-            }
-        });
+        event.getJDA().getGuilds().forEach(g -> guilds.addOption(g.getName(), g.getId()));
         if (guilds.build().getOptions().isEmpty()){
             event.reply("All server were you member have disabled the modmail-feature").setEphemeral(true).queue();
             return;

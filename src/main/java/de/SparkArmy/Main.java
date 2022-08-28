@@ -1,12 +1,14 @@
 package de.SparkArmy;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
+import de.SparkArmy.commandBuilder.CommandRegisterer;
 import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
 import de.SparkArmy.springBoot.LoggingController;
 import de.SparkArmy.springBoot.SpringApp;
 import de.SparkArmy.timedOperations.TimedOperationsExecutor;
+import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -16,6 +18,8 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
+
+import java.io.File;
 
 public class Main {
 
@@ -53,7 +57,7 @@ public class Main {
             this.jda = builder.build();
             logger.info("JDA successful build");
         } catch (Exception e) {
-            logger.error("Failed to build  - " + e.getMessage());
+            logger.error("JDA Failed to build  - " + e.getMessage());
             System.exit(1);
         }
 
@@ -82,7 +86,7 @@ public class Main {
             logger.warn("No storage-server registered or The bot is not on storage-server");
         }
 
-
+        CommandRegisterer.registerGlobalSlashCommands();
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();
@@ -91,6 +95,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        preCreateSpringConfig();
         SpringApplication.run(SpringApp.class,"");
         new Main();
         MainUtil.logger.info("I`m ready.");
@@ -99,6 +104,22 @@ public class Main {
     public static void systemExit(Integer code) {
         if (null != MainUtil.jda) MainUtil.jda.cancelRequests();
         System.exit(code);
+    }
+
+    private static void preCreateSpringConfig(){
+        File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
+        assert configFolder != null;
+        if (FileHandler.getFileInDirectory(configFolder,"spring.properties").exists()) return;
+        String propertiesString = """
+                    #server.port= Your server port
+                    #server.ssl.key-store=Your key-store for https
+                    #server.ssl.key-store-password=your key-store password
+                    #
+                    ## JKS or PKCS12
+                    #server.ssl.keyStoreType= your key-store-type
+                    """;
+
+        FileHandler.writeValuesInFile(configFolder,"spring.properties",propertiesString);
     }
 
 }

@@ -3,7 +3,9 @@ package de.SparkArmy.commandBuilder;
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -21,6 +23,7 @@ public enum CommandRegisterer {
         JSONObject commandData = new JSONObject();
         SlashCommands.globalSlashCommands().forEach(c-> {
             CommandRegisterer.jda.upsertCommand(c).queue();
+            c.setDefaultPermissions(DefaultMemberPermissions.ENABLED);
             commandData.append("globalCommands",c.getName());
             MainUtil.logger.info(c.getName() + " has been updated/created.");
         });
@@ -34,8 +37,18 @@ public enum CommandRegisterer {
     public static void registerGuildSlashCommands(@NotNull Guild guild){
         guild.updateCommands().queue();
         JSONObject commandData = new JSONObject();
-        SlashCommands.guildSlashCommands().forEach(c->{
+        // Moderation related commands
+        SlashCommands.guildSlashModerationCommands().forEach(c->{
             commandData.append("guildCommands",c.getName());
+            c.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS));
+            guild.upsertCommand(c).queue();
+            MainUtil.logger.info(c.getName() + " has been updated/created.");
+        });
+
+        // Admin related commands
+        SlashCommands.guildSlashAdminCommands().forEach(c->{
+            commandData.append("guildCommands",c.getName());
+            c.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
             guild.upsertCommand(c).queue();
             MainUtil.logger.info(c.getName() + " has been updated/created.");
         });

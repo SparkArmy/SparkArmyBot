@@ -1,5 +1,6 @@
 package de.SparkArmy.commandListener;
 
+import de.SparkArmy.commandListener.globalCommands.slashCommands.FeedbackCommand;
 import de.SparkArmy.commandListener.globalCommands.slashCommands.ModmailCommand;
 import de.SparkArmy.commandListener.guildCommands.slashCommands.*;
 import de.SparkArmy.utils.MainUtil;
@@ -17,7 +18,10 @@ public class CommandListenerRegisterer {
     }
 
     private void registerCommandListeners() {
+        commands.add(new FeedbackCommand());
         commands.add(new ModmailCommand());
+
+
         commands.add(new Warn());
         commands.add(new Mute());
         commands.add(new Punishment());

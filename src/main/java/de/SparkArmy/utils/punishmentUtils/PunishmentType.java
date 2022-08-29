@@ -3,6 +3,9 @@ package de.SparkArmy.utils.punishmentUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @SuppressWarnings("unused")
 public enum PunishmentType {
     WARN(1,"warn","Warns a user"),
@@ -60,5 +63,17 @@ public enum PunishmentType {
                 return UNKNOW;
             }
         }
+    }
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull List<String> getAllTypes(){
+        return new ArrayList<>(){{
+            add(WARN.getName());
+            add(MUTE.getName());
+            add(KICK.getName());
+            add(BAN.getName());
+            add(UNBAN.getName());
+            add(TIMEOUT.getName());
+        }};
     }
 }

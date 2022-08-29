@@ -2,6 +2,7 @@ package de.SparkArmy.eventListener.globalEvents;
 
 import de.SparkArmy.commandBuilder.CommandRegisterer;
 import de.SparkArmy.eventListener.CustomEventListener;
+import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.UnavailableGuildJoinedEvent;
@@ -24,5 +25,7 @@ public class BotJoinGuild extends CustomEventListener {
     private void guildJoin(Guild guild){
         CommandRegisterer.registerGuildSlashCommands(guild);
         getGuildMainConfig(guild);
+        SqlUtil.createDatabaseAndTablesForGuild(guild);
+        guild.getMembers().forEach(x->SqlUtil.putUserDataInUserTable(guild,x));
     }
 }

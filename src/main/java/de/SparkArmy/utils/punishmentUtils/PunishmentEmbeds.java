@@ -1,6 +1,7 @@
 package de.SparkArmy.utils.punishmentUtils;
 
 import de.SparkArmy.utils.MessageUtil;
+import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -50,7 +51,7 @@ public class PunishmentEmbeds{
 
     public static @NotNull EmbedBuilder punishmentLogEmbed(@NotNull Guild guild, @NotNull String reason, @NotNull User offender, @NotNull User moderator, @NotNull PunishmentType type){
         return new EmbedBuilder()
-                .setTitle(String.format("%s | %d",type.getName(),1 /*SqlUtils.getPunishmentCaseIdFromGuild(guild)*/))
+                .setTitle(String.format("%s | %d",type.getName(), SqlUtil.getPunishmentCaseIdFromGuild(guild)))
                 .setAuthor(moderator.getAsTag(),null,moderator.getEffectiveAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(guild.getJDA().getSelfUser().getAsTag(),guild.getJDA().getSelfUser().getEffectiveAvatarUrl())
@@ -60,7 +61,8 @@ public class PunishmentEmbeds{
 
     public static @NotNull EmbedBuilder punishmentLogEmbed(@NotNull Guild guild, @NotNull String reason, @NotNull User offender, @NotNull User moderator, @NotNull OffsetDateTime removeTime, @NotNull PunishmentType type){
         return new EmbedBuilder()
-                .setTitle(String.format("%s | %d",type.getName(),1 /*SqlUtils.getPunishmentCaseIdFromGuild(guild)*/))                .setAuthor(moderator.getAsTag(),null,moderator.getEffectiveAvatarUrl())
+                .setTitle(String.format("%s | %d",type.getName(),SqlUtil.getPunishmentCaseIdFromGuild(guild)))
+                .setAuthor(moderator.getAsTag(),null,moderator.getEffectiveAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(guild.getJDA().getSelfUser().getAsTag(),guild.getJDA().getSelfUser().getEffectiveAvatarUrl())
                 .addField("Offender",String.format("%s (%s)",offender.getAsTag(),offender.getId()),false)

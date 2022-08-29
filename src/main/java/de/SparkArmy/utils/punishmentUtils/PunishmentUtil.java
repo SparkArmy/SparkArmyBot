@@ -5,6 +5,7 @@ import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.utils.ChannelUtil;
 import de.SparkArmy.utils.LogChannelType;
 import de.SparkArmy.utils.MainUtil;
+import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
@@ -15,9 +16,11 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -67,6 +70,7 @@ public class PunishmentUtil {
     }
 
     public static boolean giveUserPunishment(Member offender, Guild guild, PunishmentType type,String reason) {
+        // Check if guild has punishment parameters
         JSONObject config = controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
         if (config.isNull("punishments")) {
             ChannelUtil.logInLogChannel(guild.getPublicRole().getAsMention() + " Please set punishment-parameters", guild, LogChannelType.SERVER);
@@ -112,8 +116,10 @@ public class PunishmentUtil {
 
     public static void executePunishment(@NotNull SlashCommandInteractionEvent event) {
         String eventName = event.getName();
+        // Checks the event-name
         if (!(eventName.equals("warn") || eventName.equals("mute") || eventName.equals("ban") || eventName.equals("kick"))) return;
 
+        // Checks guild and if the user a member of server
         Guild guild = event.getGuild();
         if (guild == null) return;
         Member offender = Objects.requireNonNull(event.getOption("target_user")).getAsMember();
@@ -122,9 +128,12 @@ public class PunishmentUtil {
             return;
         }
 
+        // Check the moderator
         Member moderator = event.getMember();
         if (moderator == null) return;
 
+
+        // Conditions to not warn yourself, a bot, a member with a higher role, an admin
         if (offender.equals(moderator)) {
             event.reply("You can't " + eventName + " yourself").setEphemeral(true).queue();
             return;
@@ -140,10 +149,13 @@ public class PunishmentUtil {
         }
 
 
+        // Timed Punishment
         OffsetDateTime removeTime = null;
         OptionMapping duration = event.getOption("duration");
         OptionMapping timeUnit = event.getOption("time_unit");
+        // Check if the Duration not null
         if (duration != null || timeUnit != null) {
+            // Create a remove time
             removeTime = PunishmentUtil.getRemoveTime(duration, timeUnit);
             if (removeTime == null) {
                 event.reply("Please check the time_unit parameter").setEphemeral(true).queue();
@@ -151,6 +163,7 @@ public class PunishmentUtil {
             }
         }
 
+        // Reason strings
         OptionMapping reason = event.getOption("reason");
         String reasonString;
         if (reason == null) {
@@ -158,24 +171,45 @@ public class PunishmentUtil {
         } else {
             reasonString = reason.getAsString();
         }
+
+        // Create standard Embeds without timestamps
         EmbedBuilder userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reasonString, PunishmentType.getByName(eventName));
         EmbedBuilder serverEmbed = PunishmentEmbeds.punishmentLogEmbed(guild, reasonString, offender.getUser(), moderator.getUser(), PunishmentType.getByName(eventName));
 
+        // if the remove time not null create a timed-punishment and set embeds with a timestamp
         if (removeTime != null) {
                 new TemporaryPunishment(offender.getUser(), PunishmentType.getByName(eventName), removeTime, guild);
                 userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reasonString, removeTime, PunishmentType.getByName(eventName));
                 serverEmbed = PunishmentEmbeds.punishmentLogEmbed(guild, reasonString, offender.getUser(), moderator.getUser(), removeTime, PunishmentType.getByName(eventName));
             }
+
+        // log the punishment in mod-log
         ChannelUtil.logInLogChannel(serverEmbed, guild, LogChannelType.MOD);
+
         try {
-            offender.getUser().openPrivateChannel().complete().sendMessageEmbeds(userEmbed.build()).queue();
+            // try to send a message to user and ignore an error if the user has dm dissabled
+            offender.getUser().openPrivateChannel().complete().sendMessageEmbeds(userEmbed.build()).queue(null,
+                    new ErrorHandler().ignore(ErrorResponse.CANNOT_SEND_TO_USER));
         } catch (Exception ignored) {
         }
 
+        // give the user the punishment and write this in the database-table
         if (!PunishmentUtil.giveUserPunishment(offender, guild,PunishmentType.getByName(eventName),reasonString)) {
+            // if user have not the punishment send this response
             event.reply("User have not the punishment. Please give it manual").setEphemeral(true).queue();
             return;
         }
+
+        if (SqlUtil.isUserNotInTable(guild, offender)){
+            SqlUtil.putUserDataInUserTable(guild,offender);
+        }
+        if (SqlUtil.isUserNotInTable(guild,moderator)){
+            SqlUtil.putUserDataInUserTable(guild,moderator);
+            SqlUtil.putDataInModeratorTable(guild,moderator);
+        }
+        SqlUtil.putDataInPunishmentTable(guild,offender,moderator,PunishmentType.getByName(eventName));
+
+        // response to moderator
         event.reply(offender.getEffectiveName() + " was " + eventName).setEphemeral(true).queue();
     }
 

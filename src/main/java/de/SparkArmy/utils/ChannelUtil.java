@@ -15,6 +15,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class ChannelUtil {
@@ -150,5 +152,90 @@ public class ChannelUtil {
        sendMessageInRightChannel(value,guildChannel);
     }
 
+    public static @Nullable HashMap<String,HashMap<String,Collection<Permission>>> getChannelPermission(@NotNull MessageChannel channel){
+
+        HashMap<String,HashMap<String,Collection<Permission>>> overrides = new HashMap<>();
+
+        switch (channel.getType()){
+            case NEWS -> {
+                NewsChannel newsChannel = jda.getNewsChannelById(channel.getId());
+                if (newsChannel == null) return null;
+                return getOverrides(newsChannel.getPermissionOverrides());
+            }
+            case TEXT -> {
+                TextChannel textChannel = jda.getTextChannelById(channel.getId());
+                if (textChannel == null) return null;
+                return getOverrides(textChannel.getPermissionOverrides());
+            }
+            case VOICE -> {
+                VoiceChannel voiceChannel = jda.getVoiceChannelById(channel.getId());
+                if (voiceChannel == null) return null;
+                return getOverrides(voiceChannel.getPermissionOverrides());
+            }
+        }
+        return null;
+    }
+
+    private static @NotNull HashMap<String,HashMap<String,Collection<Permission>>> getOverrides(@NotNull List<PermissionOverride> permissions){
+        HashMap<String,HashMap<String,Collection<Permission>>> overrides = new HashMap<>();
+        permissions.forEach(override-> overrides.put(override.getId(),new HashMap<>(){{
+            put("allowed",override.getAllowed());
+            put("denied",override.getDenied());
+        }}));
+        return overrides;
+    }
+
+    public static void clearChannelPermissionsForPublicRole(@NotNull MessageChannel channel){
+        switch (channel.getType()){
+            case NEWS -> {
+                NewsChannel target_channel = jda.getNewsChannelById(channel.getId());
+                if (target_channel == null) return;
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,null).queue();
+            }
+            case TEXT -> {
+                TextChannel target_channel = jda.getTextChannelById(channel.getId());
+                if (target_channel == null) return;
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,null).queue();            }
+            case VOICE -> {
+                VoiceChannel target_channel = jda.getVoiceChannelById(channel.getId());
+                if (target_channel == null) return;
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,null).queue();            }
+        }
+    }
+
+    public static void disableWritingForPublicRole(@NotNull MessageChannel channel){
+        switch (channel.getType()){
+            case NEWS -> {
+                NewsChannel target_channel = jda.getNewsChannelById(channel.getId());
+                if (target_channel == null) return;
+                Collection<Permission> deniedPermissions = new ArrayList<>(){{
+                    add(Permission.MESSAGE_SEND);
+                    add(Permission.CREATE_PRIVATE_THREADS);
+                    add(Permission.CREATE_PUBLIC_THREADS);
+                }};
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,deniedPermissions).queue();
+            }
+            case TEXT -> {
+                TextChannel target_channel = jda.getTextChannelById(channel.getId());
+                if (target_channel == null) return;
+                Collection<Permission> deniedPermissions = new ArrayList<>(){{
+                    add(Permission.MESSAGE_SEND);
+                    add(Permission.CREATE_PRIVATE_THREADS);
+                    add(Permission.CREATE_PUBLIC_THREADS);
+                }};
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,deniedPermissions).queue();
+            }
+            case VOICE -> {
+                VoiceChannel target_channel = jda.getVoiceChannelById(channel.getId());
+                if (target_channel == null) return;
+                Collection<Permission> deniedPermissions = new ArrayList<>(){{
+                    add(Permission.MESSAGE_SEND);
+                    add(Permission.CREATE_PRIVATE_THREADS);
+                    add(Permission.CREATE_PUBLIC_THREADS);
+                }};
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,deniedPermissions).queue();
+            }
+        }
+    }
 
 }

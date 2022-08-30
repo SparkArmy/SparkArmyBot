@@ -17,6 +17,7 @@ public abstract class CustomCommandListener extends ListenerAdapter {
     public EventWaiter waiter = MainUtil.waiter;
 
 
+    @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         super.onSlashCommandInteraction(event);
     }

@@ -18,18 +18,26 @@ public class CommandListenerRegisterer {
     }
 
     private void registerCommandListeners() {
+        // Global Commands
         commands.add(new FeedbackCommand());
         commands.add(new ModmailCommand());
 
-
+        // Moderation Commands
         commands.add(new Warn());
         commands.add(new Mute());
-        commands.add(new Punishment());
         commands.add(new Ban());
         commands.add(new Kick());
+
+        // Admin Commands
+        commands.add(new Punishment());
         commands.add(new ReactionRoles());
         commands.add(new MediaOnly());
         commands.add(new Notifications());
+        commands.add(new Lockdown());
+        commands.add(new UpdateCommands());
+
+        // User Commands
+
 
 
         this.commands.forEach(this.jda::addEventListener);

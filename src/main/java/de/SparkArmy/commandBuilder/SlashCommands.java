@@ -115,7 +115,7 @@ public enum SlashCommands {
                     new OptionData(OptionType.CHANNEL, "channel", "The provided channel")
             ));
 
-            // NotificationCommand
+            // Notification command
             add(Commands.slash("notifications", "Add/Edit/Remove Notifications").addOptions(
                     new OptionData(OptionType.STRING, "notification", "The provided action").addChoices(
                             new Command.Choice("Twitter", "twitter"),
@@ -128,6 +128,14 @@ public enum SlashCommands {
                             new Command.Choice("Remove", "remove")
                     )
             ));
+
+            // Lockdown command
+            add(Commands.slash("lockdown","Enable/Disable for all non admins to write in this channel").addOptions(
+                    new OptionData(OptionType.CHANNEL,"target_channel","The target channel")
+            ));
+
+            // Update command
+            add(Commands.slash("update-commands","Update commands"));
         }};
     }
 }

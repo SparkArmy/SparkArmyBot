@@ -35,6 +35,7 @@ public class CommandListenerRegisterer {
         commands.add(new Notifications());
         commands.add(new Lockdown());
         commands.add(new UpdateCommands());
+        commands.add(new LogChannelConfig());
 
         // User Commands
 

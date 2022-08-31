@@ -23,7 +23,7 @@ public class ChannelUtil {
     private static final JDA jda = MainUtil.jda;
     private static final ConfigController controller = MainUtil.controller;
 
-    public static void sendMessageInRightChannel(@NotNull Object value, Channel channel){
+    public static void sendMessageInRightChannel(@NotNull Object value, Channel channel) {
         Class<?> targetClass = value.getClass();
         MessageChannel messageChannel = rightChannel(channel);
         if (messageChannel == null) return;
@@ -40,10 +40,10 @@ public class ChannelUtil {
         }
     }
 
-    public static @Nullable MessageChannel rightChannel(@NotNull Channel channel){
+    public static @Nullable MessageChannel rightChannel(@NotNull Channel channel) {
         String channelId = channel.getId();
-        switch (channel.getType()){
-            case NEWS ->{
+        switch (channel.getType()) {
+            case NEWS -> {
                 return jda.getNewsChannelById(channelId);
             }
             case TEXT -> {
@@ -52,7 +52,7 @@ public class ChannelUtil {
             case VOICE -> {
                 return jda.getVoiceChannelById(channelId);
             }
-            case GUILD_NEWS_THREAD,GUILD_PRIVATE_THREAD,GUILD_PUBLIC_THREAD  -> {
+            case GUILD_NEWS_THREAD, GUILD_PRIVATE_THREAD, GUILD_PUBLIC_THREAD -> {
                 return jda.getThreadChannelById(channelId);
             }
             default -> {
@@ -61,102 +61,104 @@ public class ChannelUtil {
         }
     }
 
-    public static TextChannel createTextChannel(@NotNull Guild guild, @NotNull String channelName){
+    public static TextChannel createTextChannel(@NotNull Guild guild, @NotNull String channelName) {
         return guild.createTextChannel(channelName).complete();
     }
 
-    public static TextChannel createTextChannel(@NotNull Category category, @NotNull String channelName){
+    public static TextChannel createTextChannel(@NotNull Category category, @NotNull String channelName) {
         return category.createTextChannel(channelName).complete();
     }
 
-    public static VoiceChannel createVoiceChannel(@NotNull Guild guild, @NotNull String channelName){
+    public static VoiceChannel createVoiceChannel(@NotNull Guild guild, @NotNull String channelName) {
         return guild.createVoiceChannel(channelName).complete();
     }
 
-    public static VoiceChannel createVoiceChannel(@NotNull Category category, @NotNull String channelName){
+    public static VoiceChannel createVoiceChannel(@NotNull Category category, @NotNull String channelName) {
         return category.createVoiceChannel(channelName).complete();
     }
 
-    public static StageChannel createStageChannel(@NotNull Guild guild, @NotNull String channelName){
+    public static StageChannel createStageChannel(@NotNull Guild guild, @NotNull String channelName) {
         return guild.createStageChannel(channelName).complete();
     }
 
-    public static StageChannel createStageChannel(@NotNull Category category, @NotNull String channelName){
+    public static StageChannel createStageChannel(@NotNull Category category, @NotNull String channelName) {
         return category.createStageChannel(channelName).complete();
     }
 
-    public static Category createCategory(@NotNull Guild guild, @NotNull String channelName){
+    public static Category createCategory(@NotNull Guild guild, @NotNull String channelName) {
         return guild.createCategory(channelName).complete();
     }
 
-    public static NewsChannel createNewsChannel(@NotNull Guild guild, @NotNull String channelName){
+    public static NewsChannel createNewsChannel(@NotNull Guild guild, @NotNull String channelName) {
         return guild.createNewsChannel(channelName).complete();
     }
 
-    public static ThreadChannel createThreadChannel(@NotNull TextChannel textChannel, @NotNull String channelName){
+    public static ThreadChannel createThreadChannel(@NotNull TextChannel textChannel, @NotNull String channelName) {
         return textChannel.createThreadChannel(channelName).complete();
     }
 
-    private static JSONObject getLogChannel(Guild guild){
+    public static JSONObject getLogChannel(Guild guild) {
         JSONObject config = controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
-        if (config.isNull("log-channel")){
-            config.put("log-channel",new JSONObject());
+        if (config.isNull("log-channel")) {
+            config.put("log-channel", new JSONObject());
         }
         return config.getJSONObject("log-channel");
     }
 
-    private static void writeNewLogChannelsInConfig(Guild guild,JSONObject logChannel){
-       JSONObject config = controller.getSpecificGuildConfig(guild,GuildConfigType.MAIN);
-       config.put("log-channel",logChannel);
-       controller.writeInSpecificGuildConfig(guild,GuildConfigType.MAIN,config);
+    private static void writeNewLogChannelsInConfig(Guild guild, JSONObject logChannel) {
+        JSONObject config = controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
+        config.put("log-channel", logChannel);
+        controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, config);
     }
 
     @Contract(" -> new")
-    private static @NotNull Collection<Permission> standardDeniedPermissions(){
-        return new ArrayList<>(){{add(Permission.VIEW_CHANNEL);}};
+    private static @NotNull Collection<Permission> standardDeniedPermissions() {
+        return new ArrayList<>() {{
+            add(Permission.VIEW_CHANNEL);
+        }};
     }
 
-    public static void logInLogChannel(Object value, Guild guild, @NotNull LogChannelType channel){
+    public static void logInLogChannel(Object value, Guild guild, @NotNull LogChannelType channel) {
         String channelName = channel.getName();
-       JSONObject logChannel = getLogChannel(guild);
+        JSONObject logChannel = getLogChannel(guild);
         Category category;
-       if (logChannel.isNull("log-category")) {
-           category = createCategory(guild, "LOGCHANNEL");
-           category.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, standardDeniedPermissions()).queue();
-           logChannel.put("log-category",category.getId());
-           writeNewLogChannelsInConfig(guild,logChannel);
-       }
-        category = guild.getCategoryById(logChannel.getString("log-category"));
-        if (category == null){
+        if (logChannel.isNull("log-category")) {
             category = createCategory(guild, "LOGCHANNEL");
             category.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, standardDeniedPermissions()).queue();
-            logChannel.put("log-category",category.getId());
-            writeNewLogChannelsInConfig(guild,logChannel);
+            logChannel.put("log-category", category.getId());
+            writeNewLogChannelsInConfig(guild, logChannel);
+        }
+        category = guild.getCategoryById(logChannel.getString("log-category"));
+        if (category == null) {
+            category = createCategory(guild, "LOGCHANNEL");
+            category.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(), null, standardDeniedPermissions()).queue();
+            logChannel.put("log-category", category.getId());
+            writeNewLogChannelsInConfig(guild, logChannel);
         }
 
 
         GuildChannel guildChannel;
         if (logChannel.isNull(String.valueOf(channelName))) {
-           guildChannel = createTextChannel(category, String.valueOf(channelName));
-           logChannel.put(String.valueOf(channelName),guildChannel.getId());
-           writeNewLogChannelsInConfig(guild,logChannel);
+            guildChannel = createTextChannel(category, String.valueOf(channelName));
+            logChannel.put(String.valueOf(channelName), guildChannel.getId());
+            writeNewLogChannelsInConfig(guild, logChannel);
         }
 
         guildChannel = guild.getGuildChannelById(logChannel.getString(channelName));
-        if (guildChannel == null){
-            guildChannel = createTextChannel(category,String.valueOf(channelName));
-            logChannel.put(String.valueOf(channelName),guildChannel.getId());
-            writeNewLogChannelsInConfig(guild,logChannel);
+        if (guildChannel == null) {
+            guildChannel = createTextChannel(category, String.valueOf(channelName));
+            logChannel.put(String.valueOf(channelName), guildChannel.getId());
+            writeNewLogChannelsInConfig(guild, logChannel);
         }
 
-       sendMessageInRightChannel(value,guildChannel);
+        sendMessageInRightChannel(value, guildChannel);
     }
 
-    public static @Nullable HashMap<String,HashMap<String,Collection<Permission>>> getChannelPermission(@NotNull MessageChannel channel){
+    public static @Nullable HashMap<String, HashMap<String, Collection<Permission>>> getChannelPermission(@NotNull MessageChannel channel) {
 
-        HashMap<String,HashMap<String,Collection<Permission>>> overrides = new HashMap<>();
+        HashMap<String, HashMap<String, Collection<Permission>>> overrides = new HashMap<>();
 
-        switch (channel.getType()){
+        switch (channel.getType()) {
             case NEWS -> {
                 NewsChannel newsChannel = jda.getNewsChannelById(channel.getId());
                 if (newsChannel == null) return null;
@@ -176,64 +178,66 @@ public class ChannelUtil {
         return null;
     }
 
-    private static @NotNull HashMap<String,HashMap<String,Collection<Permission>>> getOverrides(@NotNull List<PermissionOverride> permissions){
-        HashMap<String,HashMap<String,Collection<Permission>>> overrides = new HashMap<>();
-        permissions.forEach(override-> overrides.put(override.getId(),new HashMap<>(){{
-            put("allowed",override.getAllowed());
-            put("denied",override.getDenied());
+    private static @NotNull HashMap<String, HashMap<String, Collection<Permission>>> getOverrides(@NotNull List<PermissionOverride> permissions) {
+        HashMap<String, HashMap<String, Collection<Permission>>> overrides = new HashMap<>();
+        permissions.forEach(override -> overrides.put(override.getId(), new HashMap<>() {{
+            put("allowed", override.getAllowed());
+            put("denied", override.getDenied());
         }}));
         return overrides;
     }
 
-    public static void clearChannelPermissionsForPublicRole(@NotNull MessageChannel channel){
-        switch (channel.getType()){
+    public static void clearChannelPermissionsForPublicRole(@NotNull MessageChannel channel) {
+        switch (channel.getType()) {
             case NEWS -> {
                 NewsChannel target_channel = jda.getNewsChannelById(channel.getId());
                 if (target_channel == null) return;
-                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,null).queue();
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(), null, null).queue();
             }
             case TEXT -> {
                 TextChannel target_channel = jda.getTextChannelById(channel.getId());
                 if (target_channel == null) return;
-                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,null).queue();            }
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(), null, null).queue();
+            }
             case VOICE -> {
                 VoiceChannel target_channel = jda.getVoiceChannelById(channel.getId());
                 if (target_channel == null) return;
-                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,null).queue();            }
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(), null, null).queue();
+            }
         }
     }
 
-    public static void disableWritingForPublicRole(@NotNull MessageChannel channel){
-        switch (channel.getType()){
+    public static void disableWritingForPublicRole(@NotNull MessageChannel channel) {
+        switch (channel.getType()) {
             case NEWS -> {
                 NewsChannel target_channel = jda.getNewsChannelById(channel.getId());
                 if (target_channel == null) return;
-                Collection<Permission> deniedPermissions = new ArrayList<>(){{
+                Collection<Permission> deniedPermissions = new ArrayList<>() {{
                     add(Permission.MESSAGE_SEND);
                     add(Permission.CREATE_PRIVATE_THREADS);
                     add(Permission.CREATE_PUBLIC_THREADS);
                 }};
-                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,deniedPermissions).queue();
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(), null, deniedPermissions).queue();
             }
             case TEXT -> {
                 TextChannel target_channel = jda.getTextChannelById(channel.getId());
                 if (target_channel == null) return;
-                Collection<Permission> deniedPermissions = new ArrayList<>(){{
+                Collection<Permission> deniedPermissions = new ArrayList<>() {{
                     add(Permission.MESSAGE_SEND);
                     add(Permission.CREATE_PRIVATE_THREADS);
                     add(Permission.CREATE_PUBLIC_THREADS);
                 }};
-                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,deniedPermissions).queue();
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(), null, deniedPermissions).queue();
             }
             case VOICE -> {
                 VoiceChannel target_channel = jda.getVoiceChannelById(channel.getId());
                 if (target_channel == null) return;
-                Collection<Permission> deniedPermissions = new ArrayList<>(){{
+                Collection<Permission> deniedPermissions = new ArrayList<>() {{
                     add(Permission.MESSAGE_SEND);
                     add(Permission.CREATE_PRIVATE_THREADS);
                     add(Permission.CREATE_PUBLIC_THREADS);
                 }};
-                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(),null,deniedPermissions).queue();
+                target_channel.getManager().putPermissionOverride(target_channel.getGuild().getPublicRole(), null, deniedPermissions).queue();
             }
         }
     }

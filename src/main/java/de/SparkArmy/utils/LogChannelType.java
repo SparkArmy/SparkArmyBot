@@ -1,7 +1,11 @@
 package de.SparkArmy.utils;
 
+import java.util.Arrays;
+import java.util.List;
+
 @SuppressWarnings("unused")
 public enum LogChannelType {
+    UNKNOW(-1,"unknow"),
     MESSAGE(1,"message-log"),
     MEMBER (2,"member-log"),
     COMMAND (3,"command-log"),
@@ -25,5 +29,15 @@ public enum LogChannelType {
 
     public String getName() {
         return name;
+    }
+
+    public static List<LogChannelType> getLogChannelTypes(){
+        return Arrays.stream(LogChannelType.values()).toList();
+    }
+
+    public static LogChannelType getLogChannelTypeByName(String name){
+        List<LogChannelType> validValues = Arrays.stream(LogChannelType.values()).filter(x->x.getName().equals(name)).toList();
+        if (validValues.isEmpty()) return UNKNOW;
+        return validValues.get(0);
     }
 }

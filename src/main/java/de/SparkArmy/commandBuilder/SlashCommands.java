@@ -22,7 +22,6 @@ public enum SlashCommands {
             add(Commands.slash("feedback", "Feedback to Videos, Streams, Server,...").addOptions(
                     new OptionData(OptionType.STRING, "feedback-category", "The feedback category")
                             .setRequired(true)
-                            .setMinValue(4)
                             .setAutoComplete(true)
             ));
         }};
@@ -136,6 +135,15 @@ public enum SlashCommands {
 
             // Update command
             add(Commands.slash("update-commands","Update commands"));
+
+            // Set Log-Channel command
+            add(Commands.slash("log-channel-config","Update the target log-channel").addOptions(
+                    new OptionData(OptionType.STRING,"target-typ","The Log-Channel-Type")
+                       .setAutoComplete(true)
+                       .setRequired(true),
+                    new OptionData(OptionType.CHANNEL,"target-channnel","The log channel")
+                            .setRequired(true)
+               ));
         }};
     }
 }

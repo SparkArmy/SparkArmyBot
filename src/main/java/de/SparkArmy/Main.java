@@ -1,6 +1,7 @@
 package de.SparkArmy;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
+import de.SparkArmy.commandBuilder.CommandRegisterer;
 import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
@@ -86,7 +87,7 @@ public class Main {
             logger.warn("No storage-server registered or The bot is not on storage-server");
         }
 
-//        CommandRegisterer.registerGlobalSlashCommands();
+        CommandRegisterer.registerGlobalSlashCommands();
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();

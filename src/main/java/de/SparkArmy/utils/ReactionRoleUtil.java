@@ -480,10 +480,12 @@ public class ReactionRoleUtil {
 
             SelectMenu.Builder roles = SelectMenu.create("editRolesList," + action + ";" + suffix);
 
-            content.getJSONObject("fields").keySet().forEach(x->{
-                JSONObject field = content.getJSONObject("fields").getJSONObject(x);
-                roles.addOption(field.getString("roleName"),x);
-            });
+            if (!content.isNull("fields")) {
+                content.getJSONObject("fields").keySet().forEach(x -> {
+                    JSONObject field = content.getJSONObject("fields").getJSONObject(x);
+                    roles.addOption(field.getString("roleName"), x);
+                });
+            }
 
             roles.addOption("Delete Role","deleteRole");
             roles.addOption("Return","return");

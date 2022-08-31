@@ -17,6 +17,7 @@ public class LogChannelConfig extends CustomCommandListener {
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        if (!event.getName().equals("log-channel-config")) return;
         Collection<String> types = new ArrayList<>();
         LogChannelType.getLogChannelTypes().forEach(x ->{
             if (x.equals(LogChannelType.UNKNOW)) return;

@@ -104,7 +104,7 @@ public class PunishmentListener extends CustomEventListener {
         String modalId = event.getModalId();
         if (!modalId.contains(",")) return;
         String[] modalSplitId = modalId.split(",");
-        if (modalSplitId[0].equals("punishmentModal")) return;
+        if (!modalSplitId[0].equals("punishmentModal")) return;
         if (event.getGuild() == null) return;
         PunishmentType type = PunishmentType.getByName(modalSplitId[0]);
 

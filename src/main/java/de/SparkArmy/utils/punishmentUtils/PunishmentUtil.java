@@ -199,11 +199,11 @@ public class PunishmentUtil {
             return;
         }
 
-        if (SqlUtil.isUserNotInTable(guild, offender)){
+        if (SqlUtil.isUserNotInUserTable(guild, offender)){
             SqlUtil.putUserDataInUserTable(guild,offender);
         }
-        if (SqlUtil.isUserNotInTable(guild,moderator)){
-            SqlUtil.putUserDataInUserTable(guild,moderator);
+        if (SqlUtil.isUserNotInModeratorTable(guild,moderator)){
+            if (SqlUtil.isUserNotInUserTable(guild,moderator)) SqlUtil.putUserDataInUserTable(guild,moderator);
             SqlUtil.putDataInModeratorTable(guild,moderator);
         }
         SqlUtil.putDataInPunishmentTable(guild,offender,moderator,PunishmentType.getByName(eventName));
@@ -259,10 +259,10 @@ public class PunishmentUtil {
                 }else {
                     reason = punishments.getJSONObject("kick").getString("standard-reason");
                 }
-                if (SqlUtil.isUserNotInTable(guild, offender)){
+                if (SqlUtil.isUserNotInUserTable(guild, offender)){
                     SqlUtil.putUserDataInUserTable(guild,offender);
                 }
-                if (SqlUtil.isUserNotInTable(guild,moderator)){
+                if (SqlUtil.isUserNotInUserTable(guild,moderator)){
                     SqlUtil.putUserDataInUserTable(guild,moderator);
                     SqlUtil.putDataInModeratorTable(guild,moderator);
                 }
@@ -275,10 +275,10 @@ public class PunishmentUtil {
                 }else {
                     reason = punishments.getJSONObject("ban").getString("standard-reason");
                 }
-                if (SqlUtil.isUserNotInTable(guild, offender)){
+                if (SqlUtil.isUserNotInUserTable(guild, offender)){
                     SqlUtil.putUserDataInUserTable(guild,offender);
                 }
-                if (SqlUtil.isUserNotInTable(guild,moderator)){
+                if (SqlUtil.isUserNotInUserTable(guild,moderator)){
                     SqlUtil.putUserDataInUserTable(guild,moderator);
                     SqlUtil.putDataInModeratorTable(guild,moderator);
                 }

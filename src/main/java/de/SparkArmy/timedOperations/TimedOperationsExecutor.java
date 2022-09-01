@@ -14,6 +14,8 @@ public class TimedOperationsExecutor {
         execute.scheduleAtFixedRate(tenSeconds(),1,10, TimeUnit.SECONDS);
         execute.scheduleAtFixedRate(twoSeconds(),1,2,TimeUnit.SECONDS);
         execute.scheduleAtFixedRate(ninetySeconds(),2,90,TimeUnit.SECONDS);
+        execute.scheduleAtFixedRate(fourDays(),0,4,TimeUnit.DAYS);
+
     }
 
     @Contract(pure = true)
@@ -35,5 +37,8 @@ public class TimedOperationsExecutor {
         return TimedOperations::checkForNotificationUpdates;
     }
 
-
+    @Contract(pure = true)
+    private static @NotNull Runnable fourDays(){
+        return TimedOperations::updateYouTubeSubscriptions;
+    }
 }

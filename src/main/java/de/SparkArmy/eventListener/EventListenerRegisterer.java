@@ -10,6 +10,7 @@ import de.SparkArmy.eventListener.guildEvents.commands.PunishmentListener;
 import de.SparkArmy.eventListener.guildEvents.commands.ReactionRolesListener;
 import de.SparkArmy.eventListener.guildEvents.eventLogging.GuildMemberLeaveLogging;
 import de.SparkArmy.eventListener.guildEvents.eventLogging.SlashCommandListener;
+import de.SparkArmy.eventListener.guildEvents.member.MemberJoinEvent;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -44,6 +45,9 @@ public class EventListenerRegisterer {
 
         // ChannelRelatedEvents
         events.add(new MediaOnlyFunction());
+
+        // MemberRelatedEvents
+        events.add(new MemberJoinEvent());
 
         this.events.forEach(this.jda::addEventListener);
     }

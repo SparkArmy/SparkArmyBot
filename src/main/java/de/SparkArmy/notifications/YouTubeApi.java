@@ -28,7 +28,6 @@ public class YouTubeApi {
            HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.noBody();
            HttpRequest request = RequestUtil.prepareRequest(url,new JSONObject(),body,"POST");
            HttpResponse<String> response = RequestUtil.httpRequestToResponse(request);
-           MainUtil.logger.info(String.valueOf(response.statusCode()));
            return response.statusCode() == 202;
 
     }

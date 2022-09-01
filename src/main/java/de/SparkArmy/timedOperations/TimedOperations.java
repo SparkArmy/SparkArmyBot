@@ -3,6 +3,7 @@ package de.SparkArmy.timedOperations;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.notifications.NotificationUtil;
+import de.SparkArmy.notifications.YouTubeApi;
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
@@ -128,6 +129,32 @@ public class TimedOperations {
                     NotificationUtil.checkForTweets(twitterWatchlist,guild);
             }
 
+        });
+    }
+
+    protected static void updateYouTubeSubscriptions(){
+        File directory = FileHandler.getDirectoryInUserDirectory("botstuff/notifications");
+        if (directory == null) return;
+        List<File> files = FileHandler.getFilesInDirectory(directory);
+        if (files == null) return;
+        files.forEach(file-> {
+            Guild guild = MainUtil.jda.getGuildById(file.getName().replace(".json", ""));
+            if (guild == null || guild.equals(MainUtil.storageServer)) return;
+
+            String fileContentString = FileHandler.getFileContent(file);
+            if (fileContentString == null) return;
+
+            JSONObject fileContent = new JSONObject(fileContentString);
+
+            if (fileContent.isEmpty()) return;
+            if (fileContent.isNull("youtube")) return;
+            JSONObject watchlist = fileContent.getJSONObject("youtube");
+            if (watchlist.isEmpty()) return;
+            watchlist.keySet().forEach(x ->{
+                if(!YouTubeApi.subscribeOrUnsubscribeToPubSubHubBub(x, "subscribe")){
+                    MainUtil.logger.info("Subscription for " + x + " failed");
+                }
+            });
         });
     }
 }

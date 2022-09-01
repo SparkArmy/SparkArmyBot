@@ -104,7 +104,7 @@ public class PunishmentListener extends CustomEventListener {
         String modalId = event.getModalId();
         if (!modalId.contains(",")) return;
         String[] modalSplitId = modalId.split(",");
-        if (!modalSplitId[0].equals("punishmentModal")) return;
+        if (!modalSplitId[1].equals("punishmentModal")) return;
         if (event.getGuild() == null) return;
         PunishmentType type = PunishmentType.getByName(modalSplitId[0]);
 
@@ -134,7 +134,7 @@ public class PunishmentListener extends CustomEventListener {
                 } else {
                     roleId = role.getAsString();
                 }
-                psm.put("role.id", roleId);
+                psm.put("role-id", roleId);
             }
             case MUTE -> {
                 ModalMapping enabled = event.getValue("mute,enabled");

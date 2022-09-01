@@ -415,7 +415,7 @@ public class ModmailListener extends CustomEventListener {
                         try {
                             messageList.add(m);
                             m.delete().complete();
-                            TimeUnit.SECONDS.sleep(2);
+                            TimeUnit.SECONDS.sleep(4);
                         } catch (Exception ignored) {
                         }
                     });
@@ -450,12 +450,12 @@ public class ModmailListener extends CustomEventListener {
             }
 
             if (modmail.isNull("archive-channel")) {
-                modmailArchiveChannel = createModmailTextChannel(guild, config, modmailCategory, "archive");
+                modmailArchiveChannel = createModmailTextChannel(guild, config, modmailCategory, "archive-channel");
                 if (modmailArchiveChannel == null) return;
             } else {
                 modmailArchiveChannel = guild.getTextChannelById(modmail.getString("archive-channel"));
                 if (modmailArchiveChannel == null) {
-                    modmailArchiveChannel = createModmailTextChannel(guild, config, modmailCategory, "archive");
+                    modmailArchiveChannel = createModmailTextChannel(guild, config, modmailCategory, "archive-channel");
                     if (modmailArchiveChannel == null) return;
                 }
             }

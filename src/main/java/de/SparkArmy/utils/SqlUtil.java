@@ -149,12 +149,29 @@ public class SqlUtil {
         }
     }
 
-    public static boolean isUserNotInTable(Guild guild, @NotNull Member user){
+    public static boolean isUserNotInUserTable(Guild guild, @NotNull Member user){
         if (!sqlEnabled) return false;
         try {
             Statement stmt = statement(guild);
             ResultSet results;
             String statementString = String.format("SELECT COUNT (*) FROM tblUser WHERE usrId='%s';",user.getId());
+            results = stmt.executeQuery(statementString);
+            int n = 0;
+            if (results.next()) n = results.getInt(1);
+            stmt.close();
+            return n == 0;
+        }catch (SQLException e){
+            logger.error(e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean isUserNotInModeratorTable(Guild guild,Member member){
+        if (!sqlEnabled) return false;
+        try {
+            Statement stmt = statement(guild);
+            ResultSet results;
+            String statementString = String.format("SELECT COUNT (*) FROM tblModerator WHERE modUserId='%s';",member.getId());
             results = stmt.executeQuery(statementString);
             int n = 0;
             if (results.next()) n = results.getInt(1);
@@ -184,7 +201,7 @@ public class SqlUtil {
         if (!sqlEnabled) return;
         try {
             Statement stmt = statement(guild);
-            String insertString = String.format("INSERT INTO tblModerator (modUserId) VALUES ('%s',true)",member.getId());
+            String insertString = String.format("INSERT INTO tblModerator (modUserId,modActive) VALUES ('%s',true)",member.getId());
             stmt.executeUpdate(insertString);
             stmt.close();
         } catch (SQLException e) {

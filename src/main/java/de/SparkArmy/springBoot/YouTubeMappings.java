@@ -30,12 +30,11 @@ public class YouTubeMappings {
         return allRequestParams.getOrDefault("hub.challenge","Error").toString();
     }
 
-    private final JDA jda = MainUtil.jda;
     private final HashMap<String,String> sentVideos = new HashMap<>();
     private final File directory = FileHandler.getDirectoryInUserDirectory("botstuff/notifications");
 
     @ResponseBody
-    @PostMapping(value = "/youtubePubSub", consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_ATOM_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
+    @PostMapping(value = "/index", consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_ATOM_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_ATOM_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public void onYoutubeVideoPublished(@RequestBody @NotNull String s) {
 
@@ -50,7 +49,7 @@ public class YouTubeMappings {
         }
 
         sentVideos.put(userId,videoId);
-
+        JDA jda = MainUtil.jda;
         jda.getGuilds().forEach(guild -> {
             if (guild.equals(MainUtil.storageServer)) return;
             String filename = String.format("%s.json",guild.getId());

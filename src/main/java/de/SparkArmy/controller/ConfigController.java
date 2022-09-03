@@ -2,7 +2,7 @@ package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.LogMarker;
+import de.SparkArmy.utils.LoggingMarker;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.Contract;
@@ -35,7 +35,7 @@ public class ConfigController {
     public JSONObject getMainConfigFile(){
         assert this.configFolder != null;
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
-            this.logger.warn(LogMarker.CONFIG,"The main-config.json-file not exist, we will created a new");
+            this.logger.warn(LoggingMarker.CONFIG,"The main-config.json-file not exist, we will created a new");
             JSONObject blankConfig = new JSONObject();
             JSONObject discord = new JSONObject(){{
                 put("discord-token","Write here your Discord-Bot-Token");
@@ -66,14 +66,14 @@ public class ConfigController {
             blankConfig.put("otherKeys",otherKeys);
 
             if(FileHandler.writeValuesInFile(this.configFolder,"main-config.json",blankConfig)){
-                this.logger.info(LogMarker.CONFIG,"main-config.json was successful created");
-                this.logger.warn(LogMarker.CONFIG,"Please finish your configuration");
+                this.logger.info(LoggingMarker.CONFIG,"main-config.json was successful created");
+                this.logger.warn(LoggingMarker.CONFIG,"Please finish your configuration");
                 try {
                    Desktop.getDesktop().open(FileHandler.getFileInDirectory(this.configFolder, "main-config.json"));
                 } catch (Exception ignored) {
                 }
             }else {
-                this.logger.error(LogMarker.CONFIG,"Can't create a main-config.json");
+                this.logger.error(LoggingMarker.CONFIG,"Can't create a main-config.json");
                 Main.systemExit(1);
             }
 
@@ -81,7 +81,7 @@ public class ConfigController {
         }
         String mainConfigAsString = FileHandler.getFileContent(this.configFolder,"main-config.json");
         if (mainConfigAsString == null){
-            this.logger.error(LogMarker.CONFIG,"The main-config.json is null");
+            this.logger.error(LoggingMarker.CONFIG,"The main-config.json is null");
             Main.systemExit(12);
         }
         assert mainConfigAsString != null;

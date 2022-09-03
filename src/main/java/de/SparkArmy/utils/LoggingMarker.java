@@ -3,7 +3,7 @@ package de.SparkArmy.utils;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public class LogMarker {
+public class LoggingMarker {
 
     public static final Marker CONFIG = MarkerFactory.getMarker("CONFIG");
     public static final Marker MODMAIL = MarkerFactory.getMarker("MODMAIL");

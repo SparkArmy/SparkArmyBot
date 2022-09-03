@@ -37,6 +37,9 @@ public class ChannelUtil {
         } else if (String.class.equals(targetClass)) {
             String string = (String) value;
             messageChannel.sendMessage(string).queue();
+        } else if (MessageEmbed.class.equals(targetClass)) {
+            MessageEmbed embed = (MessageEmbed) value;
+            messageChannel.sendMessageEmbeds(embed).queue();
         }
     }
 
@@ -150,7 +153,6 @@ public class ChannelUtil {
             logChannel.put(String.valueOf(channelName), guildChannel.getId());
             writeNewLogChannelsInConfig(guild, logChannel);
         }
-
         sendMessageInRightChannel(value, guildChannel);
     }
 

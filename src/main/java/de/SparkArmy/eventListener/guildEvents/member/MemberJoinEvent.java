@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class MemberJoinEvent extends CustomEventListener {
+
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         putMemberInDatabase(event);

@@ -3,7 +3,7 @@ package de.SparkArmy.eventListener.globalEvents.commands;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.LogMarker;
+import de.SparkArmy.utils.LoggingMarker;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -531,7 +531,7 @@ public class ModmailListener extends CustomEventListener {
             //noinspection ResultOfMethodCallIgnored
             modmailLogChannel.getManager().putRolePermissionOverride(guild.getPublicRole().getIdLong(),null,deniedPermissions);
         } catch (InsufficientPermissionException | IllegalArgumentException createCategoryExeption) {
-            logger.warn(LogMarker.CONFIG,"The bot has no permissions to create a channel");
+            logger.warn(LoggingMarker.CONFIG,"The bot has no permissions to create a channel");
             return null;
         }
 
@@ -563,7 +563,7 @@ public class ModmailListener extends CustomEventListener {
             this.controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, config);
             return modmailCategory;
         } catch (IllegalArgumentException | InsufficientPermissionException categoryCreateExeption) {
-            logger.warn(LogMarker.CONFIG,"The bot has no permissions to create a channel");
+            logger.warn(LoggingMarker.CONFIG,"The bot has no permissions to create a channel");
             return null;
         }
     }
@@ -584,7 +584,7 @@ public class ModmailListener extends CustomEventListener {
             return modmailChannel;
         } catch (InsufficientPermissionException | IllegalArgumentException channelCreateExeption) {
             // Returns if the bot has no permissions
-            logger.warn(LogMarker.CONFIG,"The bot has no permissions to create a channel");
+            logger.warn(LoggingMarker.CONFIG,"The bot has no permissions to create a channel");
             return null;
         }
     }

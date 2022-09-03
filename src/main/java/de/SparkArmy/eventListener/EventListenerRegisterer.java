@@ -4,13 +4,8 @@ import de.SparkArmy.eventListener.globalEvents.BotJoinGuild;
 import de.SparkArmy.eventListener.globalEvents.commands.FeedbackListener;
 import de.SparkArmy.eventListener.globalEvents.commands.ModmailListener;
 import de.SparkArmy.eventListener.guildEvents.channel.MediaOnlyFunction;
-import de.SparkArmy.eventListener.guildEvents.commands.MediaOnlyListener;
-import de.SparkArmy.eventListener.guildEvents.commands.NotificationListener;
-import de.SparkArmy.eventListener.guildEvents.commands.PunishmentListener;
-import de.SparkArmy.eventListener.guildEvents.commands.ReactionRolesListener;
-import de.SparkArmy.eventListener.guildEvents.eventLogging.GuildMemberLeaveLogging;
-import de.SparkArmy.eventListener.guildEvents.eventLogging.SlashCommandListener;
-import de.SparkArmy.eventListener.guildEvents.member.MemberJoinEvent;
+import de.SparkArmy.eventListener.guildEvents.commands.*;
+import de.SparkArmy.eventListener.guildEvents.member.*;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -41,13 +36,17 @@ public class EventListenerRegisterer {
 
         // EventLogging
         events.add(new SlashCommandListener());
-        events.add(new GuildMemberLeaveLogging());
 
         // ChannelRelatedEvents
         events.add(new MediaOnlyFunction());
 
         // MemberRelatedEvents
+        events.add(new MemberLeaveEvent());
         events.add(new MemberJoinEvent());
+        events.add(new MemberRoleLogging());
+        events.add(new MemberPersonalUpdates());
+        events.add(new MemberPendingEvent());
+        events.add(new MemberTimeoutEvent());
 
         this.events.forEach(this.jda::addEventListener);
     }

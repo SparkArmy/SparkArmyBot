@@ -111,7 +111,7 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.error(LogMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
+            logger.error(LoggingMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
@@ -121,23 +121,23 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.error(LogMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
+            logger.error(LoggingMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
 
     public static @Nullable List<File> getFilesInDirectory(File path){
         if (null == path){
-            logger.info(LogMarker.FILHANDLER,"FILEHANDLER: The path is null");
+            logger.info(LoggingMarker.FILHANDLER,"FILEHANDLER: The path is null");
             return null;
         }
 
         if (path.isFile()){
-            logger.info(LogMarker.FILHANDLER,"FILEHANDLER: The path is a file");
+            logger.info(LoggingMarker.FILHANDLER,"FILEHANDLER: The path is a file");
             return null;
         }
         if (null == path.listFiles()){
-            logger.info(LogMarker.FILHANDLER,"FILEHANDLER: Error to listFiles");
+            logger.info(LoggingMarker.FILHANDLER,"FILEHANDLER: Error to listFiles");
             return null;
         }
         return Arrays.stream(Objects.requireNonNull(path.listFiles())).toList();
@@ -152,7 +152,7 @@ public class FileHandler {
         try {
             return new FileWriter(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            logger.error(LogMarker.FILHANDLER,"Can't create a file-writer");
+            logger.error(LoggingMarker.FILHANDLER,"Can't create a file-writer");
             return null;
         }
     }

@@ -52,6 +52,7 @@ public class Main {
         builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
         builder.enableCache(CacheFlag.getPrivileged());
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
+        builder.setEventPassthrough(true);
         logger.info("JDA-Builder was successful initialized");
 
         try {

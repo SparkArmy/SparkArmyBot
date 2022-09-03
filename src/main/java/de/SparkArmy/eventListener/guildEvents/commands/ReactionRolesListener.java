@@ -371,7 +371,7 @@ public class ReactionRolesListener extends CustomEventListener {
                 FileHandler.createFile(directory, messageId);
                 File messageFile = FileHandler.getFileInDirectory(directory, messageId);
                 FileHandler.writeValuesInFile(messageFile, content);
-                event.editComponents().queue();
+                event.getHook().editOriginalComponents().queue();
                 event.reply("Embed was edit").setEphemeral(true).queue();
             });
         }else {

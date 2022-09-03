@@ -1,4 +1,4 @@
-package de.SparkArmy.eventListener.guildEvents.eventLogging;
+package de.SparkArmy.eventListener.guildEvents.commands;
 
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.ChannelUtil;

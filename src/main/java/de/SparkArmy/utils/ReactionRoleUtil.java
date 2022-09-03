@@ -63,7 +63,7 @@ public class ReactionRoleUtil {
                 }else if (event.getClass().equals(ButtonInteractionEvent.class)){
                     new ButtonInteractionEvent(event.getJDA(), event.getResponseNumber(),((ButtonInteractionEvent) event).getInteraction())
                             .replyModal(newModal).queue();
-                    ((ButtonInteractionEvent) event).editComponents().queue();
+                    ((ButtonInteractionEvent) event).getHook().editOriginalComponents().queue();
                 }
             }
             case "edit" -> {
@@ -248,7 +248,7 @@ public class ReactionRoleUtil {
             event.getGuild().addRoleToMember(member,role).reason("Add role from reaction-role-embed").queue();
             event.reply("You have the role \"" + role.getName() + "\" now").setEphemeral(true).queue();
         }else {
-            event.getGuild().removeRoleFromMember(member,role).reason("Add role from reaction-role-embed").queue();
+            event.getGuild().removeRoleFromMember(member,role).reason("Remove role from reaction-role-embed").queue();
             event.reply("You have the role \"" + role.getName() + "\" removed").setEphemeral(true).queue();
         }
 
@@ -468,6 +468,7 @@ public class ReactionRoleUtil {
 
             if (content.isNull("fields") || content.getJSONObject("fields").isEmpty()){
                 buttonEvent.replyModal(editRolesModal(action,suffix,null,null)).queue();
+                return;
             }
 
             EmbedBuilder roleEditChoiceEmbed = new EmbedBuilder();

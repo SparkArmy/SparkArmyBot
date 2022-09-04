@@ -2,7 +2,11 @@ package de.SparkArmy.commandListener;
 
 import de.SparkArmy.commandListener.globalCommands.slashCommands.FeedbackCommand;
 import de.SparkArmy.commandListener.globalCommands.slashCommands.ModmailCommand;
-import de.SparkArmy.commandListener.guildCommands.slashCommands.*;
+import de.SparkArmy.commandListener.guildCommands.slashCommands.admin.*;
+import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Ban;
+import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Kick;
+import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Mute;
+import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Warn;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -36,6 +40,7 @@ public class CommandListenerRegisterer {
         commands.add(new Lockdown());
         commands.add(new UpdateCommands());
         commands.add(new LogChannelConfig());
+        commands.add(new ModmailConfig());
 
         // User Commands
 

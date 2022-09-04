@@ -1,4 +1,4 @@
-package de.SparkArmy.commandListener.guildCommands.slashCommands;
+package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
 import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;

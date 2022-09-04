@@ -1,4 +1,4 @@
-package de.SparkArmy.commandListener.guildCommands.slashCommands;
+package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
 import de.SparkArmy.commandBuilder.CommandRegisterer;
 import de.SparkArmy.commandListener.CustomCommandListener;

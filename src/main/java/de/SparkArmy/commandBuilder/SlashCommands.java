@@ -129,7 +129,7 @@ public enum SlashCommands {
             ));
 
             // Lockdown command
-            add(Commands.slash("lockdown","Enable/Disable for all non admins to write in this channel").addOptions(
+            add(Commands.slash("lockdown","Enable/Disable for @everyone to write in this channel").addOptions(
                     new OptionData(OptionType.CHANNEL,"target_channel","The target channel")
             ));
 
@@ -144,6 +144,16 @@ public enum SlashCommands {
                     new OptionData(OptionType.CHANNEL,"target-channnel","The log channel")
                             .setRequired(true)
                ));
+
+            // Set ModmailChannel
+            add(Commands.slash("modmail-config","Update the configuration for modmail").addOptions(
+                    new OptionData(OptionType.STRING,"target-type","The target channel log/archive").addChoices(
+                            new Command.Choice("Category","category"),
+                            new Command.Choice("LogChannel","log"),
+                            new Command.Choice("Log Archive","archive")
+                    ).setRequired(true),
+                    new OptionData(OptionType.CHANNEL,"target-channel","The new log/archive text-channel").setRequired(true)
+            ));
         }};
     }
 }

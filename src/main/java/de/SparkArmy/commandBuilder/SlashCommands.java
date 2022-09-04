@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public enum SlashCommands {
+enum SlashCommands {
     ;
 
     @Contract(" -> new")
@@ -74,6 +74,11 @@ public enum SlashCommands {
             add(Commands.slash("kick", "Kick a user").addOptions(
                     new OptionData(OptionType.USER, "target_user", "The targeted user").setRequired(true),
                     new OptionData(OptionType.STRING, "reason", "The Reason for the punishment").setRequired(true)
+            ));
+
+            add(Commands.slash("user-punishments","List the user punishments").addOptions(
+                    new OptionData(OptionType.USER,"target-user","The user you will get the punishments").setRequired(true),
+                    new OptionData(OptionType.STRING,"punishment-type","The punishment-type").setAutoComplete(true)
             ));
 
         }};
@@ -146,7 +151,7 @@ public enum SlashCommands {
                ));
 
             // Set ModmailChannel
-            add(Commands.slash("modmail-config","Update the configuration for modmail").addOptions(
+            add(Commands.slash("modmail-config","Update the configuration from modmail").addOptions(
                     new OptionData(OptionType.STRING,"target-type","The target channel log/archive").addChoices(
                             new Command.Choice("Category","category"),
                             new Command.Choice("LogChannel","log"),
@@ -154,6 +159,7 @@ public enum SlashCommands {
                     ).setRequired(true),
                     new OptionData(OptionType.CHANNEL,"target-channel","The new log/archive text-channel").setRequired(true)
             ));
+
         }};
     }
 }

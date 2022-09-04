@@ -3,10 +3,9 @@ package de.SparkArmy.commandListener;
 import de.SparkArmy.commandListener.globalCommands.slashCommands.FeedbackCommand;
 import de.SparkArmy.commandListener.globalCommands.slashCommands.ModmailCommand;
 import de.SparkArmy.commandListener.guildCommands.slashCommands.admin.*;
-import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Ban;
-import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Kick;
-import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Mute;
-import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.Warn;
+import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.*;
+import de.SparkArmy.commandListener.guildCommands.userCommands.admin.ModUnmodMember;
+import de.SparkArmy.commandListener.guildCommands.userCommands.general.RoleRemove;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -22,28 +21,34 @@ public class CommandListenerRegisterer {
     }
 
     private void registerCommandListeners() {
-        // Global Commands
-        commands.add(new FeedbackCommand());
-        commands.add(new ModmailCommand());
+        // SlashCommands
+            // Global Commands
+            commands.add(new FeedbackCommand());
+            commands.add(new ModmailCommand());
 
-        // Moderation Commands
-        commands.add(new Warn());
-        commands.add(new Mute());
-        commands.add(new Ban());
-        commands.add(new Kick());
+            // Moderation Commands
+            commands.add(new Warn());
+            commands.add(new Mute());
+            commands.add(new Ban());
+            commands.add(new Kick());
+            commands.add(new Punishments());
 
-        // Admin Commands
-        commands.add(new Punishment());
-        commands.add(new ReactionRoles());
-        commands.add(new MediaOnly());
-        commands.add(new Notifications());
-        commands.add(new Lockdown());
-        commands.add(new UpdateCommands());
-        commands.add(new LogChannelConfig());
-        commands.add(new ModmailConfig());
+            // Admin Commands
+            commands.add(new Punishment());
+            commands.add(new ReactionRoles());
+            commands.add(new MediaOnly());
+            commands.add(new Notifications());
+            commands.add(new Lockdown());
+            commands.add(new UpdateCommands());
+            commands.add(new LogChannelConfig());
+            commands.add(new ModmailConfig());
 
         // User Commands
+            // Admin Commands
+            commands.add(new ModUnmodMember());
 
+            // General Commands
+            commands.add(new RoleRemove());
 
 
         this.commands.forEach(this.jda::addEventListener);

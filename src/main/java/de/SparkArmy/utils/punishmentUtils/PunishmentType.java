@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @SuppressWarnings("unused")
@@ -41,28 +42,7 @@ public enum PunishmentType {
 
     @Contract(pure = true)
     public static PunishmentType getByName(@NotNull String name){
-        switch (name){
-            case "warn" -> {
-                return WARN;
-            }
-            case "mute" -> {
-                return MUTE;
-            }
-            case "kick" -> {
-                return KICK;
-            }
-            case "ban" -> {
-                return BAN;
-            }
-            case "unban" -> {
-                return UNBAN;
-            }
-            case "timeout" ->{
-                return TIMEOUT;
-            }default -> {
-                return UNKNOW;
-            }
-        }
+        return Arrays.stream(PunishmentType.values()).filter(x->x.getName().equals(name)).findAny().orElse(UNKNOW);
     }
 
     @Contract(value = " -> new", pure = true)

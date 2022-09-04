@@ -3,8 +3,10 @@ package de.SparkArmy.utils;
 import de.SparkArmy.utils.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -84,12 +86,23 @@ public class SqlUtil {
         }
     }
 
+    private static void insertInTable(Guild guild,String sql){
+       if (!sqlEnabled) return;
+       try {
+           Statement stmt = statement(guild);
+           stmt.executeUpdate(sql);
+           stmt.close();
+       } catch (SQLException e) {
+           logger.error(e.getMessage());
+       }
+    }
+
 
     public static void createDatabaseAndTablesForGuild(@NotNull Guild guild){
         if (!sqlEnabled) return;
         String guildId = guild.getId();
         if (!createDatabase(guildId)){
-            logger.error("Faild to create Database for " + guildId);
+            logger.error("Failed to create Database for " + guildId);
             return;
         }
 
@@ -185,46 +198,61 @@ public class SqlUtil {
 
     public static void putUserDataInUserTable(Guild guild, @NotNull Member member){
         if (!sqlEnabled) return;
-        try {
-            Statement stmt = statement(guild);
-            String creationTime = getSqlTimeStringFromDatetime(member.getTimeCreated());
-            String joinTime = getSqlTimeStringFromDatetime(member.getTimeJoined());
-            String insertString = String.format("INSERT INTO tblUser (usrId,usrAccountCreated,usrMemberSince) VALUES ('%s',%s,%s)", member.getId(),creationTime,joinTime);
-            stmt.executeUpdate(insertString);
-            stmt.close();
-        } catch (SQLException e) {
-            logger.error("putUserTable: " + e.getMessage());
-        }
+        String creationTime = getSqlTimeStringFromDatetime(member.getTimeCreated());
+        String joinTime = getSqlTimeStringFromDatetime(member.getTimeJoined());
+        String insertString = String.format("INSERT INTO tblUser (usrId,usrAccountCreated,usrMemberSince) VALUES ('%s',%s,%s)", member.getId(),creationTime,joinTime);
+        insertInTable(guild,insertString);
     }
 
     public static void putDataInModeratorTable(Guild guild, @NotNull Member member){
         if (!sqlEnabled) return;
-        try {
-            Statement stmt = statement(guild);
-            String insertString = String.format("INSERT INTO tblModerator (modUserId,modActive) VALUES ('%s',true)",member.getId());
-            stmt.executeUpdate(insertString);
-            stmt.close();
-        } catch (SQLException e) {
-            logger.error("putModeratorTable: " + e.getMessage());
-        }
+        String insertString = String.format("INSERT INTO tblModerator (modUserId,modActive) VALUES ('%s',true)",member.getId());
+        insertInTable(guild,insertString);
     }
 
     public static void putDataInPunishmentTable(Guild guild, @NotNull Member offender, @NotNull Member moderator, @NotNull PunishmentType type){
        if (!sqlEnabled) return;
+       String insertString = String.format(
+                "INSERT INTO tblPunishment (psmOffenderId,psmModeratorId,psmType,psmTimestamp) VALUES('%s'," +
+                "(SELECT modId FROM tblModerator WHERE modUserId = '%s')," +
+                "(SELECT pstId FROM tblPunishmentType WHERE pstName = '%s'),NOW());",
+                offender.getId(),
+                moderator.getId(),
+                type.getName());
+       insertInTable(guild,insertString);
+    }
+
+    public static @Nullable JSONArray getPunishmentDataFromUser(Guild guild, User user, PunishmentType type){
+       if (!sqlEnabled) return null;
+
+       StringBuilder where = new StringBuilder().append(" WHERE psmOffenderId = '%s'");
+       if (type != null) where.append(" AND psmType = (SELECT pstId FROM tblPunishmentType WHERE pstName = '").append(type.getName()).append("')");
+
+       String sql = String.format("SELECT psmId,modUserId,pstName,psmTimestamp FROM tblPunishment " +
+               "INNER JOIN tblPunishmentType ON tblPunishment.psmType = tblPunishmentType.pstId " +
+               "INNER JOIN tblModerator ON tblPunishment.psmModeratorId = tblModerator.modId " + where +
+               " ORDER BY psmId;"
+               ,user.getId());
+
+       ResultSet results;
+       JSONArray result = new JSONArray();
        try {
-            Statement stmt = statement(guild);
-            String insertString = String.format(
-                    "INSERT INTO tblPunishment (psmOffenderId,psmModeratorId,psmType,psmTimestamp) VALUES('%s'," +
-                    "(SELECT modId FROM tblModerator WHERE modUserId = '%s')," +
-                    "(SELECT pstId FROM tblPunishmentType WHERE pstName = '%s'),NOW());",
-                    offender.getId(),
-                    moderator.getId(),
-                    type.getName());
-            stmt.executeUpdate(insertString);
-            stmt.close();
-        } catch (SQLException e) {
-            logger.error("putPunishmentTable: " + e.getMessage());
-        }
+           Statement stmt = statement(guild);
+           results = stmt.executeQuery(sql);
+           while (results.next()){
+               JSONObject obj = new JSONObject();
+               obj.put("id",results.getString(1));
+               obj.put("moderatorId",results.getString(2));
+               obj.put("punishment",results.getString(3));
+               obj.put("time",results.getString(4));
+               result.put(obj);
+           }
+           stmt.close();
+           return result;
+       } catch (SQLException e) {
+           logger.error(e.getMessage());
+           return null;
+       }
     }
 
     public static @NotNull Integer getPunishmentCaseIdFromGuild(Guild guild){

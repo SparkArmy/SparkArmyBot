@@ -34,13 +34,24 @@ public enum CommandRegisterer {
         moderationCommands.forEach(x -> x.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
 
         // Admin related commands
-        Collection<CommandData> adminCommands = SlashCommands.guildSlashAdminCommands();
+        Collection<CommandData> adminCommands = new ArrayList<>(){{
+            addAll(SlashCommands.guildSlashAdminCommands());
+            addAll(UserCommands.adminUserCommands());
+        }};
         adminCommands.forEach(x -> x.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
 
+        // Public commands
+        Collection<CommandData> generalCommands = new ArrayList<>(){{
+           addAll(UserCommands.generalUserCommands());
+        }};
+
         // Put all guildCommands in one Collection
-        Collection<CommandData> guildCommands = new ArrayList<>();
-        guildCommands.addAll(moderationCommands);
-        guildCommands.addAll(adminCommands);
+        Collection<CommandData> guildCommands = new ArrayList<>(){{
+            addAll(moderationCommands);
+            addAll(adminCommands);
+            addAll(generalCommands);
+        }};
+
 
         guild.updateCommands().addCommands(guildCommands).queue();
         MainUtil.logger.info("Guild-Commands are registered");

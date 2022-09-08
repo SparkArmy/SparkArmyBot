@@ -42,6 +42,7 @@ public class CommandListenerRegisterer {
             commands.add(new UpdateCommands());
             commands.add(new LogChannelConfig());
             commands.add(new ModmailConfig());
+            commands.add(new ModerationConfig());
 
         // User Commands
             // Admin Commands

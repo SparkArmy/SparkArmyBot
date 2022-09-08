@@ -8,7 +8,6 @@ import de.SparkArmy.eventListener.EventListenerRegisterer;
 import de.SparkArmy.springBoot.LoggingController;
 import de.SparkArmy.springBoot.SpringApp;
 import de.SparkArmy.timedOperations.TimedOperationsExecutor;
-import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.JDA;
@@ -19,8 +18,6 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
-
-import java.io.File;
 
 public class Main {
 
@@ -52,7 +49,6 @@ public class Main {
         builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
         builder.enableCache(CacheFlag.getPrivileged());
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
-        builder.setEventPassthrough(true);
         logger.info("JDA-Builder was successful initialized");
 
         try {
@@ -97,7 +93,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        preCreateSpringConfig();
+        ConfigController.preCreateSpringConfig();
         SpringApplication.run(SpringApp.class,"");
         new Main();
         SqlUtil.setSqlEnabled();
@@ -110,22 +106,6 @@ public class Main {
             MainUtil.jda.shutdown();
         }
         System.exit(code);
-    }
-
-    private static void preCreateSpringConfig(){
-        File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
-        assert configFolder != null;
-        if (FileHandler.getFileInDirectory(configFolder,"spring.properties").exists()) return;
-        String propertiesString = """
-                    #server.port= Your server port
-                    #server.ssl.key-store=Your key-store for https
-                    #server.ssl.key-store-password=your key-store password
-                    #
-                    ## JKS or PKCS12
-                    #server.ssl.keyStoreType= your key-store-type
-                    """;
-
-        FileHandler.writeValuesInFile(configFolder,"spring.properties",propertiesString);
     }
 
 }

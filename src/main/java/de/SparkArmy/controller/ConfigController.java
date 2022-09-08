@@ -32,6 +32,26 @@ public class ConfigController {
         if (null == configFolder) Main.systemExit(11);
     }
 
+    public static void preCreateSpringConfig(){
+        File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
+        if (configFolder == null){
+            Main.systemExit(11);
+            return;
+        }
+
+        if (FileHandler.getFileInDirectory(configFolder,"spring.properties").exists()) return;
+        String propertiesString = """
+                    #server.port= Your server port
+                    #server.ssl.key-store=Your key-store for https
+                    #server.ssl.key-store-password=your key-store password
+                    #
+                    ## JKS or PKCS12
+                    #server.ssl.keyStoreType= your key-store-type
+                    """;
+
+        FileHandler.writeValuesInFile(configFolder,"spring.properties",propertiesString);
+    }
+
     public JSONObject getMainConfigFile(){
         assert this.configFolder != null;
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){

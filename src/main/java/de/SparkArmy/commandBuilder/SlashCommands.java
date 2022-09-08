@@ -160,6 +160,8 @@ enum SlashCommands {
                     new OptionData(OptionType.CHANNEL,"target-channel","The new log/archive text-channel").setRequired(true)
             ));
 
+            // Moderation Config
+            add(Commands.slash("moderation-config","Update the configuration from moderation- roles,etc."));
         }};
     }
 }

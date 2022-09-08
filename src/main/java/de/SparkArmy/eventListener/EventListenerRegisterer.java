@@ -33,6 +33,7 @@ public class EventListenerRegisterer {
         events.add(new ReactionRolesListener()); // Function for give/remove role from member implement in this class
         events.add(new MediaOnlyListener());
         events.add(new NotificationListener());
+        events.add(new ModerationConfigListener());
 
         // EventLogging
         events.add(new SlashCommandListener());

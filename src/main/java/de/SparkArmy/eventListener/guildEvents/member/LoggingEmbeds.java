@@ -1,6 +1,9 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
+import de.SparkArmy.utils.AuditLogUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.audit.ActionType;
+import net.dv8tion.jda.api.audit.AuditLogEntry;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
@@ -16,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 
 class LoggingEmbeds {
 
@@ -85,9 +89,16 @@ class LoggingEmbeds {
     }
 
     public static @NotNull MessageEmbed nicknameUpdate(@NotNull GuildMemberUpdateNicknameEvent event){
+        AuditLogEntry entry = AuditLogUtil.getAuditLogEntryByUser(event.getUser(), ActionType.MEMBER_UPDATE,event.getGuild());
         return new EmbedBuilder(){{
             setTitle("NicknameUpdate");
             setDescription("User updated his nickname");
+            if (entry != null && !Objects.equals(entry.getUser(), event.getUser())){
+                User mod = entry.getUser();
+                if (mod != null) {
+                    setDescription(String.format("Moderator %s (%s) update the nickname",mod.getAsTag(),mod.getId()));
+                }
+            }
             setAuthor(event.getUser().getAsTag(),null,event.getUser().getEffectiveAvatarUrl());
             setColor(color);
             addField("Old name", event.getOldNickname() != null ? event.getOldNickname() : event.getUser().getName(), false);

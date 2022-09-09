@@ -4,7 +4,6 @@ import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.ChannelUtil;
 import de.SparkArmy.utils.LogChannelType;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateAvatarEvent;
-import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateAvatarEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateDiscriminatorEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateFlagsEvent;
@@ -42,11 +41,6 @@ public class MemberPersonalUpdates extends CustomEventListener {
     public void onUserUpdateFlags(@NotNull UserUpdateFlagsEvent event) {
         jda.getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(x->
                 ChannelUtil.logInLogChannel(LoggingEmbeds.userFlagUpdate(event),x,member));
-    }
-
-    @Override
-    public void onGuildMemberUpdateNickname(@NotNull GuildMemberUpdateNicknameEvent event) {
-        ChannelUtil.logInLogChannel(LoggingEmbeds.nicknameUpdate(event),event.getGuild(),member);
     }
 
 }

@@ -57,6 +57,9 @@ public class EventListenerRegisterer {
         events.add(new MessageUpdate());
         events.add(new MessageDelete());
 
+        // Sticky Things
+        events.add(new MemberNicknameUpdate());
+
         this.events.forEach(this.jda::addEventListener);
     }
 }

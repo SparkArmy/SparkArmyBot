@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -162,6 +164,15 @@ public class SqlUtil {
                         "    PRIMARY KEY (msaId)" +
                         ");";
 
+        String nicknamesTable =
+                "CREATE TABLE IF NOT EXISTS tblUserNicknames(" +
+                        "    usnId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
+                        "    usnUserId VARCHAR(50) NOT NULL," +
+                        "    usnValue VARCHAR(1000) NOT NULL," +
+                        "    CONSTRAINT `fk_user-nicknames` FOREIGN KEY (usnUserId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
+                        "    PRIMARY KEY (usnId)" +
+                        ");";
+
 
         try {
             Statement stmt = statement(guild);
@@ -171,6 +182,7 @@ public class SqlUtil {
             stmt.executeUpdate(punishmentTable);
             stmt.executeUpdate(messageTable);
             stmt.executeUpdate(messageAttachmentsTable);
+            stmt.executeUpdate(nicknamesTable);
 
             String punishmentTypes = "INSERT INTO tblPunishmentType (pstName) VALUES ('%s');";
             PunishmentType.getAllTypes().forEach(x->{
@@ -393,4 +405,53 @@ public class SqlUtil {
             return false;
         }
     }
+
+    public static void putNicknameInNicknameTable(GuildMemberUpdateNicknameEvent event){
+       if (!sqlEnabled) return;
+
+       if (isUserNotInUserTable(event.getGuild(),event.getMember())) putUserDataInUserTable(event.getGuild(),event.getMember());
+
+       String insertString = String.format("INSERT INTO tblUserNicknames (usnUserId,usnValue) VALUES ('%s','%s');",event.getUser().getId(),event.getMember().getNickname());
+        insertIn(event.getGuild(),insertString);
+   }
+
+   public static @Nullable String getLatestNickname(GuildMemberJoinEvent event){
+       if (!sqlEnabled) return null;
+
+       if (isUserNotInUserTable(event.getGuild(),event.getMember())) putUserDataInUserTable(event.getGuild(),event.getMember());
+
+       if (isUserIdNotInNicknameTable(event)) return null;
+
+       try {
+           Statement stmt = statement(event.getGuild());
+           ResultSet results;
+           String queryString =String.format("SELECT usnValue FROM tblUserNicknames WHERE usnUserId = '%s' ORDER BY usnId;",event.getUser().getId());
+           results = stmt.executeQuery(queryString);
+           results.last();
+           String last = results.getString(1);
+           stmt.close();
+           return last;
+       } catch (SQLException e) {
+           logger.error(e.getMessage());
+           return null;
+       }
+
+   }
+
+   private static boolean isUserIdNotInNicknameTable(GuildMemberJoinEvent event){
+       if (!sqlEnabled) return false;
+       try {
+           Statement stmt = statement(event.getGuild());
+           ResultSet results;
+           String statementString = String.format("SELECT COUNT (*) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
+           results = stmt.executeQuery(statementString);
+           int n = 0;
+           if (results.next()) n = results.getInt(1);
+           stmt.close();
+           return n == 0;
+       }catch (SQLException e){
+           logger.error(e.getMessage());
+           return false;
+       }
+   }
 }

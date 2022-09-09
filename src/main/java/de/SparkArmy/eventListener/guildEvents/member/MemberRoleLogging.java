@@ -16,6 +16,7 @@ public class MemberRoleLogging extends CustomEventListener {
 
     @Override
     public void onGuildMemberRoleAdd(@NotNull GuildMemberRoleAddEvent event) {
+        if (event.getUser().isBot()) return;
         AuditLogEntry entry = AuditLogUtil.getAuditLogEntryByUser(event.getUser(), ActionType.MEMBER_ROLE_UPDATE,event.getGuild());
         User moderator = null;
         if (entry != null){
@@ -26,6 +27,7 @@ public class MemberRoleLogging extends CustomEventListener {
 
     @Override
     public void onGuildMemberRoleRemove(@NotNull GuildMemberRoleRemoveEvent event) {
+        if (event.getUser().isBot()) return;
         AuditLogEntry entry = AuditLogUtil.getAuditLogEntryByUser(event.getUser(), ActionType.MEMBER_ROLE_UPDATE,event.getGuild());
         User moderator = null;
         if (entry != null){

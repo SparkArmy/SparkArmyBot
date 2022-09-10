@@ -14,5 +14,4 @@ public class MemberNicknameUpdate extends CustomEventListener {
         SqlUtil.putNicknameInNicknameTable(event);
         ChannelUtil.logInLogChannel(LoggingEmbeds.nicknameUpdate(event),event.getGuild(), LogChannelType.MEMBER);
     }
-
 }

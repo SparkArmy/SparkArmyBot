@@ -26,10 +26,15 @@ public class MessageDelete extends CustomEventListener {
 
         User messageAuthor = getUserFromMessageId(event);
 
-        EmbedBuilder logEmbed = new EmbedBuilder();
-        logEmbed.setTitle("Message Delete");
-        logEmbed.setDescription("Message was deleted");
-        logEmbed.setAuthor(messageAuthor.getAsTag(),null,messageAuthor.getEffectiveAvatarUrl());
+        EmbedBuilder messageLogEmbed = new EmbedBuilder();
+        messageLogEmbed.setTitle("Message Delete");
+        messageLogEmbed.setDescription("Message was deleted");
+        messageLogEmbed.setAuthor(messageAuthor.getAsTag(),null,messageAuthor.getEffectiveAvatarUrl());
+
+        EmbedBuilder attachmentLogEmbed = new EmbedBuilder();
+        attachmentLogEmbed.setTitle("Message Delete");
+        attachmentLogEmbed.setDescription("Message was deleted");
+        attachmentLogEmbed.setAuthor(messageAuthor.getAsTag(),null,messageAuthor.getEffectiveAvatarUrl());
 
         User moderator = null;
         AuditLogEntry entry = AuditLogUtil.getAuditLogEntryByUser(messageAuthor, ActionType.MESSAGE_DELETE,event.getGuild());
@@ -37,7 +42,10 @@ public class MessageDelete extends CustomEventListener {
             moderator = entry.getUser();
         }
 
-        if (moderator != null) logEmbed.appendDescription(String.format(" from %s (UserId:%s)",moderator.getAsTag(),moderator.getId()));
+        if (moderator != null){
+            messageLogEmbed.appendDescription(String.format(" from %s (UserId:%s)",moderator.getAsTag(),moderator.getId()));
+            attachmentLogEmbed.appendDescription(String.format(" from %s (UserId:%s)",moderator.getAsTag(),moderator.getId()));
+        }
 
         String message = SqlUtil.getMessageContentFromMessageTable(event.getGuild(),event.getMessageId());
 
@@ -49,17 +57,29 @@ public class MessageDelete extends CustomEventListener {
             while (i < message.length()) {
                 String substring = message.substring(i, message.length() - i < 1024 ? i + message.length() - i : i + 1023);
                 i = message.length() - i < 1024 ? i + message.length() - i : i + 1023;
-                logEmbed.addField("Part " + j, substring, false);
+                messageLogEmbed.addField("Part " + j, substring, false);
                 j = j + 1;
             }
         }
 
-        String attachments = getAttachments(event);
-
-        if (!attachments.isEmpty()){
-            logEmbed.addField("Attachments",attachments,false);
+        List<String> attachments = SqlUtil.getAttachmentsFromMessage(event.getGuild(),event.getMessageId());
+        if (!attachments.isEmpty() && attachments.size() <= 5){
+            StringBuilder builder = new StringBuilder();
+            attachments.forEach(x->builder.append(x).append("\n"));
+            messageLogEmbed.addField("Attachments",builder.toString(),false);
+        }else {
+            int i = 0;
+            while (i < attachments.size()) {
+                List<String> sublist = attachments.subList(i, attachments.size() - i <= 5 ? i + attachments.size() - i : i + 5);
+                i = attachments.size() - i <= 5 ? i + attachments.size() : i + 5;
+                StringBuilder builder = new StringBuilder();
+                sublist.forEach(x -> builder.append(x).append("\n"));
+                attachmentLogEmbed.addField("Attachments", builder.toString(), false);
+            }
         }
-        ChannelUtil.logInLogChannel(logEmbed,event.getGuild(), LogChannelType.MESSAGE);
+
+        if (!messageLogEmbed.getFields().isEmpty()) ChannelUtil.logInLogChannel(messageLogEmbed,event.getGuild(), LogChannelType.MESSAGE);
+        if (!attachmentLogEmbed.getFields().isEmpty()) ChannelUtil.logInLogChannel(attachmentLogEmbed,event.getGuild(),LogChannelType.MESSAGE);
     }
 
     private @NotNull User getUserFromMessageId(@NotNull MessageDeleteEvent event){
@@ -69,11 +89,5 @@ public class MessageDelete extends CustomEventListener {
        return user;
     }
 
-    private @NotNull String getAttachments(@NotNull MessageDeleteEvent event){
-        List<String> strings = SqlUtil.getAttachmentsFromMessage(event.getGuild(),event.getMessageId());
-        StringBuilder builder = new StringBuilder();
-        strings.forEach(x->builder.append(x).append("\n"));
-        return builder.toString();
-    }
 
 }

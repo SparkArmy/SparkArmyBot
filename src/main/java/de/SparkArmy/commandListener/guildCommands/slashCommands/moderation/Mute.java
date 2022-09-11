@@ -1,7 +1,7 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 

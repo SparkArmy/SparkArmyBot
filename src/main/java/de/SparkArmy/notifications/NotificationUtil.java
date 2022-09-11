@@ -1,8 +1,8 @@
 package de.SparkArmy.notifications;
 
-import de.SparkArmy.utils.ChannelUtil;
-import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.JdaEventUtil;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.utils.jda.FileHandler;
+import de.SparkArmy.utils.jda.JdaEventUtil;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.Event;

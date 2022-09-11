@@ -1,12 +1,12 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.AuditLogUtil;
-import de.SparkArmy.utils.ChannelUtil;
-import de.SparkArmy.utils.LogChannelType;
+import de.SparkArmy.utils.jda.AuditLogUtil;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.utils.jda.LogChannelType;
 import de.SparkArmy.utils.SqlUtil;
-import de.SparkArmy.utils.punishmentUtils.PunishmentEmbeds;
-import de.SparkArmy.utils.punishmentUtils.PunishmentType;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentEmbeds;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogChange;

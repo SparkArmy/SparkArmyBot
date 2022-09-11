@@ -1,5 +1,6 @@
-package de.SparkArmy.utils;
+package de.SparkArmy.utils.jda;
 
+import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
 import net.dv8tion.jda.api.audit.TargetType;

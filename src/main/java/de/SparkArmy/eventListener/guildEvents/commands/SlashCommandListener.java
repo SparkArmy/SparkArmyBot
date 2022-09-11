@@ -1,8 +1,8 @@
 package de.SparkArmy.eventListener.guildEvents.commands;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.ChannelUtil;
-import de.SparkArmy.utils.LogChannelType;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.utils.jda.LogChannelType;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 

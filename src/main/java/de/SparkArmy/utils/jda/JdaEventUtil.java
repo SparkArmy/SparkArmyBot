@@ -1,4 +1,4 @@
-package de.SparkArmy.utils;
+package de.SparkArmy.utils.jda;
 
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;

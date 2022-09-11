@@ -1,4 +1,4 @@
-package de.SparkArmy.utils;
+package de.SparkArmy.utils.jda;
 
 import java.util.Arrays;
 import java.util.List;

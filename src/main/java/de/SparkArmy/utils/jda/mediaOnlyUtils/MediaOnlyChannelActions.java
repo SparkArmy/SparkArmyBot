@@ -1,4 +1,4 @@
-package de.SparkArmy.utils.mediaOnlyUtils;
+package de.SparkArmy.utils.jda.mediaOnlyUtils;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

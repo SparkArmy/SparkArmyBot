@@ -1,4 +1,4 @@
-package de.SparkArmy.utils.punishmentUtils;
+package de.SparkArmy.utils.jda.punishmentUtils;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

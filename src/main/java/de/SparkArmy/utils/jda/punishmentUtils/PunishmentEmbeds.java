@@ -1,6 +1,6 @@
-package de.SparkArmy.utils.punishmentUtils;
+package de.SparkArmy.utils.jda.punishmentUtils;
 
-import de.SparkArmy.utils.MessageUtil;
+import de.SparkArmy.utils.jda.MessageUtil;
 import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;

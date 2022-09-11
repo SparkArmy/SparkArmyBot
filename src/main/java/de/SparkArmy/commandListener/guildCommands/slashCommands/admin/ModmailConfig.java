@@ -1,7 +1,7 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.ChannelUtil;
+import de.SparkArmy.utils.jda.ChannelUtil;
 import net.dv8tion.jda.api.entities.Category;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.MessageChannel;

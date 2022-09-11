@@ -2,8 +2,8 @@ package de.SparkArmy.eventListener.guildEvents.commands;
 
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.punishmentUtils.PunishmentType;
-import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;

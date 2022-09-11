@@ -1,7 +1,8 @@
-package de.SparkArmy.utils;
+package de.SparkArmy.utils.jda;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
+import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;

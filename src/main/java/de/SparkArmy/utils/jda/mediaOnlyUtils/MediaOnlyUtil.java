@@ -1,7 +1,7 @@
-package de.SparkArmy.utils.mediaOnlyUtils;
+package de.SparkArmy.utils.jda.mediaOnlyUtils;
 
 import de.SparkArmy.controller.GuildConfigType;
-import de.SparkArmy.utils.JdaEventUtil;
+import de.SparkArmy.utils.jda.JdaEventUtil;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;

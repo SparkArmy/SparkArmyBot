@@ -2,7 +2,7 @@ package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
 import de.SparkArmy.utils.SqlUtil;
-import de.SparkArmy.utils.punishmentUtils.PunishmentType;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;

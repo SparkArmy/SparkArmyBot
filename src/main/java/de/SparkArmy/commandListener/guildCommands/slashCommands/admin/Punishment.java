@@ -2,8 +2,8 @@ package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
 import de.SparkArmy.controller.GuildConfigType;
-import de.SparkArmy.utils.punishmentUtils.PunishmentType;
-import de.SparkArmy.utils.punishmentUtils.PunishmentUtil;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;

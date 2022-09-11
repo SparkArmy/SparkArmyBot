@@ -1,7 +1,7 @@
 package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
-import de.SparkArmy.utils.FileHandler;
+import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.LoggingMarker;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.Guild;

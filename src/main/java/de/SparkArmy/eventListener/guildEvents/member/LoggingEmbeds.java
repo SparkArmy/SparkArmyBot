@@ -1,6 +1,6 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
-import de.SparkArmy.utils.AuditLogUtil;
+import de.SparkArmy.utils.jda.AuditLogUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogEntry;

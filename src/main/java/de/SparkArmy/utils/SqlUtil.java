@@ -1,6 +1,7 @@
 package de.SparkArmy.utils;
 
-import de.SparkArmy.utils.punishmentUtils.PunishmentType;
+import de.SparkArmy.utils.jda.MessageUtil;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -204,12 +205,10 @@ public class SqlUtil {
         try {
             Statement stmt = statement(guild);
             ResultSet results;
-            String statementString = String.format("SELECT COUNT (*) FROM tblUser WHERE usrId='%s';",user.getId());
+            String statementString = String.format("SELECT usrId FROM tblUser WHERE usrId='%s';",user.getId());
             results = stmt.executeQuery(statementString);
-            int n = 0;
-            if (results.next()) n = results.getInt(1);
             stmt.close();
-            return n == 0;
+            return !results.next();
         }catch (SQLException e){
             logger.error(e.getMessage());
             return false;
@@ -223,10 +222,8 @@ public class SqlUtil {
             ResultSet results;
             String statementString = String.format("SELECT COUNT (*) FROM tblModerator WHERE modUserId='%s';",member.getId());
             results = stmt.executeQuery(statementString);
-            int n = 0;
-            if (results.next()) n = results.getInt(1);
             stmt.close();
-            return n == 0;
+            return !results.next();
         }catch (SQLException e){
             logger.error(e.getMessage());
             return false;
@@ -296,7 +293,7 @@ public class SqlUtil {
         if (!sqlEnabled) return 1;
         try {
             Statement stmt = statement(guild);
-            String sql = "SELECT COUNT (*) FROM tblPunishment;";
+            String sql = "SELECT COUNT (psmId) FROM tblPunishment;";
             ResultSet results = stmt.executeQuery(sql);
             results.last();
             stmt.close();
@@ -325,7 +322,7 @@ public class SqlUtil {
        String insertString = "INSERT INTO tblMessageAttachments (msaMsgId,msaLink) VALUES ('" + message.getId() + "','%s');";
 
 
-       message.getAttachments().forEach(x-> insertIn(message.getGuild(),String.format(insertString,MessageUtil.logAttachmentsOnStorageServer(x,message.getGuild()))));
+       message.getAttachments().forEach(x-> insertIn(message.getGuild(),String.format(insertString, MessageUtil.logAttachmentsOnStorageServer(x,message.getGuild()))));
     }
 
     public static void updateDataInMessageTable(Message message){
@@ -396,10 +393,8 @@ public class SqlUtil {
             ResultSet results;
             String statementString = String.format("SELECT COUNT (*) FROM tblMessage WHERE msgId='%s';",messageId);
             results = stmt.executeQuery(statementString);
-            int n = 0;
-            if (results.next()) n = results.getInt(1);
-            stmt.close();
-            return n == 0;
+           stmt.close();
+           return !results.next();
         }catch (SQLException e){
             logger.error(e.getMessage());
             return false;
@@ -443,15 +438,14 @@ public class SqlUtil {
        try {
            Statement stmt = statement(event.getGuild());
            ResultSet results;
-           String statementString = String.format("SELECT COUNT (*) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
+           String statementString = String.format("SELECT COUNT (usnId) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
            results = stmt.executeQuery(statementString);
-           int n = 0;
-           if (results.next()) n = results.getInt(1);
            stmt.close();
-           return n == 0;
+           return !results.next();
        }catch (SQLException e){
            logger.error(e.getMessage());
            return false;
        }
    }
+
 }

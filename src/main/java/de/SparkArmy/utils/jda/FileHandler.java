@@ -1,5 +1,7 @@
-package de.SparkArmy.utils;
+package de.SparkArmy.utils.jda;
 
+import de.SparkArmy.utils.LoggingMarker;
+import de.SparkArmy.utils.MainUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

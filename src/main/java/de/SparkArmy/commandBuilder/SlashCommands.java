@@ -1,6 +1,6 @@
 package de.SparkArmy.commandBuilder;
 
-import de.SparkArmy.utils.punishmentUtils.PunishmentType;
+import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;

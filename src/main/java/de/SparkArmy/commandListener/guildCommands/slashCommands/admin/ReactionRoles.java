@@ -1,7 +1,7 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.ReactionRoleUtil;
+import de.SparkArmy.utils.jda.ReactionRoleUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

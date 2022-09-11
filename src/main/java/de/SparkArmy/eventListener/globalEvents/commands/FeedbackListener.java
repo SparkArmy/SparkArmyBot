@@ -1,7 +1,7 @@
 package de.SparkArmy.eventListener.globalEvents.commands;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.ChannelUtil;
+import de.SparkArmy.utils.jda.ChannelUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;

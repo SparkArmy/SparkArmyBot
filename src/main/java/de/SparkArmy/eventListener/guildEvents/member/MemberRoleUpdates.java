@@ -1,9 +1,9 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.AuditLogUtil;
-import de.SparkArmy.utils.ChannelUtil;
-import de.SparkArmy.utils.LogChannelType;
+import de.SparkArmy.utils.jda.AuditLogUtil;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.utils.jda.LogChannelType;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
 import net.dv8tion.jda.api.entities.User;
@@ -11,11 +11,20 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class MemberRoleLogging extends CustomEventListener {
+public class MemberRoleUpdates extends CustomEventListener {
 
 
     @Override
     public void onGuildMemberRoleAdd(@NotNull GuildMemberRoleAddEvent event) {
+       loggingRoleAdd(event);
+    }
+
+    @Override
+    public void onGuildMemberRoleRemove(@NotNull GuildMemberRoleRemoveEvent event) {
+       loggingRoleRemove(event);
+    }
+
+    private void loggingRoleAdd(@NotNull GuildMemberRoleAddEvent event){
         if (event.getUser().isBot()) return;
         AuditLogEntry entry = AuditLogUtil.getAuditLogEntryByUser(event.getUser(), ActionType.MEMBER_ROLE_UPDATE,event.getGuild());
         User moderator = null;
@@ -25,8 +34,7 @@ public class MemberRoleLogging extends CustomEventListener {
         ChannelUtil.logInLogChannel(LoggingEmbeds.memberRoleLogging(event.getMember(), event.getRoles(),event,moderator),event.getGuild(), LogChannelType.MEMBER);
     }
 
-    @Override
-    public void onGuildMemberRoleRemove(@NotNull GuildMemberRoleRemoveEvent event) {
+    private void loggingRoleRemove(@NotNull GuildMemberRoleRemoveEvent event){
         if (event.getUser().isBot()) return;
         AuditLogEntry entry = AuditLogUtil.getAuditLogEntryByUser(event.getUser(), ActionType.MEMBER_ROLE_UPDATE,event.getGuild());
         User moderator = null;

@@ -1,7 +1,7 @@
 package de.SparkArmy.timedOperations;
 
 import de.SparkArmy.eventListener.globalEvents.commands.ModmailListener;
-import de.SparkArmy.utils.ReactionRoleUtil;
+import de.SparkArmy.utils.jda.ReactionRoleUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 

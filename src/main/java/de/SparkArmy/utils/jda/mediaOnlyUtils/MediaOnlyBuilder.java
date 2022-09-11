@@ -1,4 +1,4 @@
-package de.SparkArmy.utils.mediaOnlyUtils;
+package de.SparkArmy.utils.jda.mediaOnlyUtils;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Channel;

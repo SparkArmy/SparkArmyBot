@@ -2,7 +2,7 @@ package de.SparkArmy.eventListener.globalEvents.commands;
 
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.FileHandler;
+import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.LoggingMarker;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.EmbedBuilder;

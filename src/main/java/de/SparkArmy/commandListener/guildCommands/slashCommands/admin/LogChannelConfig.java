@@ -1,8 +1,8 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.ChannelUtil;
-import de.SparkArmy.utils.LogChannelType;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.utils.jda.LogChannelType;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

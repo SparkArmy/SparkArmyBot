@@ -1,9 +1,9 @@
-package de.SparkArmy.utils.punishmentUtils;
+package de.SparkArmy.utils.jda.punishmentUtils;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
-import de.SparkArmy.utils.ChannelUtil;
-import de.SparkArmy.utils.LogChannelType;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.utils.jda.LogChannelType;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;

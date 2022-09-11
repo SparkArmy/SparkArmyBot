@@ -47,18 +47,17 @@ public class EventListenerRegisterer {
         // MemberRelatedEvents
         events.add(new MemberLeaveEvent());
         events.add(new MemberJoinEvent());
-        events.add(new MemberRoleLogging());
+        events.add(new MemberRoleUpdates());
         events.add(new MemberPersonalUpdates());
         events.add(new MemberPendingEvent());
         events.add(new MemberTimeoutEvent());
+        events.add(new MemberNicknameUpdate());
 
         // Message Events
         events.add(new MessageReceive());
         events.add(new MessageUpdate());
         events.add(new MessageDelete());
 
-        // Sticky Things
-        events.add(new MemberNicknameUpdate());
 
         this.events.forEach(this.jda::addEventListener);
     }

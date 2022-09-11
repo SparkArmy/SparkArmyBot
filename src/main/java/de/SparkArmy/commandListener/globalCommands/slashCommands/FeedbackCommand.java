@@ -1,7 +1,7 @@
 package de.SparkArmy.commandListener.globalCommands.slashCommands;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.FileHandler;
+import de.SparkArmy.utils.jda.FileHandler;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;

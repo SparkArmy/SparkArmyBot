@@ -1,8 +1,8 @@
 package de.SparkArmy.eventListener.guildEvents.message;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.ChannelUtil;
-import de.SparkArmy.utils.LogChannelType;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.utils.jda.LogChannelType;
 import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;

@@ -14,6 +14,7 @@ public class TimedOperationsExecutor {
         execute.scheduleAtFixedRate(tenSeconds(),1,10, TimeUnit.SECONDS);
         execute.scheduleAtFixedRate(twoSeconds(),1,2,TimeUnit.SECONDS);
         execute.scheduleAtFixedRate(ninetySeconds(),2,90,TimeUnit.SECONDS);
+        execute.scheduleAtFixedRate(fiveMinutes(), 0,5,TimeUnit.MINUTES);
         execute.scheduleAtFixedRate(fourDays(),0,4,TimeUnit.DAYS);
 
     }
@@ -35,6 +36,11 @@ public class TimedOperationsExecutor {
         // Rate Limit from Twitter 104 requests per 90 seconds (100.000 per 24h)
         // Rate Limit from Twitch 800 requests per 60 seconds
         return TimedOperations::checkForNotificationUpdates;
+    }
+
+    @Contract(pure = true)
+    private static @NotNull Runnable fiveMinutes(){
+        return TimedOperations::updateStatusPhrase;
     }
 
     @Contract(pure = true)

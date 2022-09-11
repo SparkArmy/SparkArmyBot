@@ -4,10 +4,12 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.notifications.NotificationUtil;
 import de.SparkArmy.notifications.YouTubeApi;
-import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.MainUtil;
+import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import org.json.JSONObject;
@@ -19,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 public class TimedOperations {
     private static final JDA jda = MainUtil.jda;
@@ -156,5 +159,41 @@ public class TimedOperations {
                 }
             });
         });
+    }
+
+    protected static void updateStatusPhrase(){
+        File directory = FileHandler.getDirectoryInUserDirectory("botstuff");
+        assert directory != null;
+        File file = FileHandler.getFileInDirectory(directory,"status.json");
+
+        if (!file.exists()) {
+            jda.getPresence().setPresence(OnlineStatus.ONLINE, Activity.of(Activity.ActivityType.COMPETING,"How many errors I can generate in one run"));
+            return;
+        }
+        String contentString = FileHandler.getFileContent(file);
+        if (contentString == null){
+            jda.getPresence().setPresence(OnlineStatus.ONLINE, Activity.of(Activity.ActivityType.COMPETING,"How many errors I can generate in one run"));
+            return;
+        }
+
+        JSONObject content = new JSONObject(contentString);
+
+        List<String> keys = content.keySet().stream().toList();
+        String activity = String.valueOf(keys.get(new Random().nextInt(keys.size())));
+        String phrase;
+        if (content.getJSONArray(activity).isEmpty()) {
+            jda.getPresence().setPresence(OnlineStatus.ONLINE, Activity.of(Activity.ActivityType.COMPETING,"How many errors I can generate in one run"));
+            return;
+        }
+        phrase = content.getJSONArray(activity).getString(new Random().nextInt(content.getJSONArray(activity).length()));
+        Activity statusActivity;
+        switch (activity){
+            case "listening" -> statusActivity = Activity.of(Activity.ActivityType.LISTENING, phrase);
+            case "streaming" -> statusActivity = Activity.of(Activity.ActivityType.STREAMING, phrase);
+            case "watching" -> statusActivity = Activity.of(Activity.ActivityType.WATCHING, phrase);
+            case "playing" -> statusActivity = Activity.of(Activity.ActivityType.PLAYING, phrase);
+            default -> statusActivity = Activity.of(Activity.ActivityType.COMPETING,phrase);
+        }
+        jda.getPresence().setPresence(OnlineStatus.ONLINE,statusActivity);
     }
 }

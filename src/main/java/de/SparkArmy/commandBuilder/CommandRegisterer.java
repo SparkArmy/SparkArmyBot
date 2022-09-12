@@ -43,6 +43,7 @@ public enum CommandRegisterer {
         // Public commands
         Collection<CommandData> generalCommands = new ArrayList<>(){{
            addAll(UserCommands.generalUserCommands());
+           addAll(MessageCommands.generalMessageCommands());
         }};
 
         // Put all guildCommands in one Collection

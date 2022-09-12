@@ -168,6 +168,7 @@ public class TimedOperations {
 
         if (!file.exists()) {
             jda.getPresence().setPresence(OnlineStatus.ONLINE, Activity.of(Activity.ActivityType.COMPETING,"How many errors I can generate in one run"));
+            FileHandler.createFile(directory,file.getName());
             return;
         }
         String contentString = FileHandler.getFileContent(file);

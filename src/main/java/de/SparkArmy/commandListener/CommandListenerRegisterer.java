@@ -2,6 +2,7 @@ package de.SparkArmy.commandListener;
 
 import de.SparkArmy.commandListener.globalCommands.slashCommands.FeedbackCommand;
 import de.SparkArmy.commandListener.globalCommands.slashCommands.ModmailCommand;
+import de.SparkArmy.commandListener.guildCommands.messageCommands.Report;
 import de.SparkArmy.commandListener.guildCommands.slashCommands.admin.*;
 import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.*;
 import de.SparkArmy.commandListener.guildCommands.userCommands.admin.ModUnmodMember;
@@ -50,6 +51,10 @@ public class CommandListenerRegisterer {
 
             // General Commands
             commands.add(new RoleRemove());
+
+        // Message Commands
+            // General Commands
+            commands.add(new Report());
 
 
         this.commands.forEach(this.jda::addEventListener);

@@ -18,6 +18,11 @@ public class Report extends CustomCommandListener{
 
         if (eventMember == null || targetMember == null) return;
 
+        if (targetMember.getUser().isBot() || targetMember.getUser().isSystem()) {
+            event.reply("You can't report this message!").setEphemeral(true).queue();
+            return;
+        }
+
 
         String report = String.format("Message reported from %s (%s). The message sent from %s (%s)\nLink: %s",
                 eventMember.getUser().getAsTag(),eventMember.getId(),

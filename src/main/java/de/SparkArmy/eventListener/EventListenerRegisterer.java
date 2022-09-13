@@ -9,6 +9,7 @@ import de.SparkArmy.eventListener.guildEvents.member.*;
 import de.SparkArmy.eventListener.guildEvents.message.MessageDelete;
 import de.SparkArmy.eventListener.guildEvents.message.MessageReceive;
 import de.SparkArmy.eventListener.guildEvents.message.MessageUpdate;
+import de.SparkArmy.eventListener.guildEvents.message.Reactions;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -57,6 +58,7 @@ public class EventListenerRegisterer {
         events.add(new MessageReceive());
         events.add(new MessageUpdate());
         events.add(new MessageDelete());
+        events.add(new Reactions());
 
 
         this.events.forEach(this.jda::addEventListener);

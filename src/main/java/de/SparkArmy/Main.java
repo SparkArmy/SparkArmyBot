@@ -21,13 +21,6 @@ import org.springframework.boot.SpringApplication;
 
 public class Main {
 
-    @SuppressWarnings("FieldCanBeLocal")
-    private final ConfigController controller;
-    @SuppressWarnings("FieldCanBeLocal")
-    private final EventWaiter waiter;
-
-    @SuppressWarnings("FieldCanBeLocal")
-    private final TimedOperationsExecutor timedOperations;
 
     private JDA jda;
 
@@ -37,9 +30,9 @@ public class Main {
         MainUtil.logger = logger;
 
         // Initialize ConfigController variables and the mainConfig
-        controller = new ConfigController(this);
-        MainUtil.controller = this.controller;
-        JSONObject mainConfig = this.controller.getMainConfigFile();
+        ConfigController controller = new ConfigController(this);
+        MainUtil.controller = controller;
+        JSONObject mainConfig = controller.getMainConfigFile();
         MainUtil.mainConfig = mainConfig;
 
         // Start building JDA
@@ -60,7 +53,7 @@ public class Main {
         }
 
         // Add a EventWaiter
-        this.waiter = new EventWaiter();
+        EventWaiter waiter = new EventWaiter();
         MainUtil.waiter = waiter;
         jda.addEventListener(waiter);
 
@@ -75,8 +68,7 @@ public class Main {
         MainUtil.jda = this.jda;
 
         // Initialize TimedOperations
-        this.timedOperations = new TimedOperationsExecutor();
-        MainUtil.timedOperations = timedOperations;
+        MainUtil.timedOperations = new TimedOperationsExecutor();
 
         // Get StorageServer
         MainUtil.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));

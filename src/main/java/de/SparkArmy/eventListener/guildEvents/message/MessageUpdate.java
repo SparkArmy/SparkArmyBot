@@ -15,6 +15,8 @@ public class MessageUpdate extends CustomEventListener {
     }
 
     private void logUpdateMessage(@NotNull MessageUpdateEvent event){
+        if (event.getAuthor().isSystem() || event.getAuthor().isBot()) return;
+
         EmbedBuilder newEmbed = new EmbedBuilder();
         EmbedBuilder oldEmbed = new EmbedBuilder();
 

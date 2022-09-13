@@ -1,10 +1,10 @@
 package de.SparkArmy.eventListener.guildEvents.message;
 
 import de.SparkArmy.eventListener.CustomEventListener;
+import de.SparkArmy.utils.SqlUtil;
 import de.SparkArmy.utils.jda.AuditLogUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
-import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
@@ -25,6 +25,8 @@ public class MessageDelete extends CustomEventListener {
         if (event.getGuild().equals(storageServer)) return;
 
         User messageAuthor = getUserFromMessageId(event);
+
+        if (messageAuthor.isBot()) return;
 
         EmbedBuilder messageLogEmbed = new EmbedBuilder();
         messageLogEmbed.setTitle("Message Delete");
@@ -84,6 +86,7 @@ public class MessageDelete extends CustomEventListener {
 
     private @NotNull User getUserFromMessageId(@NotNull MessageDeleteEvent event){
        String userId = SqlUtil.getUserIdFromMessageTable(event.getGuild(),event.getMessageId());
+       if (userId.isEmpty()) return jda.getSelfUser();
        User user = jda.getUserById(userId);
        if (user == null) return jda.getSelfUser();
        return user;

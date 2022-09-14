@@ -2,12 +2,20 @@ package de.SparkArmy.eventListener.globalEvents.commands;
 
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.LoggingMarker;
 import de.SparkArmy.utils.MainUtil;
+import de.SparkArmy.utils.jda.FileHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageHistory;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -168,7 +176,6 @@ public class ModmailListener extends CustomEventListener {
                                     if (g.getComponentId().equals("modmailOk")) {
                                         x.editOriginalComponents().queue();
                                         sendStartEmbedToServer(builder, guild, event.getUser(), event);
-                                        event.editComponents().queue();
                                         g.editComponents().queue();
                                     }
                                 });
@@ -217,7 +224,7 @@ public class ModmailListener extends CustomEventListener {
                         g.reply("Channel will be deleted, started by " + f.getUser().getAsTag()).queue();
                         //noinspection ConstantConditions
                         String reason = g.getValue("modmailCloseReason").getAsString();
-                        saveMessagesFromModmailChannel(event.getGuildChannel().asTextChannel(),jda.getUserById(buttonId[2]),f.getUser(),reason).start();
+                        saveMessagesFromModmailChannel(event.getChannel().asTextChannel(), jda.getUserById(buttonId[2]),f.getUser(),reason).start();
 
                         // Send the user a message that the ticket was closed
                         try {

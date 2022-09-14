@@ -5,6 +5,7 @@ import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.jda.JdaEventUtil;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

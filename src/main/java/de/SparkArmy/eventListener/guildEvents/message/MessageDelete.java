@@ -25,7 +25,6 @@ public class MessageDelete extends CustomEventListener {
         if (event.getGuild().equals(storageServer)) return;
 
         User messageAuthor = getUserFromMessageId(event);
-
         if (messageAuthor.isBot()) return;
 
         EmbedBuilder messageLogEmbed = new EmbedBuilder();

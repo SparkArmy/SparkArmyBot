@@ -361,7 +361,6 @@ public class SqlUtil {
             stmt.close();
             return results.getString(1);
         } catch (Exception e) {
-            e.printStackTrace();
             return "";
         }
     }

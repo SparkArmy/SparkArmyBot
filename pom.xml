@@ -27,7 +27,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-alpha.18</version>
+            <version>5.0.0-alpha.19</version>
         </dependency>
 
         <dependency>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>pw.chew</groupId>
             <artifactId>jda-chewtils-commons</artifactId>
-            <version>1.21.0</version>
+            <version>1.24.1</version>
             <scope>compile</scope>
         </dependency>
 

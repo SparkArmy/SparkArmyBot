@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class PunishmentUtil {
 
@@ -99,12 +100,12 @@ public class PunishmentUtil {
                 return true;
             }
             case KICK ->{
-                guild.kick(offender,reason).queue();
+                guild.kick(offender).reason(reason).queue();
                 return true;
             }
             case BAN -> {
                 int days = Integer.parseInt(punishment.getString("standard-deleted-days"));
-                guild.ban(offender,days,reason).queue();
+                guild.ban(offender,days, TimeUnit.DAYS).reason(reason).queue();
                 return true;
             }
             default -> {

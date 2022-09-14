@@ -1,12 +1,12 @@
 package de.SparkArmy.springBoot;
 
 
+import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.FileHandler;
-import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.json.XML;

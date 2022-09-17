@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -162,6 +163,15 @@ enum SlashCommands {
 
             // Moderation Config
             add(Commands.slash("moderation-config","Update the configuration from moderation- roles,etc."));
+
+            // Count Channel
+            add(Commands.slash("count-channel-settings","Update the Server count settings").addSubcommands(
+                    new SubcommandData("channel","The count channel").addOptions(
+                            new OptionData(OptionType.CHANNEL,"target-channel","The target channel").setRequired(true)),
+                    new SubcommandData("name","The string before the count").addOptions(
+                            new OptionData(OptionType.STRING,"channel-name","The string").setRequired(true)),
+                    new SubcommandData("clear","Clear channel and message")
+            ));
         }};
     }
 }

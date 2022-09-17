@@ -44,6 +44,7 @@ public class CommandListenerRegisterer {
             commands.add(new LogChannelConfig());
             commands.add(new ModmailConfig());
             commands.add(new ModerationConfig());
+            commands.add(new GuildMemberCountChannel());
 
         // User Commands
             // Admin Commands

@@ -491,7 +491,7 @@ public class ModmailListener extends CustomEventListener {
                 if (!m.getEmbeds().isEmpty() || !m.getContentRaw().isEmpty()){
                     threadChannel.sendMessage(MessageCreateData.fromMessage(m)).queue(x->x.editMessageComponents().queue());
                     try {
-                        TimeUnit.SECONDS.sleep(2);
+                        TimeUnit.SECONDS.sleep(4);
                     } catch (InterruptedException ignored) {
                     }
                 }

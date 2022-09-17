@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -196,5 +197,19 @@ public class TimedOperations {
             default -> statusActivity = Activity.of(Activity.ActivityType.COMPETING,phrase);
         }
         jda.getPresence().setPresence(OnlineStatus.ONLINE,statusActivity);
+    }
+
+    protected static void updateUserCount(){
+        jda.getGuilds().forEach(guild->{
+            if (guild.equals(MainUtil.storageServer)) return;
+            JSONObject config = controller.getSpecificGuildConfig(guild,GuildConfigType.MAIN);
+            if (config.isNull("user-count")) return;
+            JSONObject countConfig = config.getJSONObject("user-count");
+            String suffix = countConfig.getString("string");
+            String name = String.format("%s:%d",suffix,guild.getMemberCount());
+            //noinspection ConstantConditions
+            guild.getGuildChannelById(countConfig.getString("count-channel")).getManager().setName(name).queue(null,
+                    new ErrorHandler().ignore(NullPointerException.class));
+        });
     }
 }

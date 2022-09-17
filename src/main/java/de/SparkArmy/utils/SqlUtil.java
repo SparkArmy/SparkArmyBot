@@ -200,12 +200,13 @@ public class SqlUtil {
         }
     }
 
+
     public static boolean isUserNotInUserTable(Guild guild, @NotNull Member user){
         if (!sqlEnabled) return false;
         try {
             Statement stmt = statement(guild);
             ResultSet results;
-            String statementString = String.format("SELECT usrId FROM tblUser WHERE usrId='%s';",user.getId());
+            String statementString = String.format("SELECT COUNT(*) FROM tblUser WHERE usrId='%s';",user.getId());
             results = stmt.executeQuery(statementString);
             stmt.close();
             return !results.next();
@@ -220,7 +221,7 @@ public class SqlUtil {
         try {
             Statement stmt = statement(guild);
             ResultSet results;
-            String statementString = String.format("SELECT COUNT (*) FROM tblModerator WHERE modUserId='%s';",member.getId());
+            String statementString = String.format("SELECT COUNT(*) FROM tblModerator WHERE modUserId='%s';",member.getId());
             results = stmt.executeQuery(statementString);
             stmt.close();
             return !results.next();
@@ -390,7 +391,7 @@ public class SqlUtil {
         try {
             Statement stmt = statement(guild);
             ResultSet results;
-            String statementString = String.format("SELECT COUNT (*) FROM tblMessage WHERE msgId='%s';",messageId);
+            String statementString = String.format("SELECT COUNT(*) FROM tblMessage WHERE msgId='%s';",messageId);
             results = stmt.executeQuery(statementString);
            stmt.close();
            return !results.next();
@@ -437,7 +438,7 @@ public class SqlUtil {
        try {
            Statement stmt = statement(event.getGuild());
            ResultSet results;
-           String statementString = String.format("SELECT COUNT (usnId) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
+           String statementString = String.format("SELECT COUNT(*) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
            results = stmt.executeQuery(statementString);
            stmt.close();
            return !results.next();

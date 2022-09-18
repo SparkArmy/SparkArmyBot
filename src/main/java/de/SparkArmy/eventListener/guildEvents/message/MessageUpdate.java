@@ -62,9 +62,7 @@ public class MessageUpdate extends CustomEventListener {
         if (event.getAuthor().isSystem()) return;
         if (event.getMember() == null) return;
 
-        if (SqlUtil.isUserNotInUserTable(event.getGuild(), event.getMember())){
-            SqlUtil.putUserDataInUserTable(event.getGuild(),event.getMember());
-        }
+        SqlUtil.putUserDataInUserTable(event.getGuild(),event.getMember());
 
         if (SqlUtil.isMessageIdNotInMessageTable(event.getGuild(),event.getMessageId())) {
             SqlUtil.putDataInMessageTable(event.getMessage());

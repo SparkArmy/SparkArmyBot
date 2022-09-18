@@ -42,9 +42,9 @@ public class MemberTimeoutEvent extends CustomEventListener {
         EmbedBuilder userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reason, event.getNewTimeOutEnd(), PunishmentType.TIMEOUT);
         event.getUser().openPrivateChannel().complete().sendMessageEmbeds(userEmbed.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.CANNOT_SEND_TO_USER));
 
-        if (SqlUtil.isUserNotInUserTable(guild, event.getMember())) SqlUtil.putUserDataInUserTable(guild, event.getMember());
+        SqlUtil.putUserDataInUserTable(guild, event.getMember());
         if (SqlUtil.isUserNotInModeratorTable(guild,moderator)){
-            if (SqlUtil.isUserNotInUserTable(guild, moderator)) SqlUtil.putUserDataInUserTable(guild, moderator);
+            SqlUtil.putUserDataInUserTable(guild, moderator);
             SqlUtil.putDataInModeratorTable(guild,moderator);
         }
 

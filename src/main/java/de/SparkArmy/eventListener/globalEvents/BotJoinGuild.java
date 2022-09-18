@@ -26,6 +26,9 @@ public class BotJoinGuild extends CustomEventListener {
         CommandRegisterer.registerGuildSlashCommands(guild);
         getGuildMainConfig(guild);
         SqlUtil.createDatabaseAndTablesForGuild(guild);
-        guild.getMembers().forEach(x->SqlUtil.putUserDataInUserTable(guild,x));
+        guild.getMembers().forEach(x->{
+            SqlUtil.putUserDataInUserTable(guild,x);
+            SqlUtil.putDataInRoleUpdateTable(guild,x,x.getRoles());
+        });
     }
 }

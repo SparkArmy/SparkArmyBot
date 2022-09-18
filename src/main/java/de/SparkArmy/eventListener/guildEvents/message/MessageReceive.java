@@ -20,11 +20,7 @@ public class MessageReceive extends CustomEventListener {
         if (event.getAuthor().isSystem()) return;
         if (event.getMember() == null) return;
 
-        if (SqlUtil.isUserNotInUserTable(event.getGuild(), event.getMember())){
-            SqlUtil.putUserDataInUserTable(event.getGuild(),event.getMember());
-        }
-
-
+        SqlUtil.putUserDataInUserTable(event.getGuild(),event.getMember());
         SqlUtil.putDataInMessageTable(event.getMessage());
         SqlUtil.putDataInMessageAttachmentsTable(event.getMessage());
     }

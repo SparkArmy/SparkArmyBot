@@ -1,6 +1,7 @@
 package de.SparkArmy.eventListener;
 
 import de.SparkArmy.eventListener.globalEvents.BotJoinGuild;
+import de.SparkArmy.eventListener.globalEvents.commands.BotLeaveGuild;
 import de.SparkArmy.eventListener.globalEvents.commands.FeedbackListener;
 import de.SparkArmy.eventListener.globalEvents.commands.ModmailListener;
 import de.SparkArmy.eventListener.guildEvents.channel.MediaOnlyFunction;
@@ -27,6 +28,7 @@ public class EventListenerRegisterer {
 
         // Global Events
         events.add(new BotJoinGuild());
+        events.add(new BotLeaveGuild());
 
         // Listeners for GlobalCommandActions
         events.add(new ModmailListener());

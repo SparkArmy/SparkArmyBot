@@ -200,11 +200,9 @@ public class PunishmentUtil {
             return;
         }
 
-        if (SqlUtil.isUserNotInUserTable(guild, offender)){
-            SqlUtil.putUserDataInUserTable(guild,offender);
-        }
+        SqlUtil.putUserDataInUserTable(guild,offender);
         if (SqlUtil.isUserNotInModeratorTable(guild,moderator)){
-            if (SqlUtil.isUserNotInUserTable(guild,moderator)) SqlUtil.putUserDataInUserTable(guild,moderator);
+            SqlUtil.putUserDataInUserTable(guild,moderator);
             SqlUtil.putDataInModeratorTable(guild,moderator);
         }
         SqlUtil.putDataInPunishmentTable(guild,offender,moderator,PunishmentType.getByName(eventName));
@@ -260,9 +258,8 @@ public class PunishmentUtil {
                 }else {
                     reason = punishments.getJSONObject("kick").getString("standard-reason");
                 }
-                if (SqlUtil.isUserNotInUserTable(guild, offender)){
-                    SqlUtil.putUserDataInUserTable(guild,offender);
-                }
+
+                SqlUtil.putUserDataInUserTable(guild,offender);
                 if (SqlUtil.isUserNotInUserTable(guild,moderator)){
                     SqlUtil.putUserDataInUserTable(guild,moderator);
                     SqlUtil.putDataInModeratorTable(guild,moderator);
@@ -276,9 +273,8 @@ public class PunishmentUtil {
                 }else {
                     reason = punishments.getJSONObject("ban").getString("standard-reason");
                 }
-                if (SqlUtil.isUserNotInUserTable(guild, offender)){
-                    SqlUtil.putUserDataInUserTable(guild,offender);
-                }
+
+                SqlUtil.putUserDataInUserTable(guild,offender);
                 if (SqlUtil.isUserNotInUserTable(guild,moderator)){
                     SqlUtil.putUserDataInUserTable(guild,moderator);
                     SqlUtil.putDataInModeratorTable(guild,moderator);

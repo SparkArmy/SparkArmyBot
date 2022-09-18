@@ -118,7 +118,7 @@ public class ModmailListener extends CustomEventListener {
 
         SelectMenu.Builder guilds = SelectMenu.create("modmailGuildPicker;" + idExtension);
 
-        event.getJDA().getGuilds().forEach(g -> guilds.addOption(g.getName(), g.getId()));
+        event.getJDA().getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(g -> guilds.addOption(g.getName(), g.getId()));
         if (guilds.build().getOptions().isEmpty()){
             event.reply("All server were you member have disabled the modmail-feature").setEphemeral(true).queue();
             return;

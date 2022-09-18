@@ -2,13 +2,10 @@ package de.SparkArmy.utils;
 
 import de.SparkArmy.utils.jda.MessageUtil;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -20,7 +17,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("unused")
 public class SqlUtil {
    private static final Logger logger = MainUtil.logger;
 
@@ -71,8 +67,8 @@ public class SqlUtil {
     }
 
     @SuppressWarnings({"ConstantConditions", "resource"})
-    private static Statement statement(@NotNull Guild guild) throws SQLException,NullPointerException {
-        return connection("D" + guild.getId()).createStatement();
+    private static Statement guildStatement(@NotNull Guild guild) throws SQLException,NullPointerException {
+        return connection("G" + guild.getId()).createStatement();
     }
 
     private static String getSqlTimeStringFromDatetime(@NotNull OffsetDateTime time){
@@ -81,22 +77,35 @@ public class SqlUtil {
         return String.format("STR_TO_DATE('%s',%s)",timeString,formatString);
     }
 
-    private static boolean createDatabase(String databaseName){
+    private static boolean createGuildDatabase(String databaseName){
+        if (!sqlEnabled) return false;
         try {
             Statement stmt = statement();
-            String sql = "CREATE DATABASE IF NOT EXISTS D" + databaseName;
+            String sql = "CREATE DATABASE IF NOT EXISTS G" + databaseName;
             stmt.executeUpdate(sql);
             stmt.close();
             return true;
         } catch (Exception e) {
-         return false;
+            return false;
+        }
+    }
+
+    public static void dropGuildDatabase(String databaseName) {
+        if (!sqlEnabled) return;
+        try {
+            Statement stmt = statement();
+            String sql = "DROP DATABASE G" + databaseName;
+            stmt.executeUpdate(sql);
+            stmt.close();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
         }
     }
 
     private static void insertIn(Guild guild, String sql){
        if (!sqlEnabled) return;
        try {
-           Statement stmt = statement(guild);
+           Statement stmt = guildStatement(guild);
            stmt.executeUpdate(sql);
            stmt.close();
        } catch (SQLException e) {
@@ -108,7 +117,7 @@ public class SqlUtil {
     public static void createDatabaseAndTablesForGuild(@NotNull Guild guild){
         if (!sqlEnabled) return;
         String guildId = guild.getId();
-        if (!createDatabase(guildId)){
+        if (!createGuildDatabase(guildId)){
             logger.error("Failed to create Database for " + guildId);
             return;
         }
@@ -174,9 +183,17 @@ public class SqlUtil {
                         "    PRIMARY KEY (usnId)" +
                         ");";
 
+        String roleUpdateTable =
+                "CREATE TABLE IF NOT EXISTS tblRoleUpdates(" +
+                        "    rluUserId VARCHAR(50) NOT NULL," +
+                        "    rluRoleId VARCHAR(50) NOT NULL," +
+                        "    CONSTRAINT `fk_user-roles` FOREIGN KEY (rluUserId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
+                        "    PRIMARY KEY (rluRoleId,rluUserId)" +
+                        ");";
+
 
         try {
-            Statement stmt = statement(guild);
+            Statement stmt = guildStatement(guild);
             stmt.executeUpdate(userTable);
             stmt.executeUpdate(moderatorTable);
             stmt.executeUpdate(punishmentTypeTable);
@@ -184,6 +201,7 @@ public class SqlUtil {
             stmt.executeUpdate(messageTable);
             stmt.executeUpdate(messageAttachmentsTable);
             stmt.executeUpdate(nicknamesTable);
+            stmt.executeUpdate(roleUpdateTable);
 
             String punishmentTypes = "INSERT INTO tblPunishmentType (pstName) VALUES ('%s');";
             PunishmentType.getAllTypes().forEach(x->{
@@ -204,12 +222,14 @@ public class SqlUtil {
     public static boolean isUserNotInUserTable(Guild guild, @NotNull Member user){
         if (!sqlEnabled) return false;
         try {
-            Statement stmt = statement(guild);
+            Statement stmt = guildStatement(guild);
             ResultSet results;
             String statementString = String.format("SELECT COUNT(*) FROM tblUser WHERE usrId='%s';",user.getId());
             results = stmt.executeQuery(statementString);
+            results.next();
+            boolean bool = results.getInt(1) == 0;
             stmt.close();
-            return !results.next();
+            return bool;
         }catch (SQLException e){
             logger.error(e.getMessage());
             return false;
@@ -219,12 +239,14 @@ public class SqlUtil {
     public static boolean isUserNotInModeratorTable(Guild guild,Member member){
         if (!sqlEnabled) return false;
         try {
-            Statement stmt = statement(guild);
+            Statement stmt = guildStatement(guild);
             ResultSet results;
             String statementString = String.format("SELECT COUNT(*) FROM tblModerator WHERE modUserId='%s';",member.getId());
             results = stmt.executeQuery(statementString);
+            results.next();
+            boolean bool = results.getInt(1) == 0;
             stmt.close();
-            return !results.next();
+            return bool;
         }catch (SQLException e){
             logger.error(e.getMessage());
             return false;
@@ -233,6 +255,7 @@ public class SqlUtil {
 
     public static void putUserDataInUserTable(Guild guild, @NotNull Member member){
         if (!sqlEnabled) return;
+        if (!isUserNotInUserTable(guild,member)) return;
         String creationTime = getSqlTimeStringFromDatetime(member.getTimeCreated());
         String joinTime = getSqlTimeStringFromDatetime(member.getTimeJoined());
         String insertString = String.format("INSERT INTO tblUser (usrId,usrAccountCreated,usrMemberSince) VALUES ('%s',%s,%s)", member.getId(),creationTime,joinTime);
@@ -272,7 +295,7 @@ public class SqlUtil {
        ResultSet results;
        JSONArray result = new JSONArray();
        try {
-           Statement stmt = statement(guild);
+           Statement stmt = guildStatement(guild);
            results = stmt.executeQuery(sql);
            while (results.next()){
                JSONObject obj = new JSONObject();
@@ -293,8 +316,8 @@ public class SqlUtil {
     public static @NotNull Integer getPunishmentCaseIdFromGuild(Guild guild){
         if (!sqlEnabled) return 1;
         try {
-            Statement stmt = statement(guild);
-            String sql = "SELECT COUNT (psmId) FROM tblPunishment;";
+            Statement stmt = guildStatement(guild);
+            String sql = "SELECT COUNT (*) FROM tblPunishment;";
             ResultSet results = stmt.executeQuery(sql);
             results.last();
             stmt.close();
@@ -339,7 +362,7 @@ public class SqlUtil {
         if (!sqlEnabled) return "";
         if (isMessageIdNotInMessageTable(guild,messageId)) return "";
         try {
-            Statement stmt = statement(guild);
+            Statement stmt = guildStatement(guild);
             String sql = String.format("SELECT msgContent FROM tblMessage WHERE msgId ='%s';",messageId);
             ResultSet results = stmt.executeQuery(sql);
             results.last();
@@ -355,7 +378,7 @@ public class SqlUtil {
         if (!sqlEnabled) return "";
         if (isMessageIdNotInMessageTable(guild,messageId)) return "";
         try {
-            Statement stmt = statement(guild);
+            Statement stmt = guildStatement(guild);
             String sql = String.format("SELECT msgUserId FROM tblMessage WHERE msgId ='%s';",messageId);
             ResultSet results = stmt.executeQuery(sql);
             results.last();
@@ -366,11 +389,10 @@ public class SqlUtil {
         }
     }
 
-    @Contract("_, _ -> new")
     public static @NotNull List<String> getAttachmentsFromMessage(Guild guild, String messageId) {
        if (!sqlEnabled) return new ArrayList<>();
        try {
-           Statement stmt = statement(guild);
+           Statement stmt = guildStatement(guild);
            ResultSet results;
            String queryString = String.format("SELECT msaLink FROM tblMessageAttachments WHERE msaMsgId = '%s'",messageId);
            results = stmt.executeQuery(queryString);
@@ -389,12 +411,14 @@ public class SqlUtil {
     public static boolean isMessageIdNotInMessageTable(Guild guild,String messageId) {
         if (!sqlEnabled) return false;
         try {
-            Statement stmt = statement(guild);
+            Statement stmt = guildStatement(guild);
             ResultSet results;
             String statementString = String.format("SELECT COUNT(*) FROM tblMessage WHERE msgId='%s';",messageId);
             results = stmt.executeQuery(statementString);
-           stmt.close();
-           return !results.next();
+            results.next();
+            boolean bool = results.getInt(1) == 0;
+            stmt.close();
+            return bool;
         }catch (SQLException e){
             logger.error(e.getMessage());
             return false;
@@ -418,7 +442,7 @@ public class SqlUtil {
        if (isUserIdNotInNicknameTable(event)) return null;
 
        try {
-           Statement stmt = statement(event.getGuild());
+           Statement stmt = guildStatement(event.getGuild());
            ResultSet results;
            String queryString =String.format("SELECT usnValue FROM tblUserNicknames WHERE usnUserId = '%s' ORDER BY usnId;",event.getUser().getId());
            results = stmt.executeQuery(queryString);
@@ -436,15 +460,74 @@ public class SqlUtil {
    private static boolean isUserIdNotInNicknameTable(GuildMemberJoinEvent event){
        if (!sqlEnabled) return false;
        try {
-           Statement stmt = statement(event.getGuild());
+           Statement stmt = guildStatement(event.getGuild());
            ResultSet results;
            String statementString = String.format("SELECT COUNT(*) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
            results = stmt.executeQuery(statementString);
+           results.next();
+           boolean bool = results.getInt(1) == 0;
            stmt.close();
-           return !results.next();
+           return bool;
        }catch (SQLException e){
            logger.error(e.getMessage());
            return false;
+       }
+   }
+
+   public static void putDataInRoleUpdateTable(Guild guild, Member member, List<Role> roles){
+       if (!sqlEnabled) return;
+       String userId = member.getId();
+       putUserDataInUserTable(guild,member);
+       roles.forEach(role->{
+           if (isDataInRoleUpdateTable(guild,member,role)) return;
+           String insertString = String.format("INSERT INTO tblRoleUpdates (rluUserId,rluRoleId) VALUES ('%s','%s');",userId,role.getId());
+           insertIn(guild, insertString);
+       });
+   }
+
+   public static void removeDataFromRoleUpdateTable(GuildMemberRoleRemoveEvent event){
+       if (!sqlEnabled) return;
+       String userId = event.getUser().getId();
+       putUserDataInUserTable(event.getGuild(), event.getMember());
+
+       event.getRoles().forEach(role->{
+           String insertString = String.format("DELETE FROM tblRoleUpdates WHERE  rluUserId='%s' AND rluRoleId='%s';",userId,role.getId());
+           insertIn(event.getGuild(), insertString);
+       });
+   }
+
+   public static List<String> getRolesFromUser(User user,Guild guild){
+       if (!sqlEnabled) return new ArrayList<>();
+       List<String> roles = new ArrayList<>();
+       try {
+           Statement stmt = guildStatement(guild);
+           String query = String.format("SELECT rluRoleId FROM tblRoleUpdates WHERE rluUserId='%s';",user.getId());
+           ResultSet results;
+           results = stmt.executeQuery(query);
+           while (results.next()){
+               roles.add(results.getString(1));
+           }
+           stmt.close();
+           return roles;
+       } catch (SQLException e) {
+           logger.error(e.getMessage());
+           return new ArrayList<>();
+       }
+   }
+
+   private static boolean isDataInRoleUpdateTable(Guild guild,Member member,Role role){
+       if (!sqlEnabled) return true;
+       String query = String.format("SELECT COUNT (*) FROM tblRoleUpdates WHERE rluUserId='%s' AND rluRoleId='%s';",member.getId(),role.getId());
+       try {
+           Statement stmt = guildStatement(guild);
+           ResultSet result = stmt.executeQuery(query);
+           result.next();
+           boolean bool = result.getInt(1) > 0;
+           stmt.close();
+           return bool;
+       } catch (SQLException e) {
+           logger.error(e.getMessage());
+           return true;
        }
    }
 

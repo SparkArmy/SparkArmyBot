@@ -1,4 +1,4 @@
-package de.SparkArmy.eventListener.globalEvents.commands;
+package de.SparkArmy.eventListener.globalEvents;
 
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.SqlUtil;

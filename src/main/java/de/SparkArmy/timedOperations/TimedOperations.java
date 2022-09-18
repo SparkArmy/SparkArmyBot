@@ -19,10 +19,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class TimedOperations {
     private static final JDA jda = MainUtil.jda;
@@ -211,5 +208,14 @@ public class TimedOperations {
             guild.getGuildChannelById(countConfig.getString("count-channel")).getManager().setName(name).queue(null,
                     new ErrorHandler().ignore(NullPointerException.class));
         });
+    }
+
+    protected static void deleteOldLogs(){
+        File directory = FileHandler.getDirectoryInUserDirectory("logs/archived");
+        if (directory == null || !directory.exists()) return;
+        File[] files = directory.listFiles();
+        if (files == null || files.length <= 10) return;
+        //noinspection ResultOfMethodCallIgnored
+        Arrays.stream(files).toList().get(0).delete();
     }
 }

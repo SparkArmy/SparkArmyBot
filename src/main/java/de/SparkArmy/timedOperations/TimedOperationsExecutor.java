@@ -16,6 +16,7 @@ public class TimedOperationsExecutor {
         execute.scheduleAtFixedRate(ninetySeconds(),2,90,TimeUnit.SECONDS);
         execute.scheduleAtFixedRate(fiveMinutes(), 0,5,TimeUnit.MINUTES);
         execute.scheduleAtFixedRate(tenMinutes(),0,10,TimeUnit.MINUTES);
+        execute.scheduleAtFixedRate(oneDay(),0,1,TimeUnit.DAYS);
         execute.scheduleAtFixedRate(fourDays(),0,4,TimeUnit.DAYS);
 
     }
@@ -48,6 +49,8 @@ public class TimedOperationsExecutor {
     private static @NotNull Runnable tenMinutes(){
         return TimedOperations::updateUserCount;
     }
+
+    private static Runnable oneDay(){return TimedOperations::deleteOldLogs;}
 
     @Contract(pure = true)
     private static @NotNull Runnable fourDays(){

@@ -7,12 +7,14 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.PermissionOverride;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.*;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.requests.restaction.ForumPostAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.Contract;
@@ -107,6 +109,13 @@ public class ChannelUtil {
         return textChannel.createThreadChannel(channelName).complete();
     }
 
+    public static ForumChannel createForumChannel(@NotNull Guild guild, @NotNull String channelName) {
+        return guild.createForumChannel(channelName).complete();
+    }
+
+    public static @NotNull ForumPostAction createForumPost(@NotNull ForumChannel channel, String name, Message message) {
+        return channel.createForumPost(name, MessageCreateData.fromMessage(message));
+    }
     public static JSONObject getLogChannel(Guild guild) {
         JSONObject config = controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
         if (config.isNull("log-channel")) {

@@ -59,7 +59,7 @@ public class MediaOnlyUtil {
                         .build();
                 event.replyModal(nextModal).queue();
             }
-            case "attachmentsMediaOnly","filesMediaOnly","textMediaOnly" -> {
+            case "attachmentsMediaOnly","filesMediaOnly","textMediaOnly","linksMediaOnly" -> {
                 JSONObject config = MainUtil.controller.getSpecificGuildConfig(event.getGuild(), GuildConfigType.MAIN);
                 JSONObject mediaConfig = config.getJSONObject("media-only");
                 JSONObject content = mediaConfig.getJSONObject(channelId);
@@ -79,6 +79,10 @@ public class MediaOnlyUtil {
                     case "textMediaOnly" -> {
                         bool = content.getBoolean("text");
                         content.put("text",!bool);
+                    }
+                    case "linksMediaOnly" -> {
+                        bool = content.getBoolean("links");
+                        content.put("links",!bool);
                     }
                 }
 
@@ -162,6 +166,7 @@ public class MediaOnlyUtil {
                             put("attachments", true);
                             put("files", true);
                             put("text", false);
+                            put("links",false);
                         }});
 
                         config.put("media-only", mediaOnlyConfig);

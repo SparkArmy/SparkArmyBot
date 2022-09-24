@@ -28,6 +28,7 @@ public class MediaOnlyFunction extends CustomEventListener {
         boolean attachmentsEnabled = channelConfig.getBoolean("attachments");
         boolean filesEnabled = channelConfig.getBoolean("files");
         boolean textEnabled = channelConfig.getBoolean("text");
+        boolean linksEnabled = channelConfig.getBoolean("links");
 
         Message message = event.getMessage();
 
@@ -68,6 +69,9 @@ public class MediaOnlyFunction extends CustomEventListener {
             new Thread(()->{
                 if (message.getContentRaw().isEmpty()) return;
                 if (!message.getAttachments().isEmpty()) return;
+                @SuppressWarnings({"ConvertToBasicLatin", "RegExpRedundantEscape", "RegExpUnnecessaryNonCapturingGroup"})
+                String regex = "(?:(?:https?|ftp):\\/\\/|\\b(?:[a-z\\d]+\\.))(?:(?:[^\\s()<>]+|\\((?:[^\\s()<>]+|(?:\\([^\\s()<>]+\\)))?\\))+(?:\\((?:[^\\s()<>]+|(?:\\(?:[^\\s()<>]+\\)))?\\)|[^\\s`!()\\[\\]{};:'\".,<>?«»“”‘’]))?";
+                if (linksEnabled && message.getContentRaw().matches(regex)) return;
                 message.reply("You can't send TextMessages in this channel").mentionRepliedUser(true).queue(x->{
                     message.delete().queue();
                     try {

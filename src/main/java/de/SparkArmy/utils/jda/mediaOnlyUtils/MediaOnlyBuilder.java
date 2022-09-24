@@ -48,6 +48,7 @@ public class MediaOnlyBuilder {
             addField("Attachments", String.valueOf(content.getBoolean("attachments")),false);
             addField("Files", String.valueOf(content.getBoolean("files")),false);
             addField("Text",String.valueOf(content.getBoolean("text")),false);
+            addField("Links",String.valueOf(content.getBoolean("links")),false);
         }};
 
         return embed.build();
@@ -75,6 +76,7 @@ public class MediaOnlyBuilder {
         boolean attachments = content.getBoolean("attachments");
         boolean files = content.getBoolean("files");
         boolean text = content.getBoolean("text");
+        boolean links = content.getBoolean("links");
 
         if (attachments){
             buttons.add(Button.success("attachmentsMediaOnly;" + suffix,"Attachments"));
@@ -92,6 +94,12 @@ public class MediaOnlyBuilder {
             buttons.add(Button.success("textMediaOnly;" + suffix,"Text"));
         }else {
             buttons.add(Button.secondary("textMediaOnly;" + suffix,"Text"));
+        }
+
+        if (links){
+            buttons.add(Button.success("linksMediaOnly;" + suffix,"Links"));
+        }else {
+            buttons.add(Button.secondary("linksMediaOnly;" + suffix,"Links"));
         }
 
         return ActionRow.of(buttons);

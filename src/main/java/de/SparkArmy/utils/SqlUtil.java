@@ -221,36 +221,18 @@ public class SqlUtil {
 
     public static boolean isUserNotInUserTable(Guild guild, @NotNull Member user){
         if (!sqlEnabled) return false;
-        try {
-            Statement stmt = guildStatement(guild);
-            ResultSet results;
-            String statementString = String.format("SELECT COUNT(*) FROM tblUser WHERE usrId='%s';",user.getId());
-            results = stmt.executeQuery(statementString);
-            results.next();
-            boolean bool = results.getInt(1) == 0;
-            stmt.close();
-            return bool;
-        }catch (SQLException e){
-            logger.error(e.getMessage());
-            return false;
-        }
+        String statementString = String.format("SELECT COUNT(*) FROM tblUser WHERE usrId='%s';",user.getId());
+        Integer count = countData(guild, statementString);
+        if (count == null) return false;
+        return count == 0;
     }
 
     public static boolean isUserNotInModeratorTable(Guild guild,Member member){
         if (!sqlEnabled) return false;
-        try {
-            Statement stmt = guildStatement(guild);
-            ResultSet results;
-            String statementString = String.format("SELECT COUNT(*) FROM tblModerator WHERE modUserId='%s';",member.getId());
-            results = stmt.executeQuery(statementString);
-            results.next();
-            boolean bool = results.getInt(1) == 0;
-            stmt.close();
-            return bool;
-        }catch (SQLException e){
-            logger.error(e.getMessage());
-            return false;
-        }
+        String statementString = String.format("SELECT COUNT(*) FROM tblModerator WHERE modUserId='%s';",member.getId());
+        Integer count = countData(guild, statementString);
+        if (count == null) return false;
+        return count == 0;
     }
 
     public static void putUserDataInUserTable(Guild guild, @NotNull Member member){
@@ -410,19 +392,10 @@ public class SqlUtil {
 
     public static boolean isMessageIdNotInMessageTable(Guild guild,String messageId) {
         if (!sqlEnabled) return false;
-        try {
-            Statement stmt = guildStatement(guild);
-            ResultSet results;
-            String statementString = String.format("SELECT COUNT(*) FROM tblMessage WHERE msgId='%s';",messageId);
-            results = stmt.executeQuery(statementString);
-            results.next();
-            boolean bool = results.getInt(1) == 0;
-            stmt.close();
-            return bool;
-        }catch (SQLException e){
-            logger.error(e.getMessage());
-            return false;
-        }
+        String statementString = String.format("SELECT COUNT(*) FROM tblMessage WHERE msgId='%s';",messageId);
+        Integer count = countData(guild, statementString);
+        if (count == null) return false;
+        return count == 0;
     }
 
     public static void putNicknameInNicknameTable(GuildMemberUpdateNicknameEvent event){
@@ -459,19 +432,10 @@ public class SqlUtil {
 
    private static boolean isUserIdNotInNicknameTable(GuildMemberJoinEvent event){
        if (!sqlEnabled) return false;
-       try {
-           Statement stmt = guildStatement(event.getGuild());
-           ResultSet results;
-           String statementString = String.format("SELECT COUNT(*) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
-           results = stmt.executeQuery(statementString);
-           results.next();
-           boolean bool = results.getInt(1) == 0;
-           stmt.close();
-           return bool;
-       }catch (SQLException e){
-           logger.error(e.getMessage());
-           return false;
-       }
+       String statementString = String.format("SELECT COUNT(*) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
+       Integer count = countData(event.getGuild(), statementString);
+       if (count == null) return false;
+       return count == 0;
    }
 
    public static void putDataInRoleUpdateTable(Guild guild, Member member, List<Role> roles){
@@ -518,16 +482,26 @@ public class SqlUtil {
    private static boolean isDataInRoleUpdateTable(Guild guild,Member member,Role role){
        if (!sqlEnabled) return true;
        String query = String.format("SELECT COUNT (*) FROM tblRoleUpdates WHERE rluUserId='%s' AND rluRoleId='%s';",member.getId(),role.getId());
+       Integer count = countData(guild,query);
+       if (count == null) return true;
+       return count > 0;
+   }
+
+   private static @Nullable Integer countData(Guild guild, @NotNull String query){
+       if (!query.startsWith("SELECT COUNT")){
+           logger.error("Wrong query-string for count-data");
+           return null;
+       }
        try {
            Statement stmt = guildStatement(guild);
            ResultSet result = stmt.executeQuery(query);
            result.next();
-           boolean bool = result.getInt(1) > 0;
+           int i = result.getInt(1);
            stmt.close();
-           return bool;
+           return i;
        } catch (SQLException e) {
            logger.error(e.getMessage());
-           return true;
+           return null;
        }
    }
 

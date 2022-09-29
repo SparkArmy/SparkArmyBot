@@ -3,10 +3,8 @@ package de.SparkArmy.commandBuilder;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,46 +13,59 @@ public enum CommandRegisterer {
     ;
     private static final JDA jda = MainUtil.jda;
 
-    public static void registerGlobalSlashCommands() {
-        Collection<CommandData> globalCommands = SlashCommands.globalSlashCommands();
-        globalCommands.forEach(x->x.setDefaultPermissions(DefaultMemberPermissions.ENABLED));
-        if (jda.retrieveCommands().complete().stream().anyMatch(x->{
-            String name = globalCommands.stream().toList().get(0).getName();
-            return name.equals(x.getName());
-        })){
-            return;
-        }
-        jda.updateCommands().addCommands(globalCommands).queue();
-        MainUtil.logger.info("Global-Commands are registered");
-    }
+    public static void registerCommands() {
 
-    public static void registerGuildSlashCommands(@NotNull Guild guild) {
+        // Global commands
+        Collection<CommandData> globalCommands = SlashCommands.globalSlashCommands();
+        globalCommands.forEach(x->{
+            x.setDefaultPermissions(DefaultMemberPermissions.ENABLED);
+            x.setGuildOnly(false);
+        });
+
         // Moderation related commands
         Collection<CommandData> moderationCommands = SlashCommands.guildSlashModerationCommands();
-        moderationCommands.forEach(x -> x.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
+        moderationCommands.forEach(x -> {
+            x.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS));
+            x.setGuildOnly(true);
+        });
 
         // Admin related commands
         Collection<CommandData> adminCommands = new ArrayList<>(){{
             addAll(SlashCommands.guildSlashAdminCommands());
             addAll(UserCommands.adminUserCommands());
         }};
-        adminCommands.forEach(x -> x.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
+        adminCommands.forEach(x -> {
+            x.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+            x.setGuildOnly(true);
+        });
 
-        // Public commands
+        // Public guild commands
         Collection<CommandData> generalCommands = new ArrayList<>(){{
-           addAll(UserCommands.generalUserCommands());
-           addAll(MessageCommands.generalMessageCommands());
+            Collection<CommandData> generalUserCommands = UserCommands.generalUserCommands();
+            generalUserCommands.forEach(x->{
+                x.setDefaultPermissions(DefaultMemberPermissions.ENABLED);
+                x.setGuildOnly(true);
+            });
+            addAll(generalUserCommands);
+            Collection<CommandData> generalMessageCommands = MessageCommands.generalMessageCommands();
+            generalMessageCommands.forEach(x->{
+                x.setDefaultPermissions(DefaultMemberPermissions.ENABLED);
+                x.setGuildOnly(true);
+            });
+            addAll(generalMessageCommands);
         }};
 
-        // Put all guildCommands in one Collection
-        Collection<CommandData> guildCommands = new ArrayList<>(){{
+        Collection<CommandData> commands = new ArrayList<>(){{
+            addAll(globalCommands);
             addAll(moderationCommands);
             addAll(adminCommands);
             addAll(generalCommands);
         }};
 
+        if (jda.retrieveCommands().complete().equals(commands)) return;
 
-        guild.updateCommands().addCommands(guildCommands).queue();
-        MainUtil.logger.info("Guild-Commands are registered");
+        jda.updateCommands().addCommands(commands).queue();
+        MainUtil.logger.info("Commands are registered");
     }
+
 }

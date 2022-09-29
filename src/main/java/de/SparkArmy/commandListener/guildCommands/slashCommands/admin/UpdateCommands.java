@@ -14,7 +14,7 @@ public class UpdateCommands extends CustomCommandListener {
             event.reply("Please use this command on a guild").setEphemeral(true).queue();
             return;
         }
-        CommandRegisterer.registerGuildSlashCommands(event.getGuild());
+        CommandRegisterer.registerCommands();
         event.reply("Commands will be updated").setEphemeral(true).queue();
     }
 }

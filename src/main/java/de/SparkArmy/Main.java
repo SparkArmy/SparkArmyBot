@@ -76,7 +76,7 @@ public class Main {
             logger.warn("No storage-server registered or The bot is not on storage-server");
         }
 
-        CommandRegisterer.registerGlobalSlashCommands();
+        CommandRegisterer.registerCommands();
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();

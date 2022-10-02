@@ -102,7 +102,7 @@ public class SqlUtil {
         }
     }
 
-    private static void insertIn(Guild guild, String sql){
+    private static void insertOrUpdateData(Guild guild, String sql){
        if (!sqlEnabled) return;
        try {
            Statement stmt = guildStatement(guild);
@@ -133,8 +133,7 @@ public class SqlUtil {
                 "CREATE TABLE IF NOT EXISTS tblModerator(" +
                 "modId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
                 "modUserId  VARCHAR(50) NOT NULL," +
-                "modActive boolean," +
-                "CONSTRAINT `fk_moderator` FOREIGN KEY (modUserId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
+                "CONSTRAINT `fk_moderator-userId` FOREIGN KEY (modUserId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
                 "PRIMARY KEY (modId));";
 
         String punishmentTable =
@@ -144,8 +143,8 @@ public class SqlUtil {
                 "    psmModeratorId BIGINT UNSIGNED NOT NULL," +
                 "    psmType SMALLINT UNSIGNED NOT NULL," +
                 "    psmTimestamp DATETIME," +
-                "    CONSTRAINT `fk_offenders` FOREIGN KEY (psmOffenderId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
-                "    CONSTRAINT `fk_moderators` FOREIGN KEY (psmModeratorId) REFERENCES tblModerator (modId) ON DELETE CASCADE ON UPDATE RESTRICT," +
+                "    CONSTRAINT `fk_offenderId` FOREIGN KEY (psmOffenderId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
+                "    CONSTRAINT `fk_moderatorId` FOREIGN KEY (psmModeratorId) REFERENCES tblModerator (modId) ON DELETE CASCADE ON UPDATE RESTRICT," +
                 "    CONSTRAINT `fk_types` FOREIGN KEY (psmType) REFERENCES tblPunishmentType (pstId) ON DELETE CASCADE ON UPDATE RESTRICT," +
                 "    PRIMARY KEY (psmId));";
 
@@ -176,11 +175,11 @@ public class SqlUtil {
 
         String nicknamesTable =
                 "CREATE TABLE IF NOT EXISTS tblUserNicknames(" +
-                        "    usnId BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
+                        "    usnTimestamp DATETIME NOT NULL," +
                         "    usnUserId VARCHAR(50) NOT NULL," +
                         "    usnValue VARCHAR(1000) NOT NULL," +
                         "    CONSTRAINT `fk_user-nicknames` FOREIGN KEY (usnUserId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
-                        "    PRIMARY KEY (usnId)" +
+                        "    PRIMARY KEY (usnTimestamp,usnUserId)" +
                         ");";
 
         String roleUpdateTable =
@@ -189,6 +188,15 @@ public class SqlUtil {
                         "    rluRoleId VARCHAR(50) NOT NULL," +
                         "    CONSTRAINT `fk_user-roles` FOREIGN KEY (rluUserId) REFERENCES tblUser (usrId) ON DELETE CASCADE ON UPDATE RESTRICT," +
                         "    PRIMARY KEY (rluRoleId,rluUserId)" +
+                        ");";
+
+        String moderatorTimeTable =
+                "CREATE TABLE IF NOT EXISTS tblModeratorTime(" +
+                        "    mdtModId BIGINT UNSIGNED NOT NULL," +
+                        "    mdtStartTime DATETIME NOT NULL ," +
+                        "    mdtEndTime DATETIME," +
+                        "    CONSTRAINT `fk_modId` FOREIGN KEY (mdtModId) REFERENCES tblModerator (modId) ON DELETE CASCADE ON UPDATE RESTRICT," +
+                        "    PRIMARY KEY (mdtModId,mdtStartTime)" +
                         ");";
 
 
@@ -202,6 +210,7 @@ public class SqlUtil {
             stmt.executeUpdate(messageAttachmentsTable);
             stmt.executeUpdate(nicknamesTable);
             stmt.executeUpdate(roleUpdateTable);
+            stmt.executeUpdate(moderatorTimeTable);
 
             String punishmentTypes = "INSERT INTO tblPunishmentType (pstName) VALUES ('%s');";
             PunishmentType.getAllTypes().forEach(x->{
@@ -241,13 +250,13 @@ public class SqlUtil {
         String creationTime = getSqlTimeStringFromDatetime(member.getTimeCreated());
         String joinTime = getSqlTimeStringFromDatetime(member.getTimeJoined());
         String insertString = String.format("INSERT INTO tblUser (usrId,usrAccountCreated,usrMemberSince) VALUES ('%s',%s,%s)", member.getId(),creationTime,joinTime);
-        insertIn(guild,insertString);
+        insertOrUpdateData(guild,insertString);
     }
 
     public static void putDataInModeratorTable(Guild guild, @NotNull Member member){
         if (!sqlEnabled) return;
-        String insertString = String.format("INSERT INTO tblModerator (modUserId,modActive) VALUES ('%s',true)",member.getId());
-        insertIn(guild,insertString);
+        String insertString = String.format("INSERT INTO tblModerator (modUserId) VALUES ('%s')",member.getId());
+        insertOrUpdateData(guild,insertString);
     }
 
     public static void putDataInPunishmentTable(Guild guild, @NotNull Member offender, @NotNull Member moderator, @NotNull PunishmentType type){
@@ -259,7 +268,7 @@ public class SqlUtil {
                 offender.getId(),
                 moderator.getId(),
                 type.getName());
-       insertIn(guild,insertString);
+       insertOrUpdateData(guild,insertString);
     }
 
     public static @Nullable JSONArray getPunishmentDataFromUser(Guild guild, User user, PunishmentType type){
@@ -318,7 +327,7 @@ public class SqlUtil {
                message.getContentRaw(),
                message.getChannel().getId());
 
-       insertIn(message.getGuild(),insertString);
+       insertOrUpdateData(message.getGuild(),insertString);
     }
 
     public static void putDataInMessageAttachmentsTable(@NotNull Message message){
@@ -328,7 +337,7 @@ public class SqlUtil {
        String insertString = "INSERT INTO tblMessageAttachments (msaMsgId,msaLink) VALUES ('" + message.getId() + "','%s');";
 
 
-       message.getAttachments().forEach(x-> insertIn(message.getGuild(),String.format(insertString, MessageUtil.logAttachmentsOnStorageServer(x,message.getGuild()))));
+       message.getAttachments().forEach(x-> insertOrUpdateData(message.getGuild(),String.format(insertString, MessageUtil.logAttachmentsOnStorageServer(x,message.getGuild()))));
     }
 
     public static void updateDataInMessageTable(Message message){
@@ -337,7 +346,7 @@ public class SqlUtil {
                message.getContentRaw(),
                message.getId());
 
-       insertIn(message.getGuild(),insertString);
+       insertOrUpdateData(message.getGuild(),insertString);
     }
 
     public static String getMessageContentFromMessageTable(Guild guild, String messageId){
@@ -403,8 +412,8 @@ public class SqlUtil {
 
        if (isUserNotInUserTable(event.getGuild(),event.getMember())) putUserDataInUserTable(event.getGuild(),event.getMember());
 
-       String insertString = String.format("INSERT INTO tblUserNicknames (usnUserId,usnValue) VALUES ('%s','%s');",event.getUser().getId(),event.getMember().getNickname());
-        insertIn(event.getGuild(),insertString);
+       String insertString = String.format("INSERT INTO tblUserNicknames (usnTimestamp,usnUserId,usnValue) VALUES (NOW(),'%s','%s');",event.getUser().getId(),event.getMember().getEffectiveName());
+       insertOrUpdateData(event.getGuild(),insertString);
    }
 
    public static @Nullable String getLatestNickname(GuildMemberJoinEvent event){
@@ -412,12 +421,12 @@ public class SqlUtil {
 
        if (isUserNotInUserTable(event.getGuild(),event.getMember())) putUserDataInUserTable(event.getGuild(),event.getMember());
 
-       if (isUserIdNotInNicknameTable(event)) return null;
+       if (isUserIdNotInNicknameTable(event.getGuild(),event.getMember())) return null;
 
        try {
            Statement stmt = guildStatement(event.getGuild());
            ResultSet results;
-           String queryString =String.format("SELECT usnValue FROM tblUserNicknames WHERE usnUserId = '%s' ORDER BY usnId;",event.getUser().getId());
+           String queryString =String.format("SELECT usnValue FROM tblUserNicknames WHERE usnUserId = '%s' ORDER BY usnTimestamp;",event.getUser().getId());
            results = stmt.executeQuery(queryString);
            results.last();
            String last = results.getString(1);
@@ -430,13 +439,43 @@ public class SqlUtil {
 
    }
 
-   private static boolean isUserIdNotInNicknameTable(GuildMemberJoinEvent event){
+   private static boolean isUserIdNotInNicknameTable(Guild guild, Member member){
        if (!sqlEnabled) return false;
-       String statementString = String.format("SELECT COUNT(*) FROM tblUserNicknames WHERE usnUserId='%s';",event.getUser().getId());
-       Integer count = countData(event.getGuild(), statementString);
+       String statementString = String.format("SELECT COUNT(*) FROM tblUserNicknames WHERE usnUserId='%s';",member.getId());
+       Integer count = countData(guild, statementString);
        if (count == null) return false;
        return count == 0;
    }
+
+   public static @NotNull JSONArray getNicknamesFromMember(Guild guild, Member member){
+       if (!sqlEnabled) return new JSONArray();
+
+       putUserDataInUserTable(guild,member);
+       if (isUserIdNotInNicknameTable(guild,member)) return new JSONArray();
+
+       try {
+           JSONArray nameList = new JSONArray();
+           Statement stmt = guildStatement(guild);
+           ResultSet results;
+           String queryString =String.format("SELECT usnTimestamp,usnValue FROM tblUserNicknames WHERE usnUserId = '%s' ORDER BY usnTimestamp DESC;",member.getId());
+           results = stmt.executeQuery(queryString);
+           while (results.next()){
+               JSONObject obj = new JSONObject(){{
+                   put("time",results.getString(1));
+                   put("value",results.getString(2));
+               }};
+               nameList.put(obj);
+           }
+           stmt.close();
+           return nameList;
+       } catch (SQLException e) {
+           logger.error(e.getMessage());
+           return new JSONArray();
+       }
+
+
+   }
+
 
    public static void putDataInRoleUpdateTable(Guild guild, Member member, List<Role> roles){
        if (!sqlEnabled) return;
@@ -445,7 +484,7 @@ public class SqlUtil {
        roles.forEach(role->{
            if (isDataInRoleUpdateTable(guild,member,role)) return;
            String insertString = String.format("INSERT INTO tblRoleUpdates (rluUserId,rluRoleId) VALUES ('%s','%s');",userId,role.getId());
-           insertIn(guild, insertString);
+           insertOrUpdateData(guild, insertString);
        });
    }
 
@@ -456,7 +495,7 @@ public class SqlUtil {
 
        event.getRoles().forEach(role->{
            String insertString = String.format("DELETE FROM tblRoleUpdates WHERE  rluUserId='%s' AND rluRoleId='%s';",userId,role.getId());
-           insertIn(event.getGuild(), insertString);
+           insertOrUpdateData(event.getGuild(), insertString);
        });
    }
 
@@ -505,4 +544,32 @@ public class SqlUtil {
        }
    }
 
+   public static void putDataInModeratorTimeTable(Guild guild,Member member,boolean havePermission){
+       if (!sqlEnabled) return;
+       if (isUserNotInModeratorTable(guild,member)) putDataInModeratorTable(guild,member);
+       if (havePermission){
+           String queryString = String.format("SELECT COUNT(*) FROM tblModeratorTime " +
+                   "WHERE mdtModId=(SELECT modId FROM tblModerator WHERE modUserId='%s') AND mdtEndTime IS NULL;",member.getId());
+           Integer count = countData(guild,queryString);
+           if (count == null) return;
+           if (count != 0) return;
+           String insertString = String.format("INSERT INTO tblModeratorTime (mdtModId,mdtStartTime) VALUES" +
+                   " ((SELECT modId FROM tblModerator WHERE modUserId='%s'),NOW());",member.getId());
+           insertOrUpdateData(guild,insertString);
+       }else {
+           String queryString = String.format("SELECT COUNT(*) FROM tblModeratorTime " +
+                   "WHERE mdtModId=(SELECT modId FROM tblModerator WHERE modUserId='%s') AND mdtEndTime IS NULL;",member.getId());
+           Integer count = countData(guild,queryString);
+           if (count == null) return;
+           if (count == 0){
+               String insertString = String.format("INSERT INTO tblModeratorTime (mdtModId,mdtStartTime) VALUES" +
+                       " ((SELECT modId FROM tblModerator WHERE modUserId='%s'),NOW());",member.getId());
+               insertOrUpdateData(guild,insertString);
+           }
+
+           String updateString = String.format("UPDATE tblModeratorTime SET mdtEndTime=NOW() " +
+                   "WHERE mdtModId=(SELECT modId FROM tblModerator WHERE modUserId='%s') AND mdtEndTime IS NULL;",member.getId());
+           insertOrUpdateData(guild,updateString);
+       }
+   }
 }

@@ -115,6 +115,7 @@ public class PunishmentUtil {
     }
 
     public static void executePunishment(@NotNull SlashCommandInteractionEvent event) {
+        event.deferReply(true).queue();
         String eventName = event.getName();
         // Checks the event-name
         if (!(eventName.equals("warn") || eventName.equals("mute") || eventName.equals("ban") || eventName.equals("kick"))) return;
@@ -135,16 +136,16 @@ public class PunishmentUtil {
 
         // Conditions to not warn yourself, a bot, a member with a higher role, an admin
         if (offender.equals(moderator)) {
-            event.reply("You can't " + eventName + " yourself").setEphemeral(true).queue();
+            event.getHook().editOriginal("You can't " + eventName + " yourself").queue();
             return;
         } else if (offender.getUser().isBot()) {
-            event.reply("You can't " + eventName + " a bot").setEphemeral(true).queue();
+            event.getHook().editOriginal("You can't " + eventName + " a bot").queue();
             return;
         } else if (!offender.getRoles().isEmpty() && !moderator.canInteract(offender.getRoles().get(0))) {
-            event.reply("You can't " + eventName + " a member with a same/higher role").setEphemeral(true).queue();
+            event.getHook().editOriginal("You can't " + eventName + " a member with a same/higher role").queue();
             return;
         } else if (offender.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("You can't " + eventName + " a administrator").setEphemeral(true).queue();
+            event.getHook().editOriginal("You can't " + eventName + " a administrator").queue();
             return;
         }
 
@@ -158,7 +159,7 @@ public class PunishmentUtil {
             // Create a remove time
             removeTime = PunishmentUtil.getRemoveTime(duration, timeUnit);
             if (removeTime == null) {
-                event.reply("Please check the time_unit parameter").setEphemeral(true).queue();
+                event.getHook().editOriginal("Please check the time_unit parameter").queue();
                 return;
             }
         }
@@ -196,7 +197,7 @@ public class PunishmentUtil {
         // give the user the punishment and write this in the database-table
         if (!PunishmentUtil.giveUserPunishment(offender, guild,PunishmentType.getByName(eventName),reasonString)) {
             // if user have not the punishment send this response
-            event.reply("User have not the punishment. Please give it manual").setEphemeral(true).queue();
+            event.getHook().editOriginal("User have not the punishment. Please give it manual").queue();
             return;
         }
 
@@ -208,7 +209,7 @@ public class PunishmentUtil {
         SqlUtil.putDataInPunishmentTable(guild,offender,moderator,PunishmentType.getByName(eventName));
 
         // response to moderator
-        event.reply(offender.getEffectiveName() + " was " + eventName).setEphemeral(true).queue();
+        event.getHook().editOriginal(offender.getEffectiveName() + " was " + eventName).queue();
     }
 
     public static void sendPunishmentParamEmbed(@NotNull SlashCommandInteractionEvent event, @NotNull OptionMapping punishment, JSONObject config) {

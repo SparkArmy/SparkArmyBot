@@ -32,7 +32,8 @@ public class CommandListenerRegisterer {
             commands.add(new Mute());
             commands.add(new Ban());
             commands.add(new Kick());
-            commands.add(new Punishments());
+            commands.add(new UserPunishments());
+            commands.add(new UserNicknames());
 
             // Admin Commands
             commands.add(new Punishment());

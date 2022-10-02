@@ -82,6 +82,10 @@ enum SlashCommands {
                     new OptionData(OptionType.STRING,"punishment-type","The punishment-type").setAutoComplete(true)
             ));
 
+            add(Commands.slash("user-nicknames","List the user nickname history").addOptions(
+                    new OptionData(OptionType.USER,"target-user","The user you will get the nicknames").setRequired(true)
+            ));
+
         }};
     }
 
@@ -172,6 +176,8 @@ enum SlashCommands {
                             new OptionData(OptionType.STRING,"channel-name","The string").setRequired(true)),
                     new SubcommandData("clear","Clear channel and message")
             ));
+
+            // ModeratorTimeCommand
         }};
     }
 }

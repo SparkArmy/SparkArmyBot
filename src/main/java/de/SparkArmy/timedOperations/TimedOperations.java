@@ -9,9 +9,7 @@ import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import org.json.JSONObject;
 
@@ -77,14 +75,25 @@ public class TimedOperations {
                             return;
                         }
 
-                        //noinspection ConstantConditions
-                        if (guild.getMember(user).getRoles().isEmpty() || !guild.getMember(user).getRoles().contains(guild.getRoleById(roleId))) {
+                        Member member = guild.getMember(user);
+                        if (member == null){
                             keyList.add(key);
                             return;
                         }
 
-                        //noinspection ConstantConditions
-                        guild.removeRoleFromMember(user, guild.getRoleById(roleId)).reason("Automatic role remove").queue();
+                        if (member.getRoles().isEmpty() || !member.getRoles().contains(guild.getRoleById(roleId))) {
+                            keyList.add(key);
+                            return;
+                        }
+
+                        Role role = guild.getRoleById(roleId);
+
+                        if (role == null) {
+                            keyList.add(key);
+                            return;
+                        }
+
+                        guild.removeRoleFromMember(user, role).reason("Automatic role remove").queue();
                         keyList.add(key);
                         return;
                     }

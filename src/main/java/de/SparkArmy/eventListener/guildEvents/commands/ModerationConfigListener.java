@@ -8,12 +8,12 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Modal;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -43,7 +43,7 @@ public class ModerationConfigListener extends CustomEventListener {
     }
 
     @Override
-    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
+    public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
         String menuId = event.getComponentId();
         if (!menuId.contains(";")) return;
         if (event.getGuild() == null) return;
@@ -55,7 +55,7 @@ public class ModerationConfigListener extends CustomEventListener {
         }
     }
 
-    private void modConfigSelectRoleEvent(@NotNull SelectMenuInteractionEvent event){
+    private void modConfigSelectRoleEvent(@NotNull StringSelectInteractionEvent event){
         String value = event.getValues().get(0);
 
         if (value.equals("add")){
@@ -154,7 +154,7 @@ public class ModerationConfigListener extends CustomEventListener {
     private @NotNull ActionRow actionRowOfRoleConfig(@NotNull User user, @NotNull List<MessageEmbed.Field> fields){
         String userId = user.getId();
 
-        SelectMenu.Builder selectMenu = SelectMenu.create("roleConfigSelectMenu;" + userId);
+        StringSelectMenu.Builder selectMenu = StringSelectMenu.create("roleConfigSelectMenu;" + userId);
 
         selectMenu.addOption("Add Role","add");
         //noinspection ConstantConditions

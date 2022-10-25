@@ -1,16 +1,19 @@
 package de.SparkArmy.notifications;
 
+import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.jda.JdaEventUtil;
-import de.SparkArmy.utils.MainUtil;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.jetbrains.annotations.NotNull;
@@ -149,7 +152,7 @@ public class NotificationUtil {
         }
     }
 
-    public static void sendEditModalOrDeleteEntry(@NotNull SelectMenuInteractionEvent event){
+    public static void sendEditModalOrDeleteEntry(@NotNull StringSelectInteractionEvent event){
         User user = event.getUser();
         String suffix = event.getComponentId().split(";")[1];
         if (!user.getId().equals(suffix.split(",")[0])) return;

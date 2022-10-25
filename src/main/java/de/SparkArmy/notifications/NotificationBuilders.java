@@ -6,11 +6,11 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.jetbrains.annotations.Contract;
@@ -96,7 +96,7 @@ public class NotificationBuilders {
         else if (fieldsBefore > 0)actionRows.add(ActionRow.of(beforeButton));
         else if (fieldsRemain > 0) actionRows.add(ActionRow.of(nextButton));
 
-        SelectMenu.Builder menu = SelectMenu.create("notificationSelectMenu;" + user.getId() + "," + type.getTypeName() + "," + action);
+        StringSelectMenu.Builder menu = StringSelectMenu.create("notificationSelectMenu;" + user.getId() + "," + type.getTypeName() + "," + action);
         var ref = new Object() {
             int i = 0;
         };

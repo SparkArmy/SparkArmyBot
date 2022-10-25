@@ -9,13 +9,14 @@ import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import org.jetbrains.annotations.NotNull;
@@ -257,7 +258,7 @@ public class ReactionRoleUtil {
 
     }
 
-    public static void giveOrRemoveMemberRole(@NotNull SelectMenuInteractionEvent event){
+    public static void giveOrRemoveMemberRole(@NotNull StringSelectInteractionEvent event){
         String name = event.getMessage().getId() + ".json";
         if (event.getGuild() == null) return;
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff/reactionRoles/" + event.getGuild().getId());
@@ -482,7 +483,7 @@ public class ReactionRoleUtil {
                 To delete a role choice the option " Delete Role \"""");
             roleEditChoiceEmbed.setColor(new Color(0x941D9E));
 
-            SelectMenu.Builder roles = SelectMenu.create("editRolesList," + action + ";" + suffix);
+            StringSelectMenu.Builder roles = StringSelectMenu.create("editRolesList," + action + ";" + suffix);
 
             if (!content.isNull("fields")) {
                 content.getJSONObject("fields").keySet().forEach(x -> {
@@ -498,9 +499,9 @@ public class ReactionRoleUtil {
             }
 
             buttonEvent.editMessageEmbeds(roleEditChoiceEmbed.build()).setComponents(ActionRow.of(roles.build())).queue();
-        }else if (event.getClass().equals(SelectMenuInteractionEvent.class)) {
-            SelectMenuInteractionEvent selectEvent;
-            selectEvent = new SelectMenuInteractionEvent(event.getJDA(), event.getResponseNumber(), ((SelectMenuInteractionEvent) event).getInteraction());
+        }else if (event.getClass().equals(StringSelectInteractionEvent.class)) {
+            StringSelectInteractionEvent selectEvent;
+            selectEvent = new StringSelectInteractionEvent(event.getJDA(), event.getResponseNumber(), ((StringSelectInteractionEvent) event).getInteraction());
             if (content.isEmpty()) {
                 selectEvent.reply("Ups something went wrong").setEphemeral(true).queue();
                 return;
@@ -570,7 +571,7 @@ public class ReactionRoleUtil {
         return new JSONObject(contentString);
     }
 
-    public static void deleteRoleFromEmbed(@NotNull SelectMenuInteractionEvent event, String action, String id){
+    public static void deleteRoleFromEmbed(@NotNull StringSelectInteractionEvent event, String action, String id){
         File file = getReactionRoleFileOrTempFile(id,action,event.getGuild());
         if (file == null){
             event.reply("Ups something went wrong").setEphemeral(true).queue();
@@ -583,7 +584,7 @@ public class ReactionRoleUtil {
             return;
         }
 
-        SelectMenu.Builder selectRole = SelectMenu.create(String.format("selectRoleForDelete,%s;%s",action,id));
+        StringSelectMenu.Builder selectRole = StringSelectMenu.create(String.format("selectRoleForDelete,%s;%s",action,id));
 
         JSONObject fields = content.getJSONObject("fields");
 

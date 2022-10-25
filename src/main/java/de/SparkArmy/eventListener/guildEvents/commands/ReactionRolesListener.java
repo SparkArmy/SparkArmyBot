@@ -8,13 +8,13 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -57,14 +57,14 @@ public class ReactionRolesListener extends CustomEventListener {
     }
 
     @Override
-    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
+    public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
         editRolesList(event);
         deleteSelectRoleFromReactionRole(event);
         ReactionRoleUtil.giveOrRemoveMemberRole(event);
 
     }
 
-    private void editRolesList(@NotNull SelectMenuInteractionEvent event){
+    private void editRolesList(@NotNull StringSelectInteractionEvent event){
         String menuId = event.getComponentId();
         if (!menuId.contains(";")) return;
         String[] splitMenuId = menuId.split(";");
@@ -133,7 +133,7 @@ public class ReactionRolesListener extends CustomEventListener {
             }
         }
     }
-    private void deleteSelectRoleFromReactionRole(@NotNull SelectMenuInteractionEvent event){
+    private void deleteSelectRoleFromReactionRole(@NotNull StringSelectInteractionEvent event){
         String menuId = event.getComponentId();
         if (!menuId.contains(";")) return;
         String[] splitMenuId = menuId.split(";");
@@ -350,7 +350,7 @@ public class ReactionRolesListener extends CustomEventListener {
                 actionRows.add(ActionRow.of(Button.primary(x, field.getString("roleName"))));
             });
         }else {
-            SelectMenu.Builder roles = SelectMenu.create("getReactionRoleList");
+            StringSelectMenu.Builder roles = StringSelectMenu.create("getReactionRoleList");
             fields.keySet().forEach(x -> {
                         JSONObject field = fields.getJSONObject(x);
                         roles.addOption(field.getString("roleName"),x);
@@ -389,7 +389,7 @@ public class ReactionRolesListener extends CustomEventListener {
             });
         }
     }
-    private void modalActionForNextModal(@NotNull ModalInteractionEvent event, String @NotNull [] splitModalId){
+    private void modalActionForNextModal(@NotNull ModalInteractionEvent event, @NotNull String[] splitModalId){
         String choiceId = splitModalId[0].split(",")[1];
         ModalMapping channel = event.getValue("reactionRoleChannelChoice");
         if (channel == null) {
@@ -410,7 +410,7 @@ public class ReactionRolesListener extends CustomEventListener {
             ReactionRoleUtil.deleteReactionRoleEmbed(channelId, messageId, event);
         }
     }
-    private void modalActionForEditHeaderModal(@NotNull ModalInteractionEvent event, String @NotNull [] splitModalId){
+    private void modalActionForEditHeaderModal(@NotNull ModalInteractionEvent event, @NotNull String[] splitModalId){
         String action = splitModalId[0].split(",")[1];
         String suffix = splitModalId[1];
         User user = jda.getUserById(suffix.split(",")[1]);
@@ -487,7 +487,7 @@ public class ReactionRolesListener extends CustomEventListener {
         FileHandler.writeValuesInFile(file,content);
         event.editMessageEmbeds(editHeaderEmbed.build()).queue();
     }
-    private void modalActionForEditRoleModal(@NotNull ModalInteractionEvent event, String @NotNull [] splitModalId){
+    private void modalActionForEditRoleModal(@NotNull ModalInteractionEvent event, @NotNull String[] splitModalId){
         String action = splitModalId[0].split(",")[1];
         String suffix = splitModalId[1];
         User user = jda.getUserById(suffix.split(",")[1]);
@@ -582,7 +582,7 @@ public class ReactionRolesListener extends CustomEventListener {
 
         event.editMessageEmbeds(reactionRoleEmbed.build()).setComponents(ActionRow.of(buttons)).queue();
     }
-    private void modalActionForCreateModal(@NotNull ModalInteractionEvent event, String @NotNull [] splitModalId){
+    private void modalActionForCreateModal(@NotNull ModalInteractionEvent event, @NotNull String[] splitModalId){
         String idExtension = splitModalId[1].split(",")[0];
         User user = jda.getUserById(splitModalId[1].split(",")[1]);
         if (user == null || !user.equals(event.getUser())) return;

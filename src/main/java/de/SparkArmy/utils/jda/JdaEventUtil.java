@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,8 +26,8 @@ public class JdaEventUtil {
         return new ModalInteractionEvent(event.getJDA(), event.getResponseNumber(), ((ModalInteractionEvent) event).getInteraction());
     }
 
-    public static @Nullable SelectMenuInteractionEvent getSelectMenuEvent(@NotNull Event event){
-        if (!event.getClass().equals(SelectMenuInteractionEvent.class)) return null;
-        return new SelectMenuInteractionEvent(event.getJDA(), event.getResponseNumber(), ((SelectMenuInteractionEvent) event).getInteraction());
+    public static @Nullable StringSelectInteractionEvent getSelectMenuEvent(@NotNull Event event){
+        if (!event.getClass().equals(StringSelectInteractionEvent.class)) return null;
+        return new StringSelectInteractionEvent(event.getJDA(), event.getResponseNumber(), ((StringSelectInteractionEvent) event).getInteraction());
     }
 }

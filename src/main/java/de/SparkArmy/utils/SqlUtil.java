@@ -24,7 +24,6 @@ public class SqlUtil {
 
    public static void setSqlEnabled(){
        new Thread(()->{
-           //noinspection resource
            boolean state = connection() != null;
            if (!state){
                logger.warn("SQL is not available");
@@ -34,7 +33,8 @@ public class SqlUtil {
    }
 
 
-    private static java.sql.@Nullable Connection connection(String database){
+    @Nullable
+    private static Connection connection(String database){
         JSONObject mariaDbConfig = MainUtil.controller.getMainConfigFile().getJSONObject("mariaDbConnection");
         Connection c;
         try {
@@ -61,12 +61,12 @@ public class SqlUtil {
         return c;
     }
 
-    @SuppressWarnings({"ConstantConditions", "resource"})
+    @SuppressWarnings({"ConstantConditions"})
     private static Statement statement() throws SQLException,NullPointerException {
         return connection().createStatement();
     }
 
-    @SuppressWarnings({"ConstantConditions", "resource"})
+    @SuppressWarnings({"ConstantConditions"})
     private static Statement guildStatement(@NotNull Guild guild) throws SQLException,NullPointerException {
         return connection("G" + guild.getId()).createStatement();
     }

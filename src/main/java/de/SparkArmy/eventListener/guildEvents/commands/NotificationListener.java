@@ -5,7 +5,7 @@ import de.SparkArmy.notifications.NotificationType;
 import de.SparkArmy.notifications.NotificationUtil;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -58,7 +58,7 @@ public class NotificationListener extends CustomEventListener {
     }
 
     @Override
-    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
+    public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
         if (event.getGuild() == null) return;
         String menuName = event.getComponentId();
         if (!menuName.startsWith("notificationSelectMenu")) return;

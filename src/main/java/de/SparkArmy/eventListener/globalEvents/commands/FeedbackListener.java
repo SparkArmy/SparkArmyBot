@@ -12,13 +12,13 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -91,7 +91,7 @@ public class FeedbackListener extends CustomEventListener {
             });
             channel.sendMessageEmbeds(embed).queue();
         } else {
-            SelectMenu.Builder guildSelect = SelectMenu.create("feedbackGuildSelect");
+            StringSelectMenu.Builder guildSelect = StringSelectMenu.create("feedbackGuildSelect");
             jda.getGuilds().forEach(x -> {
                 if (storageServer.equals(x)) return;
                 guildSelect.addOption(x.getName(), x.getId());
@@ -104,7 +104,7 @@ public class FeedbackListener extends CustomEventListener {
                 });
             }
             event.editComponents().setActionRow(guildSelect.build()).queue(x ->
-                    waiter.waitForEvent(SelectMenuInteractionEvent.class, e -> e.getUser().equals(event.getUser()) && e.getComponentId().equals("feedbackGuildSelect"), e -> {
+                    waiter.waitForEvent(StringSelectInteractionEvent.class, e -> e.getUser().equals(event.getUser()) && e.getComponentId().equals("feedbackGuildSelect"), e -> {
                         Guild guild = jda.getGuildById(e.getValues().get(0));
                         MessageChannel channel = getFeedbackChannel(guild);
                         e.editMessage("Will you add attachments?").setComponents(

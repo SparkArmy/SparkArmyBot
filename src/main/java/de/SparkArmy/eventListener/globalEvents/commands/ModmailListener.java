@@ -18,15 +18,15 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NonNls;
@@ -116,7 +116,7 @@ public class ModmailListener extends CustomEventListener {
         }
 
 
-        SelectMenu.Builder guilds = SelectMenu.create("modmailGuildPicker;" + idExtension);
+        StringSelectMenu.Builder guilds = StringSelectMenu.create("modmailGuildPicker;" + idExtension);
 
         event.getJDA().getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(g -> guilds.addOption(g.getName(), g.getId()));
         if (guilds.build().getOptions().isEmpty()){
@@ -129,7 +129,7 @@ public class ModmailListener extends CustomEventListener {
 
     // Select menu interactions
     @Override
-    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
+    public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
         String menuName = event.getComponentId();
         if (!menuName.contains(";")) return;
         String[] strings = menuName.split(";");
@@ -261,7 +261,7 @@ public class ModmailListener extends CustomEventListener {
 
 
     // Method to send start message to specific server
-    private void sendStartEmbedToServer(EmbedBuilder embedFromUser, Guild guild, User user, SelectMenuInteractionEvent e) {
+    private void sendStartEmbedToServer(EmbedBuilder embedFromUser, Guild guild, User user, StringSelectInteractionEvent e) {
         JSONObject config = this.controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
         if (config.isNull("modmail")) {
            config = createConfig(config,guild);

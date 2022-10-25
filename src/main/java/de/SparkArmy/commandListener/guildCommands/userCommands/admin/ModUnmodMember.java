@@ -1,6 +1,7 @@
 package de.SparkArmy.commandListener.guildCommands.userCommands.admin;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
@@ -8,11 +9,14 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.List;
+
 public class ModUnmodMember extends CustomCommandListener {
     @Override
     public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
         if (!event.getName().equals("Mod/Unmod Member")) return;
-        if (event.getGuild() == null) {
+        Guild guild = event.getGuild();
+        if (guild == null) {
             event.reply("Use this app on a guild-member").setEphemeral(true).queue();
             return;
         }
@@ -23,9 +27,20 @@ public class ModUnmodMember extends CustomCommandListener {
             return;
         }
         JSONObject moderationConfig = config.getJSONObject("moderation");
-        JSONArray roles = moderationConfig.getJSONArray("roles");
-        if (roles.isEmpty()) {
+        JSONArray roleIds = moderationConfig.getJSONArray("roles");
+        if (roleIds.isEmpty()) {
             event.reply("Please add a moderation-role with /moderation-config").setEphemeral(true).queue();
+            return;
+        }
+
+        List<Role> roles = roleIds.toList().stream().map(x -> {
+            Role r = guild.getRoleById(x.toString());
+            if (r != null) return r;
+            return guild.getPublicRole();
+        }).toList();
+
+        if (roles.contains(guild.getPublicRole())){
+            event.reply("PLease check this role-ids").setEphemeral(true).queue();
             return;
         }
 
@@ -36,39 +51,22 @@ public class ModUnmodMember extends CustomCommandListener {
             return;
         }
 
-        if (targetMember.getRoles().stream().anyMatch(x -> roles.toList().contains(x.getId()))) {
-            StringBuilder failedRoles = new StringBuilder();
-            roles.forEach(role -> {
-                try {
-                    Role r = event.getGuild().getRoleById(role.toString());
-                    //noinspection ConstantConditions
-                    event.getGuild().removeRoleFromMember(targetMember, r).queue();
-                } catch (NullPointerException ignored) {
-                    failedRoles.append(role).append(" ");
-                }
-            });
-            if (!failedRoles.isEmpty()) {
-                event.reply("Please check this roles: " + failedRoles).setEphemeral(true).queue();
-                return;
-            }
+        Member bot = event.getGuild().getMember(jda.getSelfUser());
+        if (bot == null) {
+            event.reply("Ups something went wrong").setEphemeral(true).queue();
+            return;
+        }
 
+        if (!roles.stream().allMatch(bot::canInteract)) {
+            event.reply("Please place the bot over the target member or the roles under the bot").setEphemeral(true).queue();
+            return;
+        }
+
+        if (targetMember.getRoles().stream().anyMatch(x -> roleIds.toList().contains(x.getId()))) {
+            roles.forEach(x -> guild.removeRoleFromMember(targetMember, x).queue());
             event.reply("Moderation rights from member removed").setEphemeral(true).queue();
         } else {
-            StringBuilder failedRoles = new StringBuilder();
-            roles.forEach(role -> {
-                try {
-                    Role r = event.getGuild().getRoleById(role.toString());
-                    //noinspection ConstantConditions
-                    event.getGuild().addRoleToMember(targetMember.getUser(), r).queue();
-                } catch (NullPointerException ignored) {
-                    failedRoles.append(role).append(" ");
-                }
-            });
-            if (!failedRoles.isEmpty()) {
-                event.reply("Please check this roles: " + failedRoles).setEphemeral(true).queue();
-                return;
-            }
-
+            roles.forEach(x -> guild.addRoleToMember(targetMember, x).queue());
             event.reply("User has moderator rights now").setEphemeral(true).queue();
         }
     }

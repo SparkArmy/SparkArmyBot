@@ -1,7 +1,6 @@
 package de.SparkArmy;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
-import de.SparkArmy.commandBuilder.CommandRegisterer;
 import de.SparkArmy.commandListener.CommandListenerRegisterer;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
@@ -36,16 +35,16 @@ public class Main {
         MainUtil.mainConfig = mainConfig;
 
         // Start building JDA
-        JDABuilder builder = JDABuilder.createDefault(mainConfig.getJSONObject("discord").getString("discord-token"));
-        builder.enableIntents(GatewayIntent.GUILD_MEMBERS);
-        builder.enableIntents(GatewayIntent.GUILD_PRESENCES);
-        builder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
-        builder.enableCache(CacheFlag.getPrivileged());
-        builder.setMemberCachePolicy(MemberCachePolicy.ALL);
+        JDABuilder jdaBuilder = JDABuilder.createDefault(mainConfig.getJSONObject("discord").getString("discord-token"));
+        jdaBuilder.enableIntents(GatewayIntent.GUILD_MEMBERS);
+        jdaBuilder.enableIntents(GatewayIntent.GUILD_PRESENCES);
+        jdaBuilder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
+        jdaBuilder.enableCache(CacheFlag.getPrivileged());
+        jdaBuilder.setMemberCachePolicy(MemberCachePolicy.ALL);
         logger.info("JDA-Builder was successful initialized");
 
         try {
-            this.jda = builder.build();
+            this.jda = jdaBuilder.build();
             logger.info("JDA successful build");
         } catch (Exception e) {
             logger.error("JDA Failed to build  - " + e.getMessage());
@@ -73,10 +72,10 @@ public class Main {
         // Get StorageServer
         MainUtil.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
         if (MainUtil.storageServer == null){
-            logger.warn("No storage-server registered or The bot is not on storage-server");
+            logger.warn("No storage-server registered or the bot is not on storage-server");
         }
 
-        CommandRegisterer.registerCommands();
+//        CommandRegisterer.registerCommands();
 
         // Add CommandListener to JDA
         new CommandListenerRegisterer();
@@ -94,8 +93,10 @@ public class Main {
 
     public static void systemExit(Integer code) {
         if (null != MainUtil.jda){
-            MainUtil.jda.cancelRequests();
             MainUtil.jda.shutdown();
+            try {
+                MainUtil.jda.awaitStatus(JDA.Status.SHUTDOWN);
+            } catch (InterruptedException ignored) {}
         }
         System.exit(code);
     }

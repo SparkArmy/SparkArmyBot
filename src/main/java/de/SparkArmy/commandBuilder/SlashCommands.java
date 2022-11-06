@@ -177,7 +177,15 @@ enum SlashCommands {
                     new SubcommandData("clear","Clear channel and message")
             ));
 
-            // ModeratorTimeCommand
+            // Purge Command
+            add(Commands.slash("purge","Delete messages in channel").addSubcommands(
+                    new SubcommandData("periodically","Remove messages after a specific time automatically"),
+                    new SubcommandData("live","Remove messages immediately").addOptions(
+                            new OptionData(OptionType.CHANNEL,"target-channel","The target channel"),
+                            new OptionData(OptionType.USER,"target-user","The target user"),
+                            new OptionData(OptionType.STRING,"target-string","The target string"),
+                            new OptionData(OptionType.INTEGER,"messages","The message-count you will delete (max. and standard 100)"))
+            ));
         }};
     }
 }

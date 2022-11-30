@@ -22,6 +22,16 @@ public class PunishmentEmbeds{
             case TIMEOUT -> action = "timeout";
             default -> action = "unknown";
         }
+
+        String modmailHint =String.format( """
+                Have you any questions about this %s?
+                Please use "/modmail" in this channel to contact the mods!
+                PS: Any other way will be ignored""",type.getName());
+
+        switch (type){
+            case MUTE,WARN,TIMEOUT -> reason = reason + "\n" + modmailHint;
+        }
+
         return new EmbedBuilder()
                 .setTitle(type.getName())
                 .setDescription("You was " + action +  " on " + guild.getName())
@@ -40,6 +50,16 @@ public class PunishmentEmbeds{
             case TIMEOUT -> action = "timeout";
             default -> action = "unknown";
         }
+
+        String modmailHint =String.format( """
+                Have you any questions about this %s?
+                Please use "/modmail" in this channel to contact the mods!
+                PS: Any other way will be ignored""",type.getName());
+
+        switch (type){
+            case MUTE,WARN,TIMEOUT -> reason = reason + "\n" + modmailHint;
+        }
+
         return new EmbedBuilder()
                 .setTitle(type.getName())
                 .setDescription("You was " + action +  " on " + guild.getName())

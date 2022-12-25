@@ -1,7 +1,7 @@
 package de.SparkArmy.eventListener.guildEvents.message;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.SqlUtil;
+import de.SparkArmy.utils.PostgresConnection;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,8 +20,7 @@ public class MessageReceive extends CustomEventListener {
         if (event.getAuthor().isSystem()) return;
         if (event.getMember() == null) return;
 
-        SqlUtil.putUserDataInUserTable(event.getGuild(),event.getMember());
-        SqlUtil.putDataInMessageTable(event.getMessage());
-        SqlUtil.putDataInMessageAttachmentsTable(event.getMessage());
+        PostgresConnection.putDataInMemberTable(event.getMember());
+        PostgresConnection.putDataInMessageTable(event.getMessage());
     }
 }

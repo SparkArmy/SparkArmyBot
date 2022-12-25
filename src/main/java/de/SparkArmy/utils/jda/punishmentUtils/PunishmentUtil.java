@@ -2,10 +2,10 @@ package de.SparkArmy.utils.jda.punishmentUtils;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
+import de.SparkArmy.utils.MainUtil;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
-import de.SparkArmy.utils.MainUtil;
-import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
@@ -201,12 +201,9 @@ public class PunishmentUtil {
             return;
         }
 
-        SqlUtil.putUserDataInUserTable(guild,offender);
-        if (SqlUtil.isUserNotInModeratorTable(guild,moderator)){
-            SqlUtil.putUserDataInUserTable(guild,moderator);
-            SqlUtil.putDataInModeratorTable(guild,moderator);
-        }
-        SqlUtil.putDataInPunishmentTable(guild,offender,moderator,PunishmentType.getByName(eventName));
+        PostgresConnection.putDataInMemberTable(offender);
+        PostgresConnection.putDataInModeratorTable(moderator);
+        PostgresConnection.putDataInPunishmentTable(offender,moderator,PunishmentType.getByName(eventName),reasonString);
 
         // response to moderator
         event.getHook().editOriginal(offender.getEffectiveName() + " was " + eventName).queue();
@@ -249,8 +246,6 @@ public class PunishmentUtil {
         String reason;
         JSONObject config = controller.getSpecificGuildConfig(entry.getGuild(), GuildConfigType.MAIN);
 
-        Guild guild = entry.getGuild();
-
         JSONObject punishments = config.getJSONObject("punishments");
         switch (entry.getType()){
             case KICK -> {
@@ -260,12 +255,10 @@ public class PunishmentUtil {
                     reason = punishments.getJSONObject("kick").getString("standard-reason");
                 }
 
-                SqlUtil.putUserDataInUserTable(guild,offender);
-                if (SqlUtil.isUserNotInUserTable(guild,moderator)){
-                    SqlUtil.putUserDataInUserTable(guild,moderator);
-                    SqlUtil.putDataInModeratorTable(guild,moderator);
-                }
-                SqlUtil.putDataInPunishmentTable(guild, offender,moderator,PunishmentType.KICK);
+                PostgresConnection.putDataInMemberTable(offender);
+                PostgresConnection.putDataInModeratorTable(moderator);
+
+                PostgresConnection.putDataInPunishmentTable(offender,moderator,PunishmentType.KICK,reason);
                 ChannelUtil.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender.getUser(),moderator.getUser(),PunishmentType.KICK), entry.getGuild(),LogChannelType.MOD);
             }
             case BAN -> {
@@ -275,12 +268,10 @@ public class PunishmentUtil {
                     reason = punishments.getJSONObject("ban").getString("standard-reason");
                 }
 
-                SqlUtil.putUserDataInUserTable(guild,offender);
-                if (SqlUtil.isUserNotInUserTable(guild,moderator)){
-                    SqlUtil.putUserDataInUserTable(guild,moderator);
-                    SqlUtil.putDataInModeratorTable(guild,moderator);
-                }
-                SqlUtil.putDataInPunishmentTable(guild, offender,moderator,PunishmentType.BAN);
+                PostgresConnection.putDataInMemberTable(offender);
+                PostgresConnection.putDataInModeratorTable(moderator);
+
+                PostgresConnection.putDataInPunishmentTable(offender,moderator,PunishmentType.BAN,reason);
                 ChannelUtil.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender.getUser(),moderator.getUser(),PunishmentType.BAN), entry.getGuild(),LogChannelType.MOD);
             }
         }

@@ -1,19 +1,19 @@
 package de.SparkArmy.utils.jda;
 
 import de.SparkArmy.utils.MainUtil;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 
 import java.io.File;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-@SuppressWarnings("unused")
+
 public class MessageUtil {
     private static @NotNull String timeToEpochSecond(@NotNull OffsetDateTime parsedTime){
         return String.valueOf(parsedTime.toEpochSecond());
@@ -33,7 +33,7 @@ public class MessageUtil {
         return String.format("<t:%s>",timeToEpochSecond(time));
     }
 
-    public static String discordTimestamp(OffsetDateTime time,String formating){
+    public static String discordTimestamp(OffsetDateTime time,String formatting){
         /*
          * t	16:20	Short Time
          * T	16:20:30	Long Time
@@ -44,49 +44,46 @@ public class MessageUtil {
          * R	2 months ago	Relative Time
          * *default
          * */
-        return String.format("<t:%s:%s>",timeToEpochSecond(time),formating);
+        return String.format("<t:%s:%s>",timeToEpochSecond(time),formatting);
     }
 
-    public static @NotNull String logAttachmentsOnStorageServer(@NotNull Message.Attachment attachment, @NotNull Guild guild){
-        Guild storage = MainUtil.storageServer;
-        Category category;
-        if (storage.getCategoriesByName(guild.getId(),false).isEmpty()){
-           category = ChannelUtil.createCategory(storage,guild.getId());
-        }else {
-            category = storage.getCategoriesByName(guild.getId(),false).get(0);
-        }
-
-        if (category == null) {
-            category = ChannelUtil.createCategory(storage,guild.getId());
-        }
-
-        TextChannel channel;
-        if (category.getTextChannels().stream().filter(x->x.getName().equals("message-attachments")).toList().isEmpty()){
-            channel = ChannelUtil.createTextChannel(category,"message-attachments");
-        }else {
-           channel = category.getTextChannels().stream().filter(x->x.getName().equals("message-attachments")).toList().get(0);
-        }
-
-        if (channel == null){
-            channel = ChannelUtil.createTextChannel(category,"message-attachments");
-        }
-
+    public static @NotNull JSONArray storeDataOnStorageServer(Message msg){
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff/attachments");
-        assert directory != null;
-        File file = FileHandler.getFileInDirectory(directory,attachment.getFileName());
-        try {
-            file = attachment.getProxy().downloadToFile(file).get();
-        } catch (InterruptedException | ExecutionException e) {
-            MainUtil.logger.error(e.getMessage());
+        if (directory == null) return new JSONArray();
+
+        List<Message.Attachment> attachments = msg.getAttachments();
+        if (attachments.isEmpty()) return new JSONArray();
+        // Get all attachments from message
+        List<File> files = attachments.stream().map(x->{
+            File file = FileHandler.getFileInDirectory(directory,x.getFileName());
+            try {
+                file = x.getProxy().downloadToFile(file).get();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+            return file;
+        }).toList();
+
+        // Get the storage channel and if non exists create one
+        List<TextChannel> storageChannels = MainUtil.storageServer.getTextChannelsByName("attachment-storage",true);
+        TextChannel storageChannel;
+        if (storageChannels.isEmpty()){
+           storageChannel = ChannelUtil.createTextChannel(MainUtil.storageServer,"attachment-storage");
+        }else {
+            storageChannel = storageChannels.get(0);
         }
 
-        File finalFile = file;
-        var ref = new Object() {
-            String messageId;
-        };
-        String attachmentUrl = channel.sendFiles(new ArrayList<>(){{add(FileUpload.fromData(finalFile));}}).complete().getAttachments().get(0).getUrl();
-        //noinspection ResultOfMethodCallIgnored
-        file.delete();
-        return attachmentUrl;
+        // Send the attachments in this channel and get the urls
+        JSONArray attachmentUrls = new JSONArray();
+        List<FileUpload> fileUploads = new ArrayList<>();
+        if (files.isEmpty()) return new JSONArray();
+        files.forEach(x->fileUploads.add(FileUpload.fromData(x)));
+        storageChannel.sendFiles(fileUploads).complete().getAttachments().forEach(y->attachmentUrls.put(y.getUrl()));
+
+        files.forEach(File::delete);
+
+        return attachmentUrls;
     }
 }

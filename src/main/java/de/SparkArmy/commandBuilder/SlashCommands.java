@@ -78,7 +78,8 @@ enum SlashCommands {
             ));
 
             add(Commands.slash("user-punishments","List the user punishments").addOptions(
-                    new OptionData(OptionType.USER,"target-user","The user you will get the punishments").setRequired(true),
+                    new OptionData(OptionType.USER,"target-member","The user you will get the punishments"),
+                    new OptionData(OptionType.USER,"target-moderator","The executed moderator"),
                     new OptionData(OptionType.STRING,"punishment-type","The punishment-type").setAutoComplete(true)
             ));
 

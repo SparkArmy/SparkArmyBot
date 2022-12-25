@@ -83,6 +83,12 @@ public class ConfigController {
                 put("storage-server","Please setup a new server, delete all included channels and put the id in this field");
                 put("twitter_bearer","Please copy the twitter bearer in this field");
             }};
+            JSONObject postgres = new JSONObject(){{
+               put("url","The url for the database");
+               put("user","Database-User");
+               put("password","User-Password");
+            }};
+            blankConfig.put("postgres",postgres);
             blankConfig.put("otherKeys",otherKeys);
 
             if(FileHandler.writeValuesInFile(this.configFolder,"main-config.json",blankConfig)){

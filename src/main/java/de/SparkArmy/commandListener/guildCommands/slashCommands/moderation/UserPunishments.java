@@ -1,7 +1,7 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.SqlUtil;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,61 +38,86 @@ public class UserPunishments extends CustomCommandListener {
 
         OptionMapping userOption = event.getOption("target-user");
         OptionMapping typeOption = event.getOption("punishment-type");
+        OptionMapping moderatorOption = event.getOption("target-moderator");
 
-        if (userOption == null){
-            event.reply("Please write in target-user a value").setEphemeral(true).queue();
-            return;
+        if (userOption != null){
+            getPunishmentsFromUser(event,userOption,typeOption);
+        } else if (moderatorOption != null) {
+            getPunishmentsExecutedByModerator(event);
+        } else {
+            event.reply("Please give a target member").setEphemeral(true).queue();
         }
+    }
 
-        PunishmentType type = null;
-        if (typeOption != null){
-            type = PunishmentType.getByName(typeOption.getAsString());
-            if (type == PunishmentType.UNKNOW){
-                event.reply("Please give a valid type-option").setEphemeral(true).queue();
-                return;
-            }
+    private void getPunishmentsExecutedByModerator(@NotNull SlashCommandInteractionEvent event) {
+        event.reply("This function is not implement, please use the other option").setEphemeral(true).queue();
+    }
+
+    private void getPunishmentsFromUser(SlashCommandInteractionEvent event,OptionMapping memberMapping,OptionMapping typeMapping) {
+        JSONArray values;
+        if (getPunishmentTypeFromOptionMapping(typeMapping).equals(PunishmentType.UNKNOW)){
+            values = PostgresConnection.getPunishmentDataByOffender(memberMapping.getAsMember());
+        } else {
+            values = PostgresConnection.getPunishmentDataByOffender(memberMapping.getAsMember(),getPunishmentTypeFromOptionMapping(typeMapping));
         }
+        sendOverviewEmbed(values,event);
+    }
 
-        JSONArray values = SqlUtil.getPunishmentDataFromUser(event.getGuild(), userOption.getAsUser(), type);
+    private PunishmentType getPunishmentTypeFromOptionMapping(OptionMapping mapping){
+        if (mapping == null) return PunishmentType.UNKNOW;
+        return PunishmentType.getByName(mapping.getAsString());
+    }
+
+    private void sendOverviewEmbed(JSONArray values,SlashCommandInteractionEvent event){
         if (values == null){
-            event.reply("SQL is disabled").setEphemeral(true).queue();
+            event.reply("Database not connected!").setEphemeral(true).queue();
+            return;
+        } else if (values.isEmpty()) {
+            event.reply("For this user no entry's exist").setEphemeral(true).queue();
             return;
         }
-        if (values.isEmpty()){
-            event.reply("There is no entry for this user").setEphemeral(true).queue();
-            return;
-        }
+
+        List<Object> valuesAsList = values.toList();
+
+        // TODO Display more than 24 punishments
+        // TODO Implement the moderator option
+
+        List<Object> tempSublist;
+
+
+        EmbedBuilder punishmentsEmbed = new EmbedBuilder();
+        punishmentsEmbed.setTitle("Punishments from user");
+        // Get the offender as user and set an author
+//        User u = jda.getUserById(((JSONObject) tempSublist.get(0)).getString("mbrId"));
+//        if (u != null) {
+//            punishmentsEmbed.setAuthor(u.getAsTag(), null, u.getEffectiveAvatarUrl());
+//        }
 
         List<MessageEmbed.Field> fields = new ArrayList<>();
         for (int i = 0;i<values.length();i++){
             JSONObject punishment = values.getJSONObject(i);
-            String title = String.format("%s || %s",punishment.getString("id"),punishment.getString("punishment"));
+            String title = String.format("%s || %s",punishment.getString("punishment"),punishment.get("timestamp").toString());
             String value = String.format("""
-                    Moderator: %s
-                    Time: %s
+                    Moderator-Id: %s
+                    Reason: %s
                     """,
-                    punishment.getString("moderatorId"),
-                    punishment.getString("time"));
+                    punishment.get("modId").toString(),
+                    punishment.get("reason").toString());
 
             fields.add(new MessageEmbed.Field(title,value,false));
         }
-
 
         List<MessageEmbed.Field> finalList;
 
         if (fields.size() > 24){
 //          Collections.reverse(fields);
-          finalList = fields.subList(0,24);
+            finalList = fields.subList(0,24);
         }
         else{
             finalList = fields;
         }
-
-        EmbedBuilder showEmbed = new EmbedBuilder();
-        showEmbed.setTitle("Punishments");
-        showEmbed.setDescription("The punishments from " + userOption.getAsUser().getAsTag());
-        finalList.forEach(showEmbed::addField);
-
-        event.replyEmbeds(showEmbed.build()).setEphemeral(true).queue();
+        finalList.forEach(punishmentsEmbed::addField);
+        punishmentsEmbed.setTimestamp(OffsetDateTime.now());
+        event.replyEmbeds(punishmentsEmbed.build()).setEphemeral(true).queue();
     }
 }

@@ -1,10 +1,10 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
 import de.SparkArmy.eventListener.CustomEventListener;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.AuditLogUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
-import de.SparkArmy.utils.SqlUtil;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentEmbeds;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -42,13 +42,10 @@ public class MemberTimeoutEvent extends CustomEventListener {
         EmbedBuilder userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reason, event.getNewTimeOutEnd(), PunishmentType.TIMEOUT);
         event.getUser().openPrivateChannel().complete().sendMessageEmbeds(userEmbed.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.CANNOT_SEND_TO_USER));
 
-        SqlUtil.putUserDataInUserTable(guild, event.getMember());
-        if (SqlUtil.isUserNotInModeratorTable(guild,moderator)){
-            SqlUtil.putUserDataInUserTable(guild, moderator);
-            SqlUtil.putDataInModeratorTable(guild,moderator);
-        }
+        PostgresConnection.putDataInMemberTable(event.getMember());
+        PostgresConnection.putDataInModeratorTable(event.getMember());
 
-        SqlUtil.putDataInPunishmentTable(guild,event.getMember(),moderator,PunishmentType.TIMEOUT);
+        PostgresConnection.putDataInPunishmentTable(event.getMember(),moderator,PunishmentType.TIMEOUT,reason);
 
     }
 }

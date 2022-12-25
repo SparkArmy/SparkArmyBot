@@ -1,6 +1,7 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
 import de.SparkArmy.eventListener.CustomEventListener;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateAvatarEvent;
@@ -21,6 +22,7 @@ public class MemberPersonalUpdates extends CustomEventListener {
 
     @Override
     public void onUserUpdateName(@NotNull UserUpdateNameEvent event) {
+        PostgresConnection.updateUserInUserTable(event.getUser());
         jda.getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(x->
                 ChannelUtil.logInLogChannel(LoggingEmbeds.usernameUpdate(event),x, member));
     }

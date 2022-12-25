@@ -1,6 +1,7 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
 import de.SparkArmy.eventListener.CustomEventListener;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.AuditLogUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
@@ -21,7 +22,7 @@ public class MemberLeaveEvent extends CustomEventListener {
     @Override
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
         leaveLogging(event);
-
+        PostgresConnection.addLeaveTimestampInMemberTable(event.getMember());
     }
 
     private void leaveLogging(@NotNull GuildMemberRemoveEvent event){

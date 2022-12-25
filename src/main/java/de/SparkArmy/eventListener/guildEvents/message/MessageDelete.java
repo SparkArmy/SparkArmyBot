@@ -1,7 +1,7 @@
 package de.SparkArmy.eventListener.guildEvents.message;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.SqlUtil;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.AuditLogUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
@@ -48,7 +48,7 @@ public class MessageDelete extends CustomEventListener {
             attachmentLogEmbed.appendDescription(String.format(" from %s (UserId:%s)",moderator.getAsTag(),moderator.getId()));
         }
 
-        String message = SqlUtil.getMessageContentFromMessageTable(event.getGuild(),event.getMessageId());
+        String message = PostgresConnection.getMessageContentByMessageId(event.getMessageIdLong());
 
         if (!message.isEmpty()) {
 
@@ -63,7 +63,7 @@ public class MessageDelete extends CustomEventListener {
             }
         }
 
-        List<String> attachments = SqlUtil.getAttachmentsFromMessage(event.getGuild(),event.getMessageId());
+        List<String> attachments = PostgresConnection.getMessageAttachmentUrlsByDiscordMessageID(event.getMessageIdLong());
         if (!attachments.isEmpty() && attachments.size() <= 5){
             StringBuilder builder = new StringBuilder();
             attachments.forEach(x->builder.append(x).append("\n"));
@@ -84,8 +84,8 @@ public class MessageDelete extends CustomEventListener {
     }
 
     private @NotNull User getUserFromMessageId(@NotNull MessageDeleteEvent event){
-       String userId = SqlUtil.getUserIdFromMessageTable(event.getGuild(),event.getMessageId());
-       if (userId.isEmpty()) return jda.getSelfUser();
+       long userId = PostgresConnection.getUserIdByMessageId(event.getMessageIdLong());
+       if (userId == 0) return jda.getSelfUser();
        User user = jda.getUserById(userId);
        if (user == null) return jda.getSelfUser();
        return user;

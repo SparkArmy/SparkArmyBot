@@ -1,7 +1,7 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.SqlUtil;
+import de.SparkArmy.utils.PostgresConnection;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -33,7 +33,7 @@ public class UserNicknames extends CustomCommandListener {
             return;
         }
 
-        JSONArray nicknames = SqlUtil.getNicknamesFromMember(event.getGuild(),targetMember);
+        JSONArray nicknames = PostgresConnection.getNicknamesFromMemberByDiscordUserId(targetMember);
 
         if (nicknames.isEmpty()){
             event.reply("This member has no nicknames").setEphemeral(true).queue();

@@ -8,7 +8,7 @@ import de.SparkArmy.springBoot.LoggingController;
 import de.SparkArmy.springBoot.SpringApp;
 import de.SparkArmy.timedOperations.TimedOperationsExecutor;
 import de.SparkArmy.utils.MainUtil;
-import de.SparkArmy.utils.SqlUtil;
+import de.SparkArmy.utils.PostgresConnection;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -87,7 +87,7 @@ public class Main {
         ConfigController.preCreateSpringConfig();
         SpringApplication.run(SpringApp.class,"");
         new Main();
-        SqlUtil.setSqlEnabled();
+        PostgresConnection.checkPreconditions();
         MainUtil.logger.info("I`m ready.");
     }
 

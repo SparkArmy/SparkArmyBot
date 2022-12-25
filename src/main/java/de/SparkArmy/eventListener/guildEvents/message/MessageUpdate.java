@@ -1,9 +1,9 @@
 package de.SparkArmy.eventListener.guildEvents.message;
 
 import de.SparkArmy.eventListener.CustomEventListener;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
-import de.SparkArmy.utils.SqlUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ public class MessageUpdate extends CustomEventListener {
         EmbedBuilder oldEmbed = new EmbedBuilder();
 
         String newMessage = event.getMessage().getContentRaw();
-        String oldMessage = SqlUtil.getMessageContentFromMessageTable(event.getGuild(), event.getMessageId());
+        String oldMessage = PostgresConnection.getMessageContentByMessageId(event.getMessageIdLong());
         int i = 0;
         int j = 1;
 
@@ -62,13 +62,8 @@ public class MessageUpdate extends CustomEventListener {
         if (event.getAuthor().isSystem()) return;
         if (event.getMember() == null) return;
 
-        SqlUtil.putUserDataInUserTable(event.getGuild(),event.getMember());
+        PostgresConnection.putDataInMemberTable(event.getMember());
 
-        if (SqlUtil.isMessageIdNotInMessageTable(event.getGuild(),event.getMessageId())) {
-            SqlUtil.putDataInMessageTable(event.getMessage());
-            SqlUtil.putDataInMessageAttachmentsTable(event.getMessage());
-            return;
-        }
-        SqlUtil.updateDataInMessageTable(event.getMessage());
+        PostgresConnection.updateDataInMessageTable(event.getMessage());
     }
 }

@@ -1,7 +1,7 @@
 package de.SparkArmy.eventListener.guildEvents.member;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.SqlUtil;
+import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.AuditLogUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
@@ -14,6 +14,9 @@ import net.dv8tion.jda.api.events.guild.member.GenericGuildMemberEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class MemberRoleUpdates extends CustomEventListener {
 
@@ -54,17 +57,26 @@ public class MemberRoleUpdates extends CustomEventListener {
 
     private void addUserRoleInDatabase(@NotNull GuildMemberRoleAddEvent event){
         if (event.getUser().isBot()) return;
-        SqlUtil.putDataInRoleUpdateTable(event.getGuild(), event.getMember(), event.getRoles());
+        PostgresConnection.putDataInRoleActionsTable(event);
     }
 
     private void removeUserRoleFromDatabase(@NotNull GuildMemberRoleRemoveEvent event){
         if (event.getUser().isBot()) return;
-        SqlUtil.removeDataFromRoleUpdateTable(event);
+        PostgresConnection.addRemoveTimeInRoleActionsTable(event);
     }
 
     private void addOrUpdateMemberInModeratorTimeTable(@NotNull GenericGuildMemberEvent event){
         Member member = event.getMember();
         if (member.getUser().isBot()) return;
-        SqlUtil.putDataInModeratorTimeTable(event.getGuild(),member, member.hasPermission(Permission.KICK_MEMBERS));
+        Collection<Permission> moderatorPermissions = new ArrayList<>(){{
+           add(Permission.KICK_MEMBERS);
+           add(Permission.BAN_MEMBERS);
+           add(Permission.MODERATE_MEMBERS);
+        }};
+        if (member.hasPermission(moderatorPermissions)){
+            PostgresConnection.putDataInModeratorTable(member);
+        } else {
+            PostgresConnection.addDisappointmentTimeInModeratorTable(member);
+        }
     }
 }

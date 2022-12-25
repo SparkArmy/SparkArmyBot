@@ -72,23 +72,17 @@ public class ConfigController {
                 put("spring-callback-url","[Optional] Your callback domain");
             }};
             blankConfig.put("youtube",youtube);
-            JSONObject mariadb = new JSONObject(){{
-                put("url","The url for the databases (//127.0.0.1/ -> standard for localhost)");
+            JSONObject postgres = new JSONObject(){{
+                put("url","The url for the database");
                 put("user","Database-User");
                 put("password","User-Password");
             }};
-            blankConfig.put("mariaDbConnection",mariadb);
+            blankConfig.put("postgres",postgres);
             JSONObject otherKeys = new JSONObject(){{
                 put("virustotal-api-key","[Optional] Write here your API-Key from VirusTotal");
                 put("storage-server","Please setup a new server, delete all included channels and put the id in this field");
                 put("twitter_bearer","Please copy the twitter bearer in this field");
             }};
-            JSONObject postgres = new JSONObject(){{
-               put("url","The url for the database");
-               put("user","Database-User");
-               put("password","User-Password");
-            }};
-            blankConfig.put("postgres",postgres);
             blankConfig.put("otherKeys",otherKeys);
 
             if(FileHandler.writeValuesInFile(this.configFolder,"main-config.json",blankConfig)){

@@ -43,7 +43,7 @@ public class MessageUpdate extends CustomEventListener {
         }
 
         newEmbed.setTitle("Message Update");
-        newEmbed.setDescription(String.format("This is the old content from [%s](%s)",event.getMessage().getId(),event.getMessage().getJumpUrl()));
+        newEmbed.setDescription(String.format("This is the new content from [%s](%s)",event.getMessage().getId(),event.getMessage().getJumpUrl()));
         newEmbed.setAuthor(event.getAuthor().getAsTag(),null,event.getAuthor().getEffectiveAvatarUrl());
 
         oldEmbed.setTitle("Message Update");

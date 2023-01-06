@@ -214,7 +214,6 @@ public class MediaOnlyUtil {
             } else {
                 mediaOnlyConfig = config.getJSONObject("media-only");
             }
-            MainUtil.logger.info(action);
             switch (type) {
                 case ADD, EDIT -> {
                     if (mediaOnlyConfig.isEmpty() || mediaOnlyConfig.isNull(targetChannel.getId())) {
@@ -222,6 +221,7 @@ public class MediaOnlyUtil {
                             put("attachments", true);
                             put("files", true);
                             put("text", false);
+                            put("links",false);
                         }});
 
                         config.put("media-only", mediaOnlyConfig);
@@ -280,6 +280,7 @@ public class MediaOnlyUtil {
                             put("attachments", true);
                             put("files", true);
                             put("text", false);
+                            put("links",false);
                         }});
 
                         config.put("media-only", mediaOnlyConfig);

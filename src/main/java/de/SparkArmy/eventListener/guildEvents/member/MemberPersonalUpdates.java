@@ -23,25 +23,25 @@ public class MemberPersonalUpdates extends CustomEventListener {
     @Override
     public void onUserUpdateName(@NotNull UserUpdateNameEvent event) {
         PostgresConnection.updateUserInUserTable(event.getUser());
-        jda.getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(x->
+        jda.getGuilds().stream().filter(x->!x.equals(storageServer) && x.isMember(event.getUser())).forEach(x->
                 ChannelUtil.logInLogChannel(LoggingEmbeds.usernameUpdate(event),x, member));
     }
 
     @Override
     public void onUserUpdateAvatar(@NotNull UserUpdateAvatarEvent event) {
-        jda.getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(x->
+        jda.getGuilds().stream().filter(x->!x.equals(storageServer) && x.isMember(event.getUser())).forEach(x->
                 ChannelUtil.logInLogChannel(LoggingEmbeds.memberAvatarUpdate(event.getUser()),x,member));
     }
 
     @Override
     public void onUserUpdateDiscriminator(@NotNull UserUpdateDiscriminatorEvent event) {
-        jda.getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(x->
+        jda.getGuilds().stream().filter(x->!x.equals(storageServer) && x.isMember(event.getUser())).forEach(x->
                 ChannelUtil.logInLogChannel(LoggingEmbeds.discriminatorUpdate(event),x,member));
     }
 
     @Override
     public void onUserUpdateFlags(@NotNull UserUpdateFlagsEvent event) {
-        jda.getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(x->
+        jda.getGuilds().stream().filter(x->!x.equals(storageServer) && x.isMember(event.getUser())).forEach(x->
                 ChannelUtil.logInLogChannel(LoggingEmbeds.userFlagUpdate(event),x,member));
     }
 

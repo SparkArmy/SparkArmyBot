@@ -118,7 +118,8 @@ public class ModmailListener extends CustomEventListener {
 
         StringSelectMenu.Builder guilds = StringSelectMenu.create("modmailGuildPicker;" + idExtension);
 
-        event.getJDA().getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(g -> guilds.addOption(g.getName(), g.getId()));
+        event.getJDA().getGuilds().stream().filter(x->!x.equals(storageServer) && event.getUser().getMutualGuilds().contains(x))
+                .forEach(g -> guilds.addOption(g.getName(), g.getId()));
         if (guilds.build().getOptions().isEmpty()){
             event.reply("All server were you member have disabled the modmail-feature").setEphemeral(true).queue();
             return;
@@ -231,7 +232,10 @@ public class ModmailListener extends CustomEventListener {
                             PrivateChannel privateChannel = Objects.requireNonNull(jda.getUserById(buttonId[2])).openPrivateChannel().complete();
                             new Thread(()-> privateChannel.getHistory().retrievePast(30).complete().forEach(m->{
                                 if (m.getAuthor().equals(jda.getSelfUser()) && m.getEmbeds().isEmpty()){
-                                    m.editMessageComponents().complete();
+                                    if (!m.getType().isSystem()){
+                                        if (m.isPinned()) m.unpin().queue();
+                                        m.editMessageComponents().complete();
+                                    }
                                     try {
                                         TimeUnit.SECONDS.sleep(3);
                                     } catch (InterruptedException ignored) {}
@@ -321,20 +325,20 @@ public class ModmailListener extends CustomEventListener {
                 Your ticket was received.
                 Please use the button under this message to reply or adding a text.
                 """;
-        try {
+
             PrivateChannel privateChannel =  user.openPrivateChannel().complete();
             // Try to send a DM to the User
-            privateChannel.sendMessage(message).setActionRow(Button.success(String.format("modmailReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")).queue();
-            privateChannel.sendMessageEmbeds((embedFromUser.build())).queue();
-        } catch (InsufficientPermissionException | IllegalArgumentException | UnsupportedOperationException ignored) {
-            // Catch has the user disabled the DM from server members
-            modmailChannel.delete().reason("The target user has direct-messages from server members disabled").queue();
-            EmbedBuilder closeEmbed = new EmbedBuilder();
-            closeEmbed.setTitle("Ticket " + user.getAsTag() + " closed");
-            closeEmbed.setDescription("This ticket was automated closed, because the user have PN's disabled");
-            closeEmbed.setFooter(jda.getSelfUser().getAsTag(), jda.getSelfUser().getEffectiveAvatarUrl());
-            modmailLogChannel.sendMessageEmbeds(closeEmbed.build()).queue();
-        }
+            TextChannel finalModmailLogChannel = modmailLogChannel;
+            privateChannel.sendMessage(message).setActionRow(Button.success(String.format("modmailReply;%s;%s", modmailChannel.getId(), user.getId()), "Reply")).queue(x-> x.pin().queue(),new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, x->{
+                // Catch has the user disabled the DM from server members
+                modmailChannel.delete().reason("The target user has direct-messages from server members disabled").queue();
+                EmbedBuilder closeEmbed = new EmbedBuilder();
+                closeEmbed.setTitle("Ticket " + user.getAsTag() + " closed");
+                closeEmbed.setDescription("This ticket was automated closed, because the user have PN's disabled");
+                closeEmbed.setFooter(jda.getSelfUser().getAsTag(), jda.getSelfUser().getEffectiveAvatarUrl());
+                finalModmailLogChannel.sendMessageEmbeds(closeEmbed.build()).queue();
+            }));
+            privateChannel.sendMessageEmbeds((embedFromUser.build())).queue(null,new ErrorHandler().ignore(ErrorResponse.CANNOT_SEND_TO_USER));
     }
 
     // Method to send reply message from server to user or in the other direction
@@ -422,7 +426,7 @@ public class ModmailListener extends CustomEventListener {
                         try {
                             messageList.add(m);
                             m.delete().complete();
-                            TimeUnit.SECONDS.sleep(4);
+                            TimeUnit.SECONDS.sleep(5);
                         } catch (Exception ignored) {
                         }
                     });
@@ -491,7 +495,7 @@ public class ModmailListener extends CustomEventListener {
                 if (!m.getEmbeds().isEmpty() || !m.getContentRaw().isEmpty()){
                     threadChannel.sendMessage(MessageCreateData.fromMessage(m)).queue(x->x.editMessageComponents().queue());
                     try {
-                        TimeUnit.SECONDS.sleep(4);
+                        TimeUnit.SECONDS.sleep(5);
                     } catch (InterruptedException ignored) {
                     }
                 }

@@ -10,8 +10,8 @@ import org.json.JSONObject;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
-public class PunishmentEmbeds{
 
+public class PunishmentEmbeds{
     public static @NotNull EmbedBuilder punishmentUserEmbed(@NotNull Guild guild, @NotNull String reason, @NotNull PunishmentType type){
         String action;
         switch (type){
@@ -24,6 +24,7 @@ public class PunishmentEmbeds{
         }
 
         String modmailHint =String.format( """
+                
                 Have you any questions about this %s?
                 Please use "/modmail" in this channel to contact the mods!
                 PS: Any other way will be ignored""",type.getName());
@@ -52,6 +53,7 @@ public class PunishmentEmbeds{
         }
 
         String modmailHint =String.format( """
+                
                 Have you any questions about this %s?
                 Please use "/modmail" in this channel to contact the mods!
                 PS: Any other way will be ignored""",type.getName());
@@ -75,7 +77,7 @@ public class PunishmentEmbeds{
                 .setAuthor(moderator.getAsTag(),null,moderator.getEffectiveAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(guild.getJDA().getSelfUser().getAsTag(),guild.getJDA().getSelfUser().getEffectiveAvatarUrl())
-                .addField("Offender",String.format("%s (%s)",offender.getAsTag(),offender.getId()),false)
+                .addField("Offender",String.format("%s (%s)",offender.getAsTag(),offender.getAsMention()),false)
                 .addField("Reason",reason,false);
     }
 
@@ -85,7 +87,7 @@ public class PunishmentEmbeds{
                 .setAuthor(moderator.getAsTag(),null,moderator.getEffectiveAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(guild.getJDA().getSelfUser().getAsTag(),guild.getJDA().getSelfUser().getEffectiveAvatarUrl())
-                .addField("Offender",String.format("%s (%s)",offender.getAsTag(),offender.getId()),false)
+                .addField("Offender",String.format("%s (%s)",offender.getAsTag(),offender.getAsMention()),false)
                 .addField("Reason",reason,false)
                 .addField("Expired time", MessageUtil.discordTimestamp(removeTime,"R"),false);
     }

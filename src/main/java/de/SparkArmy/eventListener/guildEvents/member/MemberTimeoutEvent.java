@@ -44,7 +44,6 @@ public class MemberTimeoutEvent extends CustomEventListener {
 
         PostgresConnection.putDataInMemberTable(event.getMember());
         PostgresConnection.putDataInModeratorTable(event.getMember());
-
         PostgresConnection.putDataInPunishmentTable(event.getMember(),moderator,PunishmentType.TIMEOUT,reason);
 
     }

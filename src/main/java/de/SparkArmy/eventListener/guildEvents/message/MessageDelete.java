@@ -28,12 +28,12 @@ public class MessageDelete extends CustomEventListener {
         if (messageAuthor.isBot()) return;
 
         EmbedBuilder messageLogEmbed = new EmbedBuilder();
-        messageLogEmbed.setTitle("Message Delete");
+        messageLogEmbed.setTitle("Message Deleted");
         messageLogEmbed.setDescription("Message was deleted");
         messageLogEmbed.setAuthor(messageAuthor.getAsTag(),null,messageAuthor.getEffectiveAvatarUrl());
 
         EmbedBuilder attachmentLogEmbed = new EmbedBuilder();
-        attachmentLogEmbed.setTitle("Message Delete");
+        attachmentLogEmbed.setTitle("Message Deleted");
         attachmentLogEmbed.setDescription("Message was deleted");
         attachmentLogEmbed.setAuthor(messageAuthor.getAsTag(),null,messageAuthor.getEffectiveAvatarUrl());
 

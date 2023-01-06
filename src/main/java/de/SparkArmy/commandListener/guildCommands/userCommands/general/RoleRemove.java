@@ -49,6 +49,9 @@ public class RoleRemove extends CustomCommandListener {
             if (x.isPublicRole()) return true;
             if (x.getPermissions().contains(Permission.ADMINISTRATOR)) return false;
             return !x.getPermissions().contains(Permission.KICK_MEMBERS);
+        }).filter(x->{
+            // Filter managed roles
+            return !x.isManaged();
         }).forEach(x->event.getGuild().removeRoleFromMember(event.getTargetMember().getUser(),x).queue());
 
         event.reply("All roles was removed from you").setEphemeral(true).queue();

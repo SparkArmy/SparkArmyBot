@@ -118,7 +118,7 @@ public class ModerationConfigListener extends CustomEventListener {
             config.put("moderation",moderation);
             writeInGuildMainConfig(event.getGuild(),config);
 
-            event.editMessage("Role was success append").queue(x->{
+            event.editMessage("Role was successfully appended").queue(x->{
                 x.editOriginalComponents().queue();
                 x.editOriginalEmbeds().queue();
             });

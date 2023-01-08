@@ -118,13 +118,19 @@ public class ModmailListener extends CustomEventListener {
 
         StringSelectMenu.Builder guilds = StringSelectMenu.create("modmailGuildPicker;" + idExtension);
 
-        event.getJDA().getGuilds().stream().filter(x->!x.equals(storageServer) && event.getUser().getMutualGuilds().contains(x))
-                .forEach(g -> guilds.addOption(g.getName(), g.getId()));
-        if (guilds.build().getOptions().isEmpty()){
-            event.reply("All server were you member have disabled the modmail-feature").setEphemeral(true).queue();
-            return;
-        }
-        event.reply("Please select the target guild").addActionRow(guilds.build()).setEphemeral(true).queue();
+        jda.retrieveUserById(event.getUser().getId()).queue(u->{
+
+            jda.getGuilds().stream().filter(x->!x.equals(storageServer)).forEach(g ->
+                    g.retrieveMember(u).queue(m ->
+                            guilds.addOption(g.getName(),g.getId()),new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MEMBER,ErrorResponse.UNKNOWN_USER)));
+
+            if (guilds.getOptions().isEmpty()){
+                event.reply("To all servers you are a member of have the modmail feature disabled or you are not member of the server").setEphemeral(true).queue();
+                return;
+            }
+            event.reply("Please select the target guild").addActionRow(guilds.build()).setEphemeral(true).queue();
+        },new ErrorHandler().ignore(ErrorResponse.UNKNOWN_USER));
+
     }
 
 
@@ -225,26 +231,29 @@ public class ModmailListener extends CustomEventListener {
                         g.reply("Channel will be deleted, started by " + f.getUser().getAsTag()).queue();
                         //noinspection ConstantConditions
                         String reason = g.getValue("modmailCloseReason").getAsString();
-                        saveMessagesFromModmailChannel(event.getChannel().asTextChannel(), jda.getUserById(buttonId[2]),f.getUser(),reason).start();
+                        saveMessagesFromModmailChannel(event.getChannel().asTextChannel(), jda.retrieveUserById(buttonId[2]).complete(),f.getUser(),reason).start();
 
                         // Send the user a message that the ticket was closed
-                        try {
-                            PrivateChannel privateChannel = Objects.requireNonNull(jda.getUserById(buttonId[2])).openPrivateChannel().complete();
-                            new Thread(()-> privateChannel.getHistory().retrievePast(30).complete().forEach(m->{
-                                if (m.getAuthor().equals(jda.getSelfUser()) && m.getEmbeds().isEmpty()){
-                                    if (!m.getType().isSystem()){
-                                        if (m.isPinned()) m.unpin().queue();
-                                        m.editMessageComponents().complete();
-                                    }
-                                    try {
-                                        TimeUnit.SECONDS.sleep(3);
-                                    } catch (InterruptedException ignored) {}
-                                }
-                            })).start();
-                            privateChannel.sendMessage("Your ticket was closed").queue(null,new ErrorHandler()
-                                    .ignore(ErrorResponse.CANNOT_SEND_TO_USER));
-                        }catch (NullPointerException | UnsupportedOperationException ignored){
-                        }
+                        jda.retrieveUserById(buttonId[2]).queue(u ->
+                                        u.openPrivateChannel().queue(privateChannel -> {
+                                                    privateChannel.getHistory().retrievePast(30).queue(messages ->
+                                                            messages.forEach(m -> {
+                                                                if (m.getAuthor().equals(jda.getSelfUser()) && m.getEmbeds().isEmpty()) {
+                                                                    if (!m.getType().isSystem()) {
+                                                                        if (m.isPinned()) m.unpin().queue(null/*,new ErrorHandler()*/);
+                                                                        m.editMessageComponents().queue();
+                                                                    }
+                                                                    try {
+                                                                        TimeUnit.SECONDS.sleep(3);
+                                                                    } catch (InterruptedException ignored) {
+                                                                    }
+                                                                }
+                                                            }));
+                                                    privateChannel.sendMessage("Your ticket was closed").queue(null,new ErrorHandler()
+                                                            .ignore(ErrorResponse.CANNOT_SEND_TO_USER));
+                                                }
+                                                ,new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE,ErrorResponse.MISSING_ACCESS,ErrorResponse.MISSING_PERMISSIONS,ErrorResponse.UNKNOWN_CHANNEL))
+                                ,new ErrorHandler().ignore(ErrorResponse.UNKNOWN_USER));
 
                     }));
 

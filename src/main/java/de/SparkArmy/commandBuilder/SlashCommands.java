@@ -35,41 +35,47 @@ enum SlashCommands {
             add(Commands.slash("warn", "Warns a user").addOptions(
                     new OptionData(OptionType.USER, "target_user", "The targeted user").setRequired(true),
                     new OptionData(OptionType.STRING, "reason", "The Reason for the punishment").setRequired(true),
-                    new OptionData(OptionType.INTEGER, "duration", "The duration of the warn (Default unit of time is minutes)"),
+                    new OptionData(OptionType.INTEGER, "duration", "The duration of the warn (Default unit of time is minutes)").setRequired(true),
                     new OptionData(OptionType.STRING, "time_unit", "The time unit from the duration (Default duration is 1 time unit)").addChoices(
                             new Command.Choice("min", "minuets"),
                             new Command.Choice("h", "hours"),
                             new Command.Choice("d", "days"),
-                            new Command.Choice("M", "months"),
-                            new Command.Choice("y", "Years"))
+                            new Command.Choice("w","weeks")
+//                            new Command.Choice("M", "months"),
+//                            new Command.Choice("y", "Years")
+                    ).setRequired(true)
             ));
 
             // Mute command
             add(Commands.slash("mute", "Mute a user").addOptions(
                     new OptionData(OptionType.USER, "target_user", "The targeted user").setRequired(true),
                     new OptionData(OptionType.STRING, "reason", "The Reason for the punishment").setRequired(true),
-                    new OptionData(OptionType.INTEGER, "duration", "The duration of the mute (Default unit of time is minutes)"),
+                    new OptionData(OptionType.INTEGER, "duration", "The duration of the warn (Default unit of time is minutes)").setRequired(true),
                     new OptionData(OptionType.STRING, "time_unit", "The time unit from the duration (Default duration is 1 time unit)").addChoices(
                             new Command.Choice("min", "minuets"),
                             new Command.Choice("h", "hours"),
                             new Command.Choice("d", "days"),
-                            new Command.Choice("M", "months"),
-                            new Command.Choice("y", "years")
-                    )));
+                            new Command.Choice("w","weeks")
+//                            new Command.Choice("M", "months"),
+//                            new Command.Choice("y", "Years")
+                    ).setRequired(true)
+            ));
 
 
             // Ban command
             add(Commands.slash("ban", "Ban a user").addOptions(
                     new OptionData(OptionType.USER, "target_user", "The targeted user").setRequired(true),
-                    new OptionData(OptionType.STRING, "reason", "The Reason for the punishment").setRequired(true),
-                    new OptionData(OptionType.INTEGER, "duration", "The duration of the ban (Default unit of time is minutes)"),
-                    new OptionData(OptionType.STRING, "time_unit", "The time unit from the duration (Default duration is 1 time unit)").addChoices(
-                            new Command.Choice("min", "minuets"),
-                            new Command.Choice("h", "hours"),
-                            new Command.Choice("d", "days"),
-                            new Command.Choice("M", "months"),
-                            new Command.Choice("y", "years")
-                    )));
+                    new OptionData(OptionType.STRING, "reason", "The Reason for the punishment").setRequired(true)
+//                    new OptionData(OptionType.INTEGER, "duration", "The duration of the warn (Default unit of time is minutes)").setRequired(true),
+//                    new OptionData(OptionType.STRING, "time_unit", "The time unit from the duration (Default duration is 1 time unit)").addChoices(
+//                            new Command.Choice("min", "minuets"),
+//                            new Command.Choice("h", "hours"),
+//                            new Command.Choice("d", "days"),
+//                            new Command.Choice("w","weeks")
+//                            new Command.Choice("M", "months"),
+//                            new Command.Choice("y", "Years")
+//                    ).setRequired(true)
+            ));
 
             // Kick command
             add(Commands.slash("kick", "Kick a user").addOptions(

@@ -22,7 +22,6 @@ public class MemberLeaveEvent extends CustomEventListener {
     @Override
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
         leaveLogging(event);
-        PostgresConnection.addLeaveTimestampInMemberTable(event.getMember());
     }
 
     private void leaveLogging(@NotNull GuildMemberRemoveEvent event){
@@ -30,7 +29,7 @@ public class MemberLeaveEvent extends CustomEventListener {
         User user = event.getUser();
         Member member = event.getMember();
 
-        eventGuild.retrieveAuditLogs().queueAfter(3, TimeUnit.SECONDS,list-> {
+        eventGuild.retrieveAuditLogs().queueAfter(2, TimeUnit.SECONDS,list-> {
             AuditLogEntry lastKickEntry = AuditLogUtil.getAuditLogEntryByUser(user,ActionType.KICK,list);
             AuditLogEntry lastBanEntry = AuditLogUtil.getAuditLogEntryByUser(user,ActionType.BAN,list);
             if (lastBanEntry != null && lastBanEntry.getType().equals(ActionType.BAN) && lastBanEntry.getTimeCreated().isAfter(OffsetDateTime.now().minusSeconds(4))) {
@@ -41,8 +40,8 @@ public class MemberLeaveEvent extends CustomEventListener {
                 PunishmentUtil.sendBanOrKickEmbed(lastKickEntry,member);
             } else {
                 ChannelUtil.logInLogChannel(user.getAsTag() + " leaved", eventGuild, LogChannelType.LEAVE);
+                PostgresConnection.addLeaveTimestampInMemberTable(member);
             }
-
         });
     }
 }

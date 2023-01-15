@@ -50,7 +50,7 @@ public class MessageDelete extends CustomEventListener {
 
         String message = PostgresConnection.getMessageContentByMessageId(event.getMessageIdLong());
 
-        if (!message.isEmpty()) {
+        if (message != null && !message.isEmpty()) {
 
             int i = 0;
             int j = 1;

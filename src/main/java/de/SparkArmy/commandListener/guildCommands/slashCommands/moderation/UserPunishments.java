@@ -5,6 +5,7 @@ import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -26,9 +27,9 @@ public class UserPunishments extends CustomCommandListener {
 
         Collection<String> strings = new ArrayList<>();
         Arrays.stream(PunishmentType.values())
-                .filter(x->!x.equals(PunishmentType.UNKNOW))
-                .filter(x->x.getName().startsWith(event.getFocusedOption().getValue()))
-                .toList().forEach(x->strings.add(x.getName()));
+                .filter(x -> !x.equals(PunishmentType.UNKNOW))
+                .filter(x -> x.getName().startsWith(event.getFocusedOption().getValue()))
+                .toList().forEach(x -> strings.add(x.getName()));
         event.replyChoiceStrings(strings).queue();
     }
 
@@ -36,12 +37,12 @@ public class UserPunishments extends CustomCommandListener {
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         if (!event.getName().equals("user-punishments")) return;
 
-        OptionMapping userOption = event.getOption("target-user");
+        OptionMapping userOption = event.getOption("target-member");
         OptionMapping typeOption = event.getOption("punishment-type");
         OptionMapping moderatorOption = event.getOption("target-moderator");
 
-        if (userOption != null){
-            getPunishmentsFromUser(event,userOption,typeOption);
+        if (userOption != null) {
+            getPunishmentsFromUser(event, userOption, typeOption);
         } else if (moderatorOption != null) {
             getPunishmentsExecutedByModerator(event);
         } else {
@@ -53,71 +54,77 @@ public class UserPunishments extends CustomCommandListener {
         event.reply("This function is not implement, please use the other option").setEphemeral(true).queue();
     }
 
-    private void getPunishmentsFromUser(SlashCommandInteractionEvent event,OptionMapping memberMapping,OptionMapping typeMapping) {
+    private void getPunishmentsFromUser(@NotNull SlashCommandInteractionEvent event, OptionMapping memberMapping, OptionMapping typeMapping) {
+        event.deferReply(true).queue();
         JSONArray values;
-        if (getPunishmentTypeFromOptionMapping(typeMapping).equals(PunishmentType.UNKNOW)){
+        if (getPunishmentTypeFromOptionMapping(typeMapping).equals(PunishmentType.UNKNOW)) {
             values = PostgresConnection.getPunishmentDataByOffender(memberMapping.getAsMember());
         } else {
-            values = PostgresConnection.getPunishmentDataByOffender(memberMapping.getAsMember(),getPunishmentTypeFromOptionMapping(typeMapping));
+            values = PostgresConnection.getPunishmentDataByOffender(memberMapping.getAsMember(), getPunishmentTypeFromOptionMapping(typeMapping));
         }
-        sendOverviewEmbed(values,event);
+        List<JSONObject> valuesAsJsonObject = new ArrayList<>();
+        if (values == null) {
+            sendOverviewEmbed(valuesAsJsonObject, event);
+        } else {
+            values.forEach(x -> {
+                JSONObject jObj = (JSONObject) x;
+                valuesAsJsonObject.add(jObj);
+            });
+            sendOverviewEmbed(valuesAsJsonObject, event);
+        }
     }
 
-    private PunishmentType getPunishmentTypeFromOptionMapping(OptionMapping mapping){
+    private PunishmentType getPunishmentTypeFromOptionMapping(OptionMapping mapping) {
         if (mapping == null) return PunishmentType.UNKNOW;
         return PunishmentType.getByName(mapping.getAsString());
     }
 
-    private void sendOverviewEmbed(JSONArray values,SlashCommandInteractionEvent event){
-        if (values == null){
-            event.reply("Database not connected!").setEphemeral(true).queue();
-            return;
-        } else if (values.isEmpty()) {
-            event.reply("For this user no entry's exist").setEphemeral(true).queue();
-            return;
-        }
+    private void sendOverviewEmbed(List<JSONObject> values, SlashCommandInteractionEvent event) {
+        new Thread(() -> {
+            if (values == null) {
+                event.reply("Database not connected!").setEphemeral(true).queue();
+                return;
+            } else if (values.isEmpty()) {
+                event.reply("For this user no entry's exist").setEphemeral(true).queue();
+                return;
+            }
+            List<MessageEmbed> embeds = new ArrayList<>();
+            OffsetDateTime t = OffsetDateTime.now();
+            int i;
+            int res = Math.ceilDiv(values.size(), 25);
+            for (i = 0; i < res; i++) {
+                List<JSONObject> sublist;
+                if (values.size() > 24) {
+                    sublist = values.subList(i, i + 24);
+                } else {
+                    sublist = values.subList(i, values.size());
+                }
+                EmbedBuilder embedBuilder = new EmbedBuilder();
+                embedBuilder.setTitle("User Punishments");
+                embedBuilder.setAuthor(jda.getSelfUser().getAsTag(), null, jda.getSelfUser().getEffectiveAvatarUrl());
+                embedBuilder.setTimestamp(t);
+                for (JSONObject o : sublist) {
+                    User moderator = jda.retrieveUserById(o.get("modId").toString()).complete();
+                    embedBuilder.addField(
+                            new MessageEmbed.Field(
 
-        List<Object> valuesAsList = values.toList();
+                                    o.get("punishment").toString() + " | " + o.get("timestamp").toString(),
+                                    String.format(
+                                            """
+                                                    Reason: %s
+                                                    Moderator: %s
+                                                    """,
+                                            o.get("reason").toString(), moderator != null ? moderator.getAsTag() : o.get("modId").toString()
+                                    ),
+                                    true)
+                    );
+                }
+                embeds.add(embedBuilder.build());
+            }
+            event.getHook().editOriginalEmbeds(embeds).queue();
+        }).start();
 
-        // TODO Display more than 24 punishments
+
         // TODO Implement the moderator option
-
-        List<Object> tempSublist;
-
-
-        EmbedBuilder punishmentsEmbed = new EmbedBuilder();
-        punishmentsEmbed.setTitle("Punishments from user");
-        // Get the offender as user and set an author
-//        User u = jda.getUserById(((JSONObject) tempSublist.get(0)).getString("mbrId"));
-//        if (u != null) {
-//            punishmentsEmbed.setAuthor(u.getAsTag(), null, u.getEffectiveAvatarUrl());
-//        }
-
-        List<MessageEmbed.Field> fields = new ArrayList<>();
-        for (int i = 0;i<values.length();i++){
-            JSONObject punishment = values.getJSONObject(i);
-            String title = String.format("%s || %s",punishment.getString("punishment"),punishment.get("timestamp").toString());
-            String value = String.format("""
-                    Moderator-Id: %s
-                    Reason: %s
-                    """,
-                    punishment.get("modId").toString(),
-                    punishment.get("reason").toString());
-
-            fields.add(new MessageEmbed.Field(title,value,false));
-        }
-
-        List<MessageEmbed.Field> finalList;
-
-        if (fields.size() > 24){
-//          Collections.reverse(fields);
-            finalList = fields.subList(0,24);
-        }
-        else{
-            finalList = fields;
-        }
-        finalList.forEach(punishmentsEmbed::addField);
-        punishmentsEmbed.setTimestamp(OffsetDateTime.now());
-        event.replyEmbeds(punishmentsEmbed.build()).setEphemeral(true).queue();
     }
 }

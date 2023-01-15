@@ -25,7 +25,7 @@ public class MessageUpdate extends CustomEventListener {
         int i = 0;
         int j = 1;
 
-        while (i < oldMessage.length()){
+        while (oldMessage != null && i < oldMessage.length()){
             String substring = oldMessage.substring(i,oldMessage.length()-i<1024 ? i + oldMessage.length() - i :i + 1023);
             i = oldMessage.length()-i<1024 ? i + oldMessage.length() - i : i + 1023;
             oldEmbed.addField("Old Part " + j,substring,false);

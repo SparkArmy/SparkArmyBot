@@ -249,7 +249,8 @@ public class ModmailListener extends CustomEventListener {
                                                                     }
                                                                 }
                                                             }));
-                                                    privateChannel.sendMessage("Your ticket was closed").queue(null,new ErrorHandler()
+                                                    // TODO Maybe change this message to an embed
+                                                    privateChannel.sendMessage("**Your ticket was closed**").queue(null,new ErrorHandler()
                                                             .ignore(ErrorResponse.CANNOT_SEND_TO_USER));
                                                 }
                                                 ,new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE,ErrorResponse.MISSING_ACCESS,ErrorResponse.MISSING_PERMISSIONS,ErrorResponse.UNKNOWN_CHANNEL))

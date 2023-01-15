@@ -110,6 +110,7 @@ public class TimedOperations {
             keyList.forEach(entrys::remove);
             FileHandler.writeValuesInFile(file,entrys);
         }catch (Exception e){
+        MainUtil.logger.error(e.getMessage());
         e.printStackTrace();
         }
     }

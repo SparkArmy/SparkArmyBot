@@ -59,6 +59,7 @@ public class PostgresConnection {
             logger.info("postgres-connected");
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return;
         }
@@ -71,6 +72,7 @@ public class PostgresConnection {
         try {
             return DriverManager.getConnection(url, properties);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -88,6 +90,7 @@ public class PostgresConnection {
             if (!rs.next()) return false;
             return rs.getLong(1) > 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return true;
         }
@@ -112,6 +115,7 @@ public class PostgresConnection {
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -128,6 +132,7 @@ public class PostgresConnection {
             prepStmt.setTimestamp(2, Timestamp.valueOf(g.getTimeCreated().toLocalDateTime()));
             prepStmt.execute();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -145,6 +150,7 @@ public class PostgresConnection {
             if (!rs.next()) return false;
             return rs.getLong(1) > 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return true;
         }
@@ -162,6 +168,7 @@ public class PostgresConnection {
             if (!rs.next()) return 0;
             return rs.getLong(1);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -181,6 +188,7 @@ public class PostgresConnection {
             prepStmt.setTimestamp(3, Timestamp.valueOf(u.getTimeCreated().toLocalDateTime()));
             prepStmt.execute();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -192,8 +200,8 @@ public class PostgresConnection {
             Connection conn = connection();
             if (conn == null) return;
             if (!isUserInUserTable(conn, u)) {
-                conn.close();
                 putDataInUserTable(conn, u);
+                conn.close();
             } else {
                 PreparedStatement prepStmt = conn.prepareStatement(
                         "UPDATE public.\"tblUser\"" +
@@ -205,6 +213,7 @@ public class PostgresConnection {
                 conn.close();
             }
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -225,8 +234,9 @@ public class PostgresConnection {
             prepStmt.setLong(2, m.getGuild().getIdLong());
             ResultSet rs = prepStmt.executeQuery();
             if (!rs.next()) return false;
-            return rs.getInt(1) > 0;
+            return rs.getLong(1) > 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return true;
         }
@@ -249,6 +259,7 @@ public class PostgresConnection {
             if (!rs.next()) return 0;
             return rs.getLong(1);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -265,6 +276,7 @@ public class PostgresConnection {
             if (!rs.next()) return 0;
             return rs.getLong(1);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -281,6 +293,7 @@ public class PostgresConnection {
             if (!rs.next()) return 0;
             return rs.getLong(1);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -309,6 +322,7 @@ public class PostgresConnection {
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -329,6 +343,7 @@ public class PostgresConnection {
             prepStmt.setTimestamp(3, Timestamp.valueOf(m.getTimeJoined().toLocalDateTime()));
             prepStmt.execute();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -355,6 +370,7 @@ public class PostgresConnection {
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -372,9 +388,10 @@ public class PostgresConnection {
             );
             prepStmt.setLong(1, memberId);
             ResultSet rs = prepStmt.executeQuery();
-            if (rs.next()) return false;
+            if (!rs.next()) return false;
             return rs.getLong(1) > 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return true;
         }
@@ -398,6 +415,7 @@ public class PostgresConnection {
             }
             return rs.getLong(1);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -425,6 +443,7 @@ public class PostgresConnection {
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -451,6 +470,7 @@ public class PostgresConnection {
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -479,6 +499,7 @@ public class PostgresConnection {
             conn.close();
             return id;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return 1;
         }
@@ -496,6 +517,7 @@ public class PostgresConnection {
             if (!rs.next()) return null;
             return rs.getString(1);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -531,9 +553,9 @@ public class PostgresConnection {
                 row.put("reason", rs.getString(6));
                 results.put(row);
             }
-            logger.info(results.toString());
             return results;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -568,9 +590,9 @@ public class PostgresConnection {
                 row.put("timestamp", rs.getTimestamp(5));
                 results.put(row);
             }
-            logger.info(results.toString());
             return results;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -600,6 +622,7 @@ public class PostgresConnection {
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -618,20 +641,21 @@ public class PostgresConnection {
             if (!rs.next()) return false;
             return rs.getLong(1) > 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return true;
         }
     }
 
     // get msgContent from the tblMessage by msgId
-    public static String getMessageContentByMessageId(long msgId) {
-        if (postgresDisabled) return "";
+    public static @Nullable String getMessageContentByMessageId(long msgId) {
+        if (postgresDisabled) return null;
         try {
             Connection conn = connection();
-            if (conn == null) return "";
+            if (conn == null) return null;
             if (!isMessageIdInMessageTable(conn, msgId)) {
                 conn.close();
-                return "";
+                return null;
             }
             PreparedStatement prepStmt = conn.prepareStatement(
                     "SELECT \"msgContent\" FROM public.\"tblMessage\" WHERE \"msgId\" = ?;"
@@ -640,14 +664,15 @@ public class PostgresConnection {
             ResultSet rs = prepStmt.executeQuery();
             if (!rs.next()) {
                 conn.close();
-                return "";
+                return null;
             }
             String content = rs.getString(1);
             conn.close();
             return content;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
-            return "";
+            return null;
         }
     }
 
@@ -671,6 +696,7 @@ public class PostgresConnection {
             conn.close();
             return userId;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -695,6 +721,7 @@ public class PostgresConnection {
             conn.close();
             return contentUrls;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -735,6 +762,7 @@ public class PostgresConnection {
             putDataInMessageAttachmentTable(msg);
 
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -758,11 +786,13 @@ public class PostgresConnection {
                     prepStmt.setString(2, x.toString());
                     prepStmt.execute();
                 } catch (SQLException e) {
+                    logger.error(e.getMessage());
                     e.printStackTrace();
                 }
             });
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
 
@@ -781,14 +811,15 @@ public class PostgresConnection {
                 return;
             }
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "UPDATE public.\"tblMessage\"" +
-                            "SET \"msgContent\" = ?" +
+                    "UPDATE public.\"tblMessage\" " +
+                            "SET \"msgContent\" = ? " +
                             "WHERE \"msgId\" = ?;"
             );
             prepStmt.setString(1, msg.getContentRaw());
             prepStmt.setLong(2, msg.getIdLong());
             prepStmt.execute();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -807,6 +838,7 @@ public class PostgresConnection {
             if (!rs.next()) return true;
             return rs.getLong(1) == 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -840,6 +872,7 @@ public class PostgresConnection {
             }
             return rs.getString(1);
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -873,6 +906,7 @@ public class PostgresConnection {
             }
             return results;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return new JSONArray();
         }
@@ -905,6 +939,7 @@ public class PostgresConnection {
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -923,6 +958,7 @@ public class PostgresConnection {
             if (!rs.next()) return false;
             return rs.getLong(1) > 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return true;
         }
@@ -946,6 +982,7 @@ public class PostgresConnection {
 
             prepStmt.execute();
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -967,6 +1004,7 @@ public class PostgresConnection {
             if (!rs.next()) return false;
             return rs.getLong(1) > 0;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
             return true;
         }
@@ -1002,11 +1040,13 @@ public class PostgresConnection {
                     prepStmt.setLong(2, r.getIdLong());
                     prepStmt.execute();
                 } catch (SQLException ex) {
+                    logger.error(ex.getMessage());
                     ex.printStackTrace();
                 }
             });
             conn.close();
         } catch (SQLException ex) {
+            logger.error(ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -1044,6 +1084,7 @@ public class PostgresConnection {
             });
             conn.close();
         } catch (SQLException ex) {
+            logger.error(ex.getMessage());
             ex.printStackTrace();
         }
     }

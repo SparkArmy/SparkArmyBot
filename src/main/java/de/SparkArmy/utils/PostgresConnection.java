@@ -2,6 +2,7 @@ package de.SparkArmy.utils;
 
 import de.SparkArmy.utils.jda.MessageUtil;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
@@ -12,6 +13,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -242,6 +244,27 @@ public class PostgresConnection {
         }
     }
 
+    private static boolean isMemberDataInMemberTable(Connection conn, long memberId, long guildId) {
+        if (postgresDisabled) return true;
+        try {
+            PreparedStatement prepStmt = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM public.\"tblMember\" " +
+                            "WHERE \"fk_mbrUserId\" = ? " +
+                            "AND \"fk_mbrGuildId\" = ? " +
+                            "AND \"mbrLeaveTime\" IS NULL;"
+            );
+            prepStmt.setLong(1, memberId);
+            prepStmt.setLong(2, guildId);
+            ResultSet rs = prepStmt.executeQuery();
+            if (!rs.next()) return false;
+            return rs.getLong(1) > 0;
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
+            e.printStackTrace();
+            return true;
+        }
+    }
+
     // get member ids from different providers
     private static long getDatabaseMemberIdByDiscordUserId(Connection conn, Member m) {
         if (postgresDisabled) return 0;
@@ -255,6 +278,28 @@ public class PostgresConnection {
             );
             prepStmt.setLong(1, m.getIdLong());
             prepStmt.setLong(2, m.getGuild().getIdLong());
+            ResultSet rs = prepStmt.executeQuery();
+            if (!rs.next()) return 0;
+            return rs.getLong(1);
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    private static long getDatabaseMemberIdByDiscordUserIdAndGuildId(Connection conn, long memberId, long guildId){
+        if (postgresDisabled) return 0;
+        try {
+            putDataInMemberTable(conn,memberId,guildId);
+            PreparedStatement prepStmt = conn.prepareStatement(
+                    "SELECT \"mbrId\" FROM public.\"tblMember\"" +
+                            "WHERE \"fk_mbrUserId\" = ? " +
+                            "AND \"fk_mbrGuildId\" = ? " +
+                            "AND \"mbrLeaveTime\" IS NULL;"
+            );
+            prepStmt.setLong(1, memberId);
+            prepStmt.setLong(2, guildId);
             ResultSet rs = prepStmt.executeQuery();
             if (!rs.next()) return 0;
             return rs.getLong(1);
@@ -327,7 +372,7 @@ public class PostgresConnection {
         }
     }
 
-    public static void putDataInMemberTable(Connection conn, Member m) {
+    private static void putDataInMemberTable(Connection conn, Member m) {
         if (postgresDisabled) return;
         try {
             putDataInUserTable(conn, m.getUser());
@@ -348,14 +393,39 @@ public class PostgresConnection {
         }
     }
 
-    // Add leave timestamp to the specific row in tblMember
-    public static void addLeaveTimestampInMemberTable(Member m) {
+    private static void putDataInMemberTable(Connection conn,long memberId, long guildId){
         if (postgresDisabled) return;
+        JDA jda = MainUtil.jda;
+           User u = jda.retrieveUserById(memberId).complete();
+                try{
+                putDataInUserTable(conn,u);
+                putDataInGuildTable(conn, jda.getGuildById(guildId));
+
+                if (isMemberDataInMemberTable(conn,memberId,guildId)) return;
+                PreparedStatement prepStmt = conn.prepareStatement(
+                        "INSERT INTO public.\"tblMember\"(" +
+                                "\"fk_mbrUserId\",\"fk_mbrGuildId\",\"mbrJoinTime\") VALUES" +
+                                "(?,?,?);"
+                );
+                prepStmt.setLong(1, memberId);
+                prepStmt.setLong(2, guildId);
+                prepStmt.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+                prepStmt.execute();
+            } catch (SQLException e) {
+            logger.error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Add leave timestamp to the specific row in tblMember
+    public static void addLeaveTimestampInMemberTable(long memberId, long guildId) {
+        if (postgresDisabled) return;
+        new Thread(()->{
         try {
             Connection conn = connection();
             if (conn == null) return;
-            long memberId = getDatabaseMemberIdByDiscordUserId(conn, m);
-            if (memberId == 0) {
+            long mbrId = getDatabaseMemberIdByDiscordUserIdAndGuildId(conn, memberId,guildId);
+            if (mbrId == 0) {
                 conn.close();
                 return;
             }
@@ -366,13 +436,14 @@ public class PostgresConnection {
             );
             OffsetDateTime t = OffsetDateTime.now();
             prepStmt.setTimestamp(1, Timestamp.valueOf(t.toLocalDateTime()));
-            prepStmt.setLong(2, memberId);
+            prepStmt.setLong(2, mbrId);
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {
             logger.error(e.getMessage());
             e.printStackTrace();
         }
+        }).start();
     }
 
     // tblModerator related methods

@@ -40,7 +40,7 @@ public class MemberLeaveEvent extends CustomEventListener {
                 PunishmentUtil.sendBanOrKickEmbed(lastKickEntry,member);
             } else {
                 ChannelUtil.logInLogChannel(user.getAsTag() + " leaved", eventGuild, LogChannelType.LEAVE);
-                PostgresConnection.addLeaveTimestampInMemberTable(member);
+                PostgresConnection.addLeaveTimestampInMemberTable(user.getIdLong(),eventGuild.getIdLong());
             }
         });
     }

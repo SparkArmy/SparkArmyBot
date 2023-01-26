@@ -1,10 +1,9 @@
-package de.SparkArmy.timedOperations;
+package de.SparkArmy.utils;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.notifications.NotificationUtil;
 import de.SparkArmy.notifications.YouTubeApi;
-import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.JDA;
@@ -23,7 +22,7 @@ public class TimedOperations {
     private static final JDA jda = MainUtil.jda;
     private static final ConfigController controller = MainUtil.controller;
 
-    protected static void removeOldTemporaryPunishments() {
+    public static void removeOldTemporaryPunishments() {
         try {
 
             File directory = FileHandler.getDirectoryInUserDirectory("botstuff/timed-punishments");
@@ -115,7 +114,7 @@ public class TimedOperations {
         }
     }
 
-    protected static void checkForNotificationUpdates() {
+    public static void checkForNotificationUpdates() {
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff/notifications");
         if (directory == null) return;
         List<File> files = FileHandler.getFilesInDirectory(directory);
@@ -143,7 +142,7 @@ public class TimedOperations {
         });
     }
 
-    protected static void updateYouTubeSubscriptions(){
+    public static void updateYouTubeSubscriptions(){
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff/notifications");
         if (directory == null) return;
         List<File> files = FileHandler.getFilesInDirectory(directory);
@@ -169,7 +168,7 @@ public class TimedOperations {
         });
     }
 
-    protected static void updateStatusPhrase(){
+    public static void updateStatusPhrase(){
         File directory = FileHandler.getDirectoryInUserDirectory("botstuff");
         assert directory != null;
         File file = FileHandler.getFileInDirectory(directory,"status.json");
@@ -206,7 +205,7 @@ public class TimedOperations {
         jda.getPresence().setPresence(OnlineStatus.ONLINE,statusActivity);
     }
 
-    protected static void updateUserCount(){
+    public static void updateUserCount(){
         jda.getGuilds().forEach(guild->{
             if (guild.equals(MainUtil.storageServer)) return;
             JSONObject config = controller.getSpecificGuildConfig(guild,GuildConfigType.MAIN);
@@ -220,7 +219,7 @@ public class TimedOperations {
         });
     }
 
-    protected static void deleteOldLogs(){
+    public static void deleteOldLogs(){
         File directory = FileHandler.getDirectoryInUserDirectory("logs/archived");
         if (directory == null || !directory.exists()) return;
         File[] files = directory.listFiles();

@@ -6,7 +6,6 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
 import de.SparkArmy.springBoot.LoggingController;
 import de.SparkArmy.springBoot.SpringApp;
-import de.SparkArmy.timedOperations.TimedOperationsExecutor;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.PostgresConnection;
 import net.dv8tion.jda.api.JDA;
@@ -66,8 +65,6 @@ public class Main {
         // Add a static JDA
         MainUtil.jda = this.jda;
 
-        // Initialize TimedOperations
-        MainUtil.timedOperations = new TimedOperationsExecutor();
 
         // Get StorageServer
         MainUtil.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));

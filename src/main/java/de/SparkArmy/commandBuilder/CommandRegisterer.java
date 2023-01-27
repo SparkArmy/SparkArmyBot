@@ -23,7 +23,10 @@ public enum CommandRegisterer {
         });
 
         // Moderation related commands
-        Collection<CommandData> moderationCommands = SlashCommands.guildSlashModerationCommands();
+        Collection<CommandData> moderationCommands = new ArrayList<>(){{
+            addAll(SlashCommands.guildSlashModerationCommands());
+            addAll(UserCommands.modUserCommands());
+        }};
         moderationCommands.forEach(x -> {
             x.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS));
             x.setGuildOnly(true);
@@ -61,8 +64,6 @@ public enum CommandRegisterer {
             addAll(adminCommands);
             addAll(generalCommands);
         }};
-
-        if (jda.retrieveCommands().complete().equals(commands)) return;
 
         jda.updateCommands().addCommands(commands).queue();
         MainUtil.logger.info("Commands are registered");

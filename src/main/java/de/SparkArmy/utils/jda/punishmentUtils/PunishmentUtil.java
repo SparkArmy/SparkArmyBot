@@ -131,7 +131,7 @@ public class PunishmentUtil {
         // Checks guild and if the user a member of server
         Guild guild = event.getGuild();
         if (guild == null) return;
-        Member offender = Objects.requireNonNull(event.getOption("target_user")).getAsMember();
+        Member offender = event.getTargetMember();
         if (offender == null) {
             event.getHook().editOriginal("Please give a valid target").queue();
             return;
@@ -158,41 +158,21 @@ public class PunishmentUtil {
         }
 
 
-        // Timed Punishment
-        OffsetDateTime removeTime = null;
-        OptionMapping duration = event.getOption("duration");
-        OptionMapping timeUnit = event.getOption("time_unit");
-        // Check if the Duration not null
-        if (duration != null || timeUnit != null) {
-            // Create a remove time
-            removeTime = PunishmentUtil.getRemoveTime(duration, timeUnit);
-            if (removeTime == null) {
-                event.getHook().editOriginal("Please check the time_unit parameter").queue();
-                return;
-            }
-        }
+        // Set PunishmentTime to 6 Weeks
+        OffsetDateTime removeTime = OffsetDateTime.now().plusWeeks(6);
 
-        // Reason strings
-        OptionMapping reason = event.getOption("reason");
-        String reasonString;
-        if (reason == null) {
-            reasonString = "No reason was provided";
-        } else {
-            reasonString = reason.getAsString();
-        }
+        String reasonString = "No reason was provided";
 
         // Create standard Embeds without timestamps
         var userEmbeds = new Object() {
-            EmbedBuilder userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reasonString, PunishmentType.getByName(eventName));
+            EmbedBuilder userEmbed;
         };
-        EmbedBuilder serverEmbed = PunishmentEmbeds.punishmentLogEmbed(guild, reasonString, offender.getUser(), moderator.getUser(), PunishmentType.getByName(eventName));
+        EmbedBuilder serverEmbed;
 
         // if the remove time not null create a timed-punishment and set embeds with a timestamp
-        if (removeTime != null) {
-            new TemporaryPunishment(offender.getUser(), PunishmentType.getByName(eventName), removeTime, guild);
-            userEmbeds.userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reasonString, removeTime, PunishmentType.getByName(eventName));
-            serverEmbed = PunishmentEmbeds.punishmentLogEmbed(guild, reasonString, offender.getUser(), moderator.getUser(), removeTime, PunishmentType.getByName(eventName));
-        }
+        new TemporaryPunishment(offender.getUser(), PunishmentType.getByName(eventName), removeTime, guild);
+        userEmbeds.userEmbed = PunishmentEmbeds.punishmentUserEmbed(guild, reasonString, removeTime, PunishmentType.getByName(eventName));
+        serverEmbed = PunishmentEmbeds.punishmentLogEmbed(guild, reasonString, offender.getUser(), moderator.getUser(), removeTime, PunishmentType.getByName(eventName));
 
         // log the punishment in mod-log
         ChannelUtil.logInLogChannel(serverEmbed, guild, LogChannelType.MOD);
@@ -345,31 +325,36 @@ public class PunishmentUtil {
             return;
         }
         String reason;
+        reason = entry.getReason();
         JSONObject config = controller.getSpecificGuildConfig(entry.getGuild(), GuildConfigType.MAIN);
 
 
         JSONObject punishments = config.getJSONObject("punishments");
         switch (entry.getType()){
             case KICK -> {
-                if (config.isNull("punishments")){
-                    reason = "No reason provided";
-                }else {
-                    reason = punishments.getJSONObject("kick").getString("standard-reason");
+                if (reason == null) {
+                    if (config.isNull("punishments")) {
+                        reason = "No reason provided";
+                    } else {
+                        reason = punishments.getJSONObject("kick").getString("standard-reason");
+                    }
                 }
 
                 PostgresConnection.putDataInPunishmentTable(offender,moderator,PunishmentType.KICK,reason);
-                PostgresConnection.addLeaveTimestampInMemberTable(offender);
+                PostgresConnection.addLeaveTimestampInMemberTable(offender.getIdLong(),entry.getGuild().getIdLong());
                 ChannelUtil.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender.getUser(),moderator.getUser(),PunishmentType.KICK), entry.getGuild(),LogChannelType.MOD);
             }
             case BAN -> {
-                if (config.isNull("punishments")){
-                    reason = "No reason provided";
-                }else {
-                    reason = punishments.getJSONObject("ban").getString("standard-reason");
+                if (reason == null) {
+                    if (config.isNull("punishments")) {
+                        reason = "No reason provided";
+                    } else {
+                        reason = punishments.getJSONObject("ban").getString("standard-reason");
+                    }
                 }
 
                 PostgresConnection.putDataInPunishmentTable(offender,moderator,PunishmentType.BAN,reason);
-                PostgresConnection.addLeaveTimestampInMemberTable(offender);
+                PostgresConnection.addLeaveTimestampInMemberTable(offender.getIdLong(),entry.getGuild().getIdLong());
                 ChannelUtil.logInLogChannel(PunishmentEmbeds.punishmentLogEmbed(entry.getGuild(), entry.getReason() == null ? reason : entry.getReason(), offender.getUser(),moderator.getUser(),PunishmentType.BAN), entry.getGuild(),LogChannelType.MOD);
             }
         }

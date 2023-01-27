@@ -18,6 +18,14 @@ enum UserCommands {
         }};
     }
 
+    @Contract(" -> new")
+    static @NotNull Collection<CommandData> modUserCommands(){
+        return new ArrayList<>(){{
+           add(Commands.context(Command.Type.USER,"warn"));
+           add(Commands.context(Command.Type.USER,"mute"));
+        }};
+    }
+
     @Contract(value = " -> new", pure = true)
     static @NotNull Collection<CommandData> generalUserCommands(){
         return new ArrayList<>(){{

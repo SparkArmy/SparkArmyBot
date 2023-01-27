@@ -5,12 +5,13 @@ import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class Warn extends CustomCommandListener{
+public class SlashBan extends CustomCommandListener {
+
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         String eventName = event.getName();
-        if (!eventName.equals("warn")) return;
+        if (!eventName.equals("ban")) return;
         PunishmentUtil.executePunishment(event);
+        PunishmentUtil.bannedOrKickedUsers.add(event.getUser().getId() + "," + event.getId());
     }
-
 }

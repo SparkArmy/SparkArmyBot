@@ -7,6 +7,8 @@ import de.SparkArmy.commandListener.guildCommands.slashCommands.admin.*;
 import de.SparkArmy.commandListener.guildCommands.slashCommands.moderation.*;
 import de.SparkArmy.commandListener.guildCommands.userCommands.admin.ModUnmodMember;
 import de.SparkArmy.commandListener.guildCommands.userCommands.general.RoleRemove;
+import de.SparkArmy.commandListener.guildCommands.userCommands.moderation.UserContextMute;
+import de.SparkArmy.commandListener.guildCommands.userCommands.moderation.UserContextWarn;
 import de.SparkArmy.utils.MainUtil;
 import net.dv8tion.jda.api.JDA;
 
@@ -28,10 +30,10 @@ public class CommandListenerRegisterer {
             commands.add(new ModmailCommand());
 
             // Moderation Commands
-            commands.add(new Warn());
-            commands.add(new Mute());
-            commands.add(new Ban());
-            commands.add(new Kick());
+            commands.add(new SlashWarn());
+            commands.add(new SlashMute());
+            commands.add(new SlashBan());
+            commands.add(new SlashKick());
             commands.add(new UserPunishments());
             commands.add(new UserNicknames());
 
@@ -51,6 +53,10 @@ public class CommandListenerRegisterer {
         // User Commands
             // Admin Commands
             commands.add(new ModUnmodMember());
+
+            // Moderation Commands
+            commands.add(new UserContextWarn());
+            commands.add(new UserContextMute());
 
             // General Commands
             commands.add(new RoleRemove());

@@ -1,7 +1,7 @@
 package de.SparkArmy.eventListener.guildEvents.commands;
 
 import de.SparkArmy.eventListener.CustomEventListener;
-import de.SparkArmy.utils.jda.FileHandler;
+import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.jda.ReactionRoleUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Role;

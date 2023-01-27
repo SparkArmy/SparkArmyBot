@@ -4,7 +4,6 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.notifications.NotificationUtil;
 import de.SparkArmy.notifications.YouTubeApi;
-import de.SparkArmy.utils.jda.FileHandler;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;

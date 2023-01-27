@@ -1,6 +1,6 @@
 package de.SparkArmy.notifications;
 
-import de.SparkArmy.utils.jda.FileHandler;
+import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.RequestUtil;
 import net.dv8tion.jda.api.entities.Guild;

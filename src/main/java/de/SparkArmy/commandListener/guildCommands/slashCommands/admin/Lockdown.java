@@ -2,7 +2,7 @@ package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
 import de.SparkArmy.commandListener.CustomCommandListener;
 import de.SparkArmy.utils.jda.ChannelUtil;
-import de.SparkArmy.utils.jda.FileHandler;
+import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

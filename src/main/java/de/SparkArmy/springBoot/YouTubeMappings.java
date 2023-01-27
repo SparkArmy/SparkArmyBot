@@ -3,7 +3,7 @@ package de.SparkArmy.springBoot;
 
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
-import de.SparkArmy.utils.jda.FileHandler;
+import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;

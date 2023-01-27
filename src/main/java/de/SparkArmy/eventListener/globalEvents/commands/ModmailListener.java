@@ -4,7 +4,7 @@ import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.LoggingMarker;
 import de.SparkArmy.utils.MainUtil;
-import de.SparkArmy.utils.jda.FileHandler;
+import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;

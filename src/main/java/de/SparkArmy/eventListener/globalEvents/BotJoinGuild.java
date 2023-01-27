@@ -4,7 +4,6 @@ import de.SparkArmy.eventListener.CustomEventListener;
 import de.SparkArmy.utils.PostgresConnection;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
-import net.dv8tion.jda.api.events.guild.UnavailableGuildJoinedEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class BotJoinGuild extends CustomEventListener {
@@ -15,13 +14,8 @@ public class BotJoinGuild extends CustomEventListener {
         guildJoin(guild);
     }
 
-    @Override
-    public void onUnavailableGuildJoined(@NotNull UnavailableGuildJoinedEvent event) {
-       Guild guild = jda.getGuildById(event.getGuildId());
-       guildJoin(guild);
-    }
-
     private void guildJoin(Guild guild){
+        if (guild == null) return;
         // create a guild config
         getGuildMainConfig(guild);
         // add the guild to database

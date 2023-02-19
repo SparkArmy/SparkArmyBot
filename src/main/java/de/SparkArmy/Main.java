@@ -78,6 +78,7 @@ public class Main {
         new CommandListenerRegisterer();
         // Add EventListener to JDA
         new EventListenerRegisterer();
+
     }
 
     public static void main(String[] args) {

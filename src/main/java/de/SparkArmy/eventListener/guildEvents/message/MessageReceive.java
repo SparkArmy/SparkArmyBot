@@ -20,6 +20,7 @@ public class MessageReceive extends CustomEventListener {
         if (event.getAuthor().isSystem()) return;
         if (event.getMember() == null) return;
 
+
         PostgresConnection.putDataInMemberTable(event.getMember());
         PostgresConnection.putDataInMessageTable(event.getMessage());
     }

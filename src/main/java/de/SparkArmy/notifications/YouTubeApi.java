@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-@SuppressWarnings("unused")
+
 public class YouTubeApi {
 
     private static final String apiKey = MainUtil.mainConfig.getJSONObject("youtube").getString("youtube-api-key");

@@ -41,19 +41,26 @@ public class YouTubeMappings {
         if (directory == null) return;
         if (s.isEmpty()) return;
 
-        String userId = XML.toJSONObject(s).getJSONObject("feed").getJSONObject("entry").getString("yt:channelId");
-        String videoId = XML.toJSONObject(s).getJSONObject("feed").getJSONObject("entry").getString("yt:videoId");
+        JSONObject requestBody = XML.toJSONObject(s);
+        if (requestBody.isEmpty() || requestBody.isNull("feed")) return;
+        JSONObject feed = requestBody.getJSONObject("feed");
+        if (feed.isEmpty() || feed.isNull("entry")) return;
+        JSONObject entry = feed.getJSONObject("entry");
+        if (entry.isEmpty() || entry.isNull("yt:channelId") || entry.isNull("yt:videoId")) return;
 
-        if (sentVideos.containsKey(userId)){
-           if (sentVideos.get(userId).equals(videoId)) return;
+        String userId = entry.getString("yt:channelId");
+        String videoId = entry.getString("yt:videoId");
+
+        if (sentVideos.containsKey(userId)) {
+            if (sentVideos.get(userId).equals(videoId)) return;
         }
 
-        sentVideos.put(userId,videoId);
+        sentVideos.put(userId, videoId);
         JDA jda = MainUtil.jda;
         jda.getGuilds().forEach(guild -> {
             if (guild.equals(MainUtil.storageServer)) return;
-            String filename = String.format("%s.json",guild.getId());
-            File configFile = FileHandler.getFileInDirectory(directory,filename);
+            String filename = String.format("%s.json", guild.getId());
+            File configFile = FileHandler.getFileInDirectory(directory, filename);
             if (!configFile.exists()) return;
             String contentString = FileHandler.getFileContent(configFile);
             if (contentString == null) return;
@@ -63,7 +70,7 @@ public class YouTubeMappings {
             if (!watchlist.keySet().contains(userId)) return;
             JSONObject userSpecs = watchlist.getJSONObject(userId);
             StringBuilder rolesString = new StringBuilder();
-            userSpecs.getJSONArray("roles").forEach(x->{
+            userSpecs.getJSONArray("roles").forEach(x -> {
                 Role role = guild.getRoleById(x.toString());
                 if (role == null) return;
                 rolesString.append(role.getAsMention()).append(",");

@@ -1,7 +1,7 @@
 package de.SparkArmy;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
-import de.SparkArmy.commandListener.CommandListenerRegisterer;
+import de.SparkArmy.commandListener.CommandDispatcher;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.eventListener.EventListenerRegisterer;
 import de.SparkArmy.springBoot.LoggingController;
@@ -20,15 +20,19 @@ import org.springframework.boot.SpringApplication;
 public class Main {
 
 
-    private JDA jda;
+    public JDA jda;
+
+    public final Logger logger;
+    public final ConfigController controller;
+    public final EventWaiter waiter;
 
     public Main() {
         // Initialize Logger variables
-        Logger logger = LoggingController.logger;
+        this.logger = LoggingController.logger;
         MainUtil.logger = logger;
 
         // Initialize ConfigController variables and the mainConfig
-        ConfigController controller = new ConfigController(this);
+        this.controller = new ConfigController(this);
         MainUtil.controller = controller;
         JSONObject mainConfig = controller.getMainConfigFile();
         MainUtil.mainConfig = mainConfig;
@@ -51,7 +55,7 @@ public class Main {
         }
 
         // Add a EventWaiter
-        EventWaiter waiter = new EventWaiter();
+        this.waiter = new EventWaiter();
         MainUtil.waiter = waiter;
         jda.addEventListener(waiter);
 
@@ -68,14 +72,14 @@ public class Main {
 
         // Get StorageServer
         MainUtil.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
-        if (MainUtil.storageServer == null){
+        if (MainUtil.storageServer == null) {
             logger.warn("No storage-server registered or the bot is not on storage-server");
         }
 
 //        CommandRegisterer.registerCommands();
 
-        // Add CommandListener to JDA
-        new CommandListenerRegisterer();
+        jda.addEventListener(new CommandDispatcher(this));
+
         // Add EventListener to JDA
         new EventListenerRegisterer();
 

@@ -114,31 +114,36 @@ public class ConfigController {
         if (0 == Objects.requireNonNull(directory.listFiles()).length){
             FileHandler.createFile(directory,"config.json");
             FileHandler.createFile(directory,"rules.json");
-            FileHandler.createFile(directory,"highlighted-keywords.json");
+            FileHandler.createFile(directory, "highlighted-keywords.json");
 
-            FileHandler.writeValuesInFile(directory,"config.json", this.guildConfigBlank());
-            FileHandler.writeValuesInFile(directory,"rules.json",new JSONObject());
-            FileHandler.writeValuesInFile(directory,"highlighted-keywords.json",new JSONObject());
+            FileHandler.writeValuesInFile(directory, "config.json", this.guildConfigBlank());
+            FileHandler.writeValuesInFile(directory, "rules.json", new JSONObject());
+            FileHandler.writeValuesInFile(directory, "highlighted-keywords.json", new JSONObject());
         }
 
         return List.of(Objects.requireNonNull(directory.listFiles()));
     }
 
-    public JSONObject getSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type){
-        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId())) return null;
+    public JSONObject getSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type) {
+        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId()))
+            return null;
         return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(this.getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0).getAbsolutePath())));
     }
 
-    public void writeInSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type, JSONObject value){
-        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId())) return;
-        File configFile = getGuildConfigs(guild).stream().filter(f->f.getName().equals(type.getName())).toList().get(0);
+    public JSONObject getGuildMainConfig(Guild guild) {
+        return this.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
+    }
 
-        FileHandler.writeValuesInFile(configFile.getAbsolutePath(),value);
+    public void writeInSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type, JSONObject value) {
+        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId())) return;
+        File configFile = getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0);
+
+        FileHandler.writeValuesInFile(configFile.getAbsolutePath(), value);
     }
 
     @Contract(" -> new")
     private @NotNull JSONObject guildConfigBlank() {
-            return new JSONObject();
+        return new JSONObject();
     }
 
 }

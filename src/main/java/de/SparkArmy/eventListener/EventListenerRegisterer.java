@@ -4,6 +4,9 @@ import de.SparkArmy.eventListener.globalEvents.BotJoinGuild;
 import de.SparkArmy.eventListener.globalEvents.BotLeaveGuild;
 import de.SparkArmy.eventListener.globalEvents.commands.FeedbackListener;
 import de.SparkArmy.eventListener.globalEvents.commands.ModmailListener;
+import de.SparkArmy.eventListener.guildEvents.autoComplete.FeedbackAutoComplete;
+import de.SparkArmy.eventListener.guildEvents.autoComplete.LogChannelConfigAutoComplete;
+import de.SparkArmy.eventListener.guildEvents.autoComplete.UserPunishmentsAutoComplete;
 import de.SparkArmy.eventListener.guildEvents.channel.MediaOnlyFunction;
 import de.SparkArmy.eventListener.guildEvents.commands.*;
 import de.SparkArmy.eventListener.guildEvents.member.*;
@@ -61,6 +64,11 @@ public class EventListenerRegisterer {
         events.add(new MessageUpdate());
         events.add(new MessageDelete());
         events.add(new Reactions());
+
+        // Auto Complete Events
+        events.add(new FeedbackAutoComplete());
+        events.add(new UserPunishmentsAutoComplete());
+        events.add(new LogChannelConfigAutoComplete());
 
 
         this.events.forEach(this.jda::addEventListener);

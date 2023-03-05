@@ -1,6 +1,8 @@
 package de.SparkArmy.commandListener.guildCommands.userCommands.general;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.UserCommand;
+import de.SparkArmy.controller.ConfigController;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import org.jetbrains.annotations.NotNull;
@@ -8,25 +10,25 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 
-public class RoleRemove extends CustomCommandListener {
+public class RoleRemove extends UserCommand {
+
     @Override
-    public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
-        if (!event.getName().equals("Remove Roles")) return;
-        if (event.getGuild() == null){
+    public void dispatch(@NotNull UserContextInteractionEvent event, JDA jda, ConfigController controller) {
+        if (event.getGuild() == null) {
             event.reply("Please use this command on a guild").setEphemeral(true).queue();
             return;
         }
 
-        if (event.getTargetMember() == null){
+        if (event.getTargetMember() == null) {
             event.reply("Ups something went wrong, please try again").setEphemeral(true).queue();
             return;
         }
 
-        if (!Objects.equals(event.getMember(), event.getTargetMember())){
+        if (!Objects.equals(event.getMember(), event.getTargetMember())) {
             event.reply("You can only remove roles from yourself").setEphemeral(true).queue();
             return;
         }
-        JSONObject config = getGuildMainConfig(event.getGuild());
+        JSONObject config = controller.getGuildMainConfig(event.getGuild());
 
         event.getTargetMember().getRoles().stream().filter(x->{
             // Filter moderation roles
@@ -40,20 +42,25 @@ public class RoleRemove extends CustomCommandListener {
             if (x.isPublicRole()) return true;
             if (config.isNull("punishments")) return true;
             JSONObject punishments = config.getJSONObject("punishments");
-            return punishments.keySet().stream().noneMatch(y->{
+            return punishments.keySet().stream().noneMatch(y -> {
                 JSONObject punishment = punishments.getJSONObject(y);
                 return !punishment.isNull("role-id") && !punishment.getString("role-id").isEmpty() && punishment.getString("role-id").equals(x.getId());
             });
-        }).filter(x->{
+        }).filter(x -> {
             // Filter permissions
             if (x.isPublicRole()) return true;
             if (x.getPermissions().contains(Permission.ADMINISTRATOR)) return false;
             return !x.getPermissions().contains(Permission.KICK_MEMBERS);
-        }).filter(x->{
+        }).filter(x -> {
             // Filter managed roles
             return !x.isManaged();
-        }).forEach(x->event.getGuild().removeRoleFromMember(event.getTargetMember().getUser(),x).queue());
+        }).forEach(x -> event.getGuild().removeRoleFromMember(event.getTargetMember().getUser(), x).queue());
 
         event.reply("All roles was removed from you").setEphemeral(true).queue();
+    }
+
+    @Override
+    public String getName() {
+        return "Remove Roles";
     }
 }

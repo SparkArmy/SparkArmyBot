@@ -1,16 +1,20 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.SlashCommand;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentUtil;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.jetbrains.annotations.NotNull;
 
-public class SlashKick extends CustomCommandListener {
+public class SlashKick extends SlashCommand {
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        String eventName = event.getName();
-        if (!eventName.equals("kick")) return;
+    public String getName() {
+        return "kick";
+    }
+
+    @Override
+    public void dispatch(SlashCommandInteractionEvent event, JDA jda, ConfigController controller) {
         PunishmentUtil.executePunishment(event);
         PunishmentUtil.bannedOrKickedUsers.add(event.getUser().getId() + "," + event.getId());
     }

@@ -1,6 +1,8 @@
 package de.SparkArmy.commandListener.guildCommands.userCommands.admin;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.UserCommand;
+import de.SparkArmy.controller.ConfigController;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -11,17 +13,17 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class ModUnmodMember extends CustomCommandListener {
+public class ModUnmodMember extends UserCommand {
+
     @Override
-    public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
-        if (!event.getName().equals("Mod/Unmod Member")) return;
+    public void dispatch(@NotNull UserContextInteractionEvent event, JDA jda, ConfigController controller) {
         Guild guild = event.getGuild();
         if (guild == null) {
             event.reply("Use this app on a guild-member").setEphemeral(true).queue();
             return;
         }
 
-        JSONObject config = getGuildMainConfig(event.getGuild());
+        JSONObject config = controller.getGuildMainConfig(guild);
         if (config.isNull("moderation")) {
             event.reply("Please add a moderation-role with /moderation-config").setEphemeral(true).queue();
             return;
@@ -51,7 +53,7 @@ public class ModUnmodMember extends CustomCommandListener {
             return;
         }
 
-        Member bot = event.getGuild().getMember(jda.getSelfUser());
+        Member bot = event.getGuild().getMember(event.getJDA().getSelfUser());
         if (bot == null) {
             event.reply("Ups something went wrong").setEphemeral(true).queue();
             return;
@@ -69,5 +71,10 @@ public class ModUnmodMember extends CustomCommandListener {
             roles.forEach(x -> guild.addRoleToMember(targetMember, x).queue());
             event.reply("User has moderator rights now").setEphemeral(true).queue();
         }
+    }
+
+    @Override
+    public String getName() {
+        return "Mod/Unmod Member";
     }
 }

@@ -1,12 +1,13 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.SlashCommand;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.PostgresConnection;
 import de.SparkArmy.utils.jda.punishmentUtils.PunishmentType;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.jetbrains.annotations.NotNull;
@@ -15,28 +16,17 @@ import org.json.JSONObject;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
-public class UserPunishments extends CustomCommandListener {
+public class UserPunishments extends SlashCommand {
 
     @Override
-    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equals("user-punishments")) return;
-
-        Collection<String> strings = new ArrayList<>();
-        Arrays.stream(PunishmentType.values())
-                .filter(x -> !x.equals(PunishmentType.UNKNOW))
-                .filter(x -> x.getName().startsWith(event.getFocusedOption().getValue()))
-                .toList().forEach(x -> strings.add(x.getName()));
-        event.replyChoiceStrings(strings).queue();
+    public String getName() {
+        return "user-punishments";
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("user-punishments")) return;
-
+    public void dispatch(SlashCommandInteractionEvent event, JDA jda, ConfigController controller) {
         OptionMapping userOption = event.getOption("target-member");
         OptionMapping typeOption = event.getOption("punishment-type");
         OptionMapping moderatorOption = event.getOption("target-moderator");
@@ -81,6 +71,7 @@ public class UserPunishments extends CustomCommandListener {
 
     private void sendOverviewEmbed(List<JSONObject> values, SlashCommandInteractionEvent event) {
         new Thread(() -> {
+            JDA jda = event.getJDA();
             if (values == null) {
                 event.reply("Database not connected!").setEphemeral(true).queue();
                 return;
@@ -127,4 +118,6 @@ public class UserPunishments extends CustomCommandListener {
 
         // TODO Implement the moderator option
     }
+
+
 }

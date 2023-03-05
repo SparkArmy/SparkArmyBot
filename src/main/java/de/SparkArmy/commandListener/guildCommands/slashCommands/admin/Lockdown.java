@@ -1,24 +1,22 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
-import de.SparkArmy.utils.jda.ChannelUtil;
+import de.SparkArmy.commandListener.SlashCommand;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.FileHandler;
+import de.SparkArmy.utils.jda.ChannelUtil;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.File;
 
-public class Lockdown extends CustomCommandListener {
+public class Lockdown extends SlashCommand {
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        String eventName = event.getName();
-        if (!eventName.equals("lockdown")) return;
-
+    public void dispatch(SlashCommandInteractionEvent event, JDA jda, ConfigController controller) {
         if (event.getGuild() == null) {
             event.reply("Please us this command in a guild-channel").setEphemeral(true).queue();
             return;
@@ -75,11 +73,16 @@ public class Lockdown extends CustomCommandListener {
                 return;
             }
 
-            FileHandler.createFile(directory,fileName);
-            FileHandler.writeValuesInFile(file,permissions);
+            FileHandler.createFile(directory, fileName);
+            FileHandler.writeValuesInFile(file, permissions);
 
             ChannelUtil.disableWritingForPublicRole(target_channel);
             event.reply("The Channel is now in lockdown").setEphemeral(true).queue();
         }
+    }
+
+    @Override
+    public String getName() {
+        return "lockdown";
     }
 }

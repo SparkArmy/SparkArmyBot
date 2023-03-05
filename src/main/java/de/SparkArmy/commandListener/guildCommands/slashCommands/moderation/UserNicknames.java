@@ -1,22 +1,22 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.moderation;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.SlashCommand;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.PostgresConnection;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.time.OffsetDateTime;
 
-public class UserNicknames extends CustomCommandListener {
+public class UserNicknames extends SlashCommand {
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("user-nicknames")) return;
+    public void dispatch(SlashCommandInteractionEvent event, JDA jda, ConfigController controller) {
         if (event.getGuild() == null) {
             event.reply("Please use this command in a guild-channel").setEphemeral(true).queue();
             return;
@@ -45,12 +45,18 @@ public class UserNicknames extends CustomCommandListener {
         nicknamesEmbed.setDescription("Here you have the nicknames from " + targetMember.getEffectiveName() + ".");
         nicknamesEmbed.setTimestamp(OffsetDateTime.now());
 
-        nicknames.forEach(x->{
+        nicknames.forEach(x -> {
             JSONObject obj = (JSONObject) x;
             if (nicknamesEmbed.getFields().size() > 24) return;
-            nicknamesEmbed.addField(obj.getString("time"),obj.getString("value"),false);
+            nicknamesEmbed.addField(obj.getString("time"), obj.getString("value"), false);
         });
 
         event.replyEmbeds(nicknamesEmbed.build()).setEphemeral(true).queue();
     }
+
+    @Override
+    public String getName() {
+        return "user-nicknames";
+    }
+
 }

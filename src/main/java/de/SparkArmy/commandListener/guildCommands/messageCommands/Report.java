@@ -1,16 +1,18 @@
 package de.SparkArmy.commandListener.guildCommands.messageCommands;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.MessageCommand;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.jda.ChannelUtil;
 import de.SparkArmy.utils.jda.LogChannelType;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class Report extends CustomCommandListener{
+public class Report extends MessageCommand {
+
     @Override
-    public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
-        if (!event.getName().equals("report")) return;
+    public void dispatch(@NotNull MessageContextInteractionEvent event, JDA jda, ConfigController controller) {
         if (event.getGuild() == null) return;
 
         Member eventMember = event.getMember();
@@ -25,12 +27,18 @@ public class Report extends CustomCommandListener{
 
 
         String report = String.format("Message reported from %s (%s). The message sent from %s (%s)\nLink: %s",
-                eventMember.getUser().getAsTag(),eventMember.getId(),
-                targetMember.getUser().getAsTag(),targetMember.getId(),
+                eventMember.getUser().getAsTag(), eventMember.getId(),
+                targetMember.getUser().getAsTag(), targetMember.getId(),
                 event.getTarget().getJumpUrl());
 
         ChannelUtil.logInLogChannel(report, event.getGuild(), LogChannelType.MOD);
 
         event.reply("Message was reported").setEphemeral(true).queue();
     }
+
+    @Override
+    public String getName() {
+        return "report";
+    }
+
 }

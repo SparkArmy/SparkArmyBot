@@ -1,7 +1,9 @@
 package de.SparkArmy.commandListener.guildCommands.slashCommands.admin;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.SlashCommand;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.jda.ChannelUtil;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -15,11 +17,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class Purge extends CustomCommandListener {
-    @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("purge")) return;
+public class Purge extends SlashCommand {
 
+    @Override
+    public void dispatch(SlashCommandInteractionEvent event, JDA jda, ConfigController controller) {
         Guild guild = event.getGuild();
         if (guild == null) return;
         String subcommandName = event.getSubcommandName();
@@ -28,7 +29,11 @@ public class Purge extends CustomCommandListener {
         else if (subcommandName.equals("live")) {
             live(event);
         }
+    }
 
+    @Override
+    public String getName() {
+        return "purge";
     }
 
     private void periodically(SlashCommandInteractionEvent event) {

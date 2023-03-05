@@ -1,15 +1,15 @@
 package de.SparkArmy.commandListener.globalCommands.slashCommands;
 
-import de.SparkArmy.commandListener.CustomCommandListener;
+import de.SparkArmy.commandListener.SlashCommand;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.FileHandler;
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -21,68 +21,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-public class FeedbackCommand extends CustomCommandListener {
-
-    private final File directory = FileHandler.getDirectoryInUserDirectory("botstuff/autocomplete");
-
-    @Contract(value = " -> new", pure = true)
-    private @NotNull Collection<String> getFeedbackCategoryCollection() {
-        if (directory == null) return new ArrayList<>();
-        File file = FileHandler.getFileInDirectory(directory, "feedback.json");
-        if (!file.exists()) return new ArrayList<>() {
-        };
-        String fileContentString = FileHandler.getFileContent(file);
-        if (fileContentString == null) return new ArrayList<>();
-        JSONObject content = new JSONObject(fileContentString);
-        if (content.isNull("options")) return new ArrayList<>();
-        Collection<String> values = new ArrayList<>();
-        content.getJSONArray("options").toList().forEach(x -> values.add(x.toString()));
-        return values;
-    }
-
-    private @Nullable File getFile() {
-        if (directory == null) return null;
-        File file = FileHandler.getFileInDirectory(directory, "feedback.json");
-        if (!file.exists()) {
-            FileHandler.createFile(directory, "feedback.json");
-            FileHandler.writeValuesInFile(file, new JSONObject() {{
-                put("options", new JSONArray());
-            }});
-        }
-        return file;
-    }
+public class FeedbackCommand extends SlashCommand {
 
     @Override
-    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equals("feedback")) return;
-
-        OptionMapping category = event.getOption("feedback-category");
-        if (category == null) return;
-
-        String string = category.getAsString().toLowerCase(Locale.ROOT);
-
-        Collection<String> collection = getFeedbackCategoryCollection();
-
-        if (collection.isEmpty()) {
-            collection = new ArrayList<>() {{
-                add("YouTube");
-                add("Twitch");
-                add("Community");
-                add("Discord");
-                add("Merch-Shop");
-            }};
-        }
-        List<String> finalCollection = new ArrayList<>(collection.stream().filter(x -> x.toLowerCase(Locale.ROOT).startsWith(string)).toList());
-        if (finalCollection.size() >= 24) {
-            finalCollection.subList(24, finalCollection.size() - 1).clear();
-        }
-        event.replyChoiceStrings(finalCollection).queue();
-    }
-
-    @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("feedback")) return;
-
+    public void dispatch(SlashCommandInteractionEvent event, JDA jda, ConfigController controller) {
         OptionMapping category = event.getOption("feedback-category");
 
 
@@ -94,15 +36,15 @@ public class FeedbackCommand extends CustomCommandListener {
         if (category != null) {
             String categoryString = category.getAsString();
 
-            if (categoryString.length() > 241){
+            if (categoryString.length() > 241) {
                 categoryString = "Please type in a shorter Topic";
             }
 
 
             String finalCategoryString = categoryString.toLowerCase(Locale.ROOT);
-            boolean blacklistPhrase = blacklist.stream().anyMatch(x-> x.contentEquals(finalCategoryString) || finalCategoryString.contains(x));
+            boolean blacklistPhrase = blacklist.stream().anyMatch(x -> x.contentEquals(finalCategoryString) || finalCategoryString.contains(x));
 
-            if (blacklistPhrase){
+            if (blacklistPhrase) {
                 event.reply("You can't send this feedback").setEphemeral(true).queue();
                 return;
             }
@@ -135,7 +77,7 @@ public class FeedbackCommand extends CustomCommandListener {
 
         String modalId = String.format("feedback;%s", event.getUser().getId());
 
-        Modal feedbackModal = Modal.create(modalId, "Feedback").addActionRows(
+        Modal feedbackModal = Modal.create(modalId, "Feedback").addComponents(
                 ActionRow.of(topic.build()),
                 ActionRow.of(text)
         ).build();
@@ -143,7 +85,8 @@ public class FeedbackCommand extends CustomCommandListener {
         event.replyModal(feedbackModal).queue();
     }
 
-    private final List<String> blacklist = new ArrayList<>(){{
+
+    private final List<String> blacklist = new ArrayList<>() {{
         add("hure");
         add("penis");
         add("nazi");
@@ -179,4 +122,37 @@ public class FeedbackCommand extends CustomCommandListener {
         add("loser");
         add("Kinderficker");
     }};
+
+    private final File directory = FileHandler.getDirectoryInUserDirectory("botstuff/autocomplete");
+
+    private @NotNull Collection<String> getFeedbackCategoryCollection() {
+        if (directory == null) return new ArrayList<>();
+        File file = FileHandler.getFileInDirectory(directory, "feedback.json");
+        if (!file.exists()) return new ArrayList<>() {
+        };
+        String fileContentString = FileHandler.getFileContent(file);
+        if (fileContentString == null) return new ArrayList<>();
+        JSONObject content = new JSONObject(fileContentString);
+        if (content.isNull("options")) return new ArrayList<>();
+        Collection<String> values = new ArrayList<>();
+        content.getJSONArray("options").toList().forEach(x -> values.add(x.toString()));
+        return values;
+    }
+
+    private @Nullable File getFile() {
+        if (directory == null) return null;
+        File file = FileHandler.getFileInDirectory(directory, "feedback.json");
+        if (!file.exists()) {
+            FileHandler.createFile(directory, "feedback.json");
+            FileHandler.writeValuesInFile(file, new JSONObject() {{
+                put("options", new JSONArray());
+            }});
+        }
+        return file;
+    }
+
+    @Override
+    public String getName() {
+        return "feedback";
+    }
 }

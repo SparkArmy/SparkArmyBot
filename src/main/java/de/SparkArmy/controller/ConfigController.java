@@ -1,9 +1,9 @@
 package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
-import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.LoggingMarker;
-import de.SparkArmy.utils.MainUtil;
+import de.SparkArmy.util.FileHandler;
+import de.SparkArmy.util.customTypes.LoggingMarker;
+import de.SparkArmy.util.customTypes.GuildConfigType;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -17,32 +17,33 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
+
 public class ConfigController {
     private final Main main;
-    private final Logger logger = MainUtil.logger;
+    private final Logger logger;
     private final File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
 
     public Main getMain() {
         return this.main;
     }
 
-    public ConfigController(Main main) {
+    public ConfigController(@NotNull Main main) {
         this.main = main;
-        if (null == configFolder) Main.systemExit(11);
+        this.logger = main.getLogger();
+        if (null == configFolder) main.systemExit(11);
     }
 
-    public static void preCreateSpringConfig(){
+    public void preCreateSpringConfig() {
         File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
-        if (configFolder == null){
-            Main.systemExit(11);
+        if (configFolder == null) {
+            this.main.systemExit(11);
             return;
         }
 
-        if (FileHandler.getFileInDirectory(configFolder,"spring.properties").exists()) return;
+        if (FileHandler.getFileInDirectory(configFolder, "spring.properties").exists()) return;
         String propertiesString = """
-                    #server.port= Your server port
-                    #server.ssl.key-store=Your key-store for https
+                #server.port= Your server port
+                #server.ssl.key-store=Your key-store for https
                     #server.ssl.key-store-password=your key-store password
                     #
                     ## JKS or PKCS12
@@ -93,16 +94,16 @@ public class ConfigController {
                 } catch (Exception ignored) {
                 }
             }else {
-                this.logger.error(LoggingMarker.CONFIG,"Can't create a main-config.json");
-                Main.systemExit(1);
+                this.logger.error(LoggingMarker.CONFIG, "Can't create a main-config.json");
+                this.main.systemExit(1);
             }
 
-            Main.systemExit(0);
+            this.main.systemExit(0);
         }
         String mainConfigAsString = FileHandler.getFileContent(this.configFolder,"main-config.json");
-        if (mainConfigAsString == null){
-            this.logger.error(LoggingMarker.CONFIG,"The main-config.json is null");
-            Main.systemExit(12);
+        if (mainConfigAsString == null) {
+            this.logger.error(LoggingMarker.CONFIG, "The main-config.json is null");
+            this.main.systemExit(12);
         }
         assert mainConfigAsString != null;
         return new JSONObject(mainConfigAsString);
@@ -125,7 +126,7 @@ public class ConfigController {
     }
 
     public JSONObject getSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type) {
-        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId()))
+        if (this.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server").equals(guild.getId()))
             return null;
         return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(this.getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0).getAbsolutePath())));
     }
@@ -135,7 +136,8 @@ public class ConfigController {
     }
 
     public void writeInSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type, JSONObject value) {
-        if (MainUtil.mainConfig.getJSONObject("otherKeys").getString("storage-server").equals(guild.getId())) return;
+        if (this.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server").equals(guild.getId()))
+            return;
         File configFile = getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0);
 
         FileHandler.writeValuesInFile(configFile.getAbsolutePath(), value);

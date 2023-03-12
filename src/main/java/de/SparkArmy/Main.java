@@ -1,15 +1,13 @@
 package de.SparkArmy;
 
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
-import de.SparkArmy.commandListener.CommandDispatcher;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.eventListener.EventListenerRegisterer;
-import de.SparkArmy.springBoot.LoggingController;
-import de.SparkArmy.springBoot.SpringApp;
-import de.SparkArmy.utils.MainUtil;
-import de.SparkArmy.utils.PostgresConnection;
+import de.SparkArmy.controller.LoggingController;
+import de.SparkArmy.springApplication.SpringApp;
+import de.SparkArmy.util.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -19,23 +17,23 @@ import org.springframework.boot.SpringApplication;
 
 public class Main {
 
+    private JDA jda;
 
-    public JDA jda;
+    private final Logger logger;
+    private final ConfigController controller;
+    private final EventWaiter waiter;
+    private final Guild storageServer;
 
-    public final Logger logger;
-    public final ConfigController controller;
-    public final EventWaiter waiter;
 
-    public Main() {
-        // Initialize Logger variables
+    public Main() {        // Initialize Logger variables
         this.logger = LoggingController.logger;
-        MainUtil.logger = logger;
+        Utils.logger = this.logger;
 
-        // Initialize ConfigController variables and the mainConfig
+        // Initialize ConfigController
         this.controller = new ConfigController(this);
-        MainUtil.controller = controller;
+        Utils.controller = this.controller;
         JSONObject mainConfig = controller.getMainConfigFile();
-        MainUtil.mainConfig = mainConfig;
+        Utils.mainConfig = mainConfig;
 
         // Start building JDA
         JDABuilder jdaBuilder = JDABuilder.createDefault(mainConfig.getJSONObject("discord").getString("discord-token"));
@@ -56,51 +54,70 @@ public class Main {
 
         // Add a EventWaiter
         this.waiter = new EventWaiter();
-        MainUtil.waiter = waiter;
+        Utils.waiter = waiter;
         jda.addEventListener(waiter);
 
         try{
-            jda.awaitReady();
+            this.jda.awaitReady();
         } catch (InterruptedException e) {
-            logger.error(e.getMessage());
-            Main.systemExit(1);
+            this.logger.error(e.getMessage());
+            this.systemExit(1);
         }
 
         // Add a static JDA
-        MainUtil.jda = this.jda;
+        Utils.jda = this.jda;
 
 
         // Get StorageServer
-        MainUtil.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
-        if (MainUtil.storageServer == null) {
+        this.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
+        Utils.storageServer = this.storageServer;
+        if (this.storageServer == null) {
             logger.warn("No storage-server registered or the bot is not on storage-server");
         }
 
-//        CommandRegisterer.registerCommands();
+        // Start spring
+        this.controller.preCreateSpringConfig();
+        SpringApplication.run(SpringApp.class, "");
 
-        jda.addEventListener(new CommandDispatcher(this));
 
-        // Add EventListener to JDA
-        new EventListenerRegisterer();
+        Utils.logger.info("I`m ready.");
 
     }
 
     public static void main(String[] args) {
-        ConfigController.preCreateSpringConfig();
-        SpringApplication.run(SpringApp.class,"");
         new Main();
-        PostgresConnection.checkPreconditions();
-        MainUtil.logger.info("I`m ready.");
     }
 
-    public static void systemExit(Integer code) {
-        if (null != MainUtil.jda){
-            MainUtil.jda.shutdown();
+    public void systemExit(Integer code) {
+        if (null != this.jda) {
+            this.jda.shutdown();
             try {
-                MainUtil.jda.awaitStatus(JDA.Status.SHUTDOWN);
-            } catch (InterruptedException ignored) {}
+                this.jda.awaitShutdown();
+            } catch (InterruptedException ignored) {
+            }
         }
         System.exit(code);
     }
 
+
+    // Getter
+    public JDA getJda() {
+        return this.jda;
+    }
+
+    public ConfigController getController() {
+        return controller;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public EventWaiter getWaiter() {
+        return waiter;
+    }
+
+    public Guild getStorageServer() {
+        return storageServer;
+    }
 }

@@ -3,6 +3,9 @@ package de.SparkArmy;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.LoggingController;
+import de.SparkArmy.db.Postgres;
+import de.SparkArmy.jdaEvents.customCommands.CommandDispatcher;
+import de.SparkArmy.jdaEvents.customCommands.CommandRegisterer;
 import de.SparkArmy.springApplication.SpringApp;
 import de.SparkArmy.util.Utils;
 import net.dv8tion.jda.api.JDA;
@@ -18,11 +21,12 @@ import org.springframework.boot.SpringApplication;
 public class Main {
 
     private JDA jda;
-
     private final Logger logger;
     private final ConfigController controller;
     private final EventWaiter waiter;
     private final Guild storageServer;
+    private final CommandRegisterer commandRegisterer;
+    private final Postgres postgres;
 
 
     public Main() {        // Initialize Logger variables
@@ -33,7 +37,6 @@ public class Main {
         this.controller = new ConfigController(this);
         Utils.controller = this.controller;
         JSONObject mainConfig = controller.getMainConfigFile();
-        Utils.mainConfig = mainConfig;
 
         // Start building JDA
         JDABuilder jdaBuilder = JDABuilder.createDefault(mainConfig.getJSONObject("discord").getString("discord-token"));
@@ -49,28 +52,31 @@ public class Main {
             logger.info("JDA successful build");
         } catch (Exception e) {
             logger.error("JDA Failed to build  - " + e.getMessage());
-            System.exit(1);
+            systemExit(1);
         }
 
-        // Add a EventWaiter
-        this.waiter = new EventWaiter();
-        Utils.waiter = waiter;
-        jda.addEventListener(waiter);
+        this.postgres = new Postgres(this);
 
-        try{
+        try {
             this.jda.awaitReady();
         } catch (InterruptedException e) {
             this.logger.error(e.getMessage());
             this.systemExit(1);
         }
 
+        // Add a EventWaiter
+        this.waiter = new EventWaiter();
+        jda.addEventListener(waiter);
+
+        // Add Command Handler
+        this.jda.addEventListener(new CommandDispatcher(this));
+
         // Add a static JDA
         Utils.jda = this.jda;
 
 
         // Get StorageServer
-        this.storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
-        Utils.storageServer = this.storageServer;
+        this.storageServer = this.jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
         if (this.storageServer == null) {
             logger.warn("No storage-server registered or the bot is not on storage-server");
         }
@@ -79,8 +85,10 @@ public class Main {
         this.controller.preCreateSpringConfig();
         SpringApplication.run(SpringApp.class, "");
 
+        this.commandRegisterer = new CommandRegisterer(this);
 
         Utils.logger.info("I`m ready.");
+
 
     }
 
@@ -104,7 +112,6 @@ public class Main {
     public JDA getJda() {
         return this.jda;
     }
-
     public ConfigController getController() {
         return controller;
     }
@@ -119,5 +126,13 @@ public class Main {
 
     public Guild getStorageServer() {
         return storageServer;
+    }
+
+    public CommandRegisterer getCommandRegisterer() {
+        return commandRegisterer;
+    }
+
+    public Postgres getPostgres() {
+        return postgres;
     }
 }

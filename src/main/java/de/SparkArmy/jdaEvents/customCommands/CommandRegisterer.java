@@ -23,9 +23,12 @@ public class CommandRegisterer {
         this.jda = main.getJda();
     }
 
-    final LocalizationFunction localizationFunction = ResourceBundleLocalizationFunction
-            .fromBundles("LocalizationData/MyCommands", DiscordLocale.GERMAN)
-            .build();
+    final String path = "LocalizationData/%s";
+
+    final @NotNull LocalizationFunction getLocalizationFunction(@NotNull CommandData data) {
+        return ResourceBundleLocalizationFunction.fromBundles(String.format(path, data.getName()),
+                DiscordLocale.GERMAN).build();
+    }
 
     public void registerCommands() {
         ArrayList<CommandData> commandData = new ArrayList<>();
@@ -34,8 +37,8 @@ public class CommandRegisterer {
                 .addOptions(
                         new OptionData(OptionType.CHANNEL, "channel", "The channel you want to archive")
                                 .setRequired(true)
-                )
-                .setLocalizationFunction(localizationFunction);
+                );
+        archive.setLocalizationFunction(getLocalizationFunction(archive));
         commandData.add(archive);
 
         CommandData ban = Commands.slash("ban", "Bans a user from server")
@@ -46,18 +49,17 @@ public class CommandRegisterer {
                                 .setRequired(true),
                         new OptionData(OptionType.INTEGER, "days", "The days you want the messages delete")
                                 .setRequiredRange(0, 7)
-                )
-                .setLocalizationFunction(localizationFunction);
+                );
+        ban.setLocalizationFunction(getLocalizationFunction(ban));
         commandData.add(ban);
 
         CommandData updateCommand = Commands.slash("update-commands", "Update the commands")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .setGuildOnly(true);
+        updateCommand.setLocalizationFunction(getLocalizationFunction(updateCommand));
         commandData.add(updateCommand);
 
 
         jda.updateCommands().addCommands(commandData).queue();
     }
-
-
 }

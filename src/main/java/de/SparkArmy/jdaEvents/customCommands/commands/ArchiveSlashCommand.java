@@ -2,6 +2,7 @@ package de.SparkArmy.jdaEvents.customCommands.commands;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jdaEvents.customCommands.CustomCommand;
+import de.SparkArmy.util.Utils;
 import de.SparkArmy.util.customTypes.GuildConfigType;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,6 +16,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ResourceBundle;
 
 public class ArchiveSlashCommand extends CustomCommand {
     @Override
@@ -22,8 +24,13 @@ public class ArchiveSlashCommand extends CustomCommand {
         return "archive";
     }
 
+    private ResourceBundle bundle;
+
     @Override
-    public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, ConfigController controller) {
+    public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
+
+        bundle = Utils.getResourceBundle(event.getName(), event.getUserLocale());
+
         @SuppressWarnings("ConstantConditions") // Channel is a required option
         GuildChannel targetChannel = event.getOption("channel").getAsChannel();
         Guild guild = event.getGuild();
@@ -52,22 +59,24 @@ public class ArchiveSlashCommand extends CustomCommand {
         }
     }
 
+    // TODO Check if channel in archive category
+
     private void moveChannel(SlashCommandInteractionEvent event, Guild guild, Category archiveCategory, @NotNull GuildChannel targetChannel) {
         switch (targetChannel.getType()) {
             case TEXT -> guild.modifyTextChannelPositions()
                     .selectPosition(targetChannel)
                     .setCategory(archiveCategory, true)
-                    .and(event.reply("Channel was moved").setEphemeral(true))
+                    .and(event.reply(bundle.getString("command.successful.move")).setEphemeral(true))
                     .queue(null, new ErrorHandler()
-                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply("Bot has no access to this channel").setEphemeral(true).queue())
-                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply("Unknown Channel, try it again").setEphemeral(true).queue()));
+                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("command.error.noAccess")).setEphemeral(true).queue())
+                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("command.error.unknownChannel")).setEphemeral(true).queue()));
             case VOICE -> guild.modifyVoiceChannelPositions()
                     .selectPosition(targetChannel)
                     .setCategory(archiveCategory, true)
-                    .and(event.reply("Channel was moved").setEphemeral(true))
+                    .and(event.reply(bundle.getString("command.successful.move")).setEphemeral(true))
                     .queue(null, new ErrorHandler()
-                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply("Bot has no access to this channel").setEphemeral(true).queue())
-                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply("Unknown Channel, try it again").setEphemeral(true).queue()));
+                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("command.error.noAccess")).setEphemeral(true).queue())
+                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("command.error.unknownChannel")).setEphemeral(true).queue()));
         }
     }
 }

@@ -5,13 +5,14 @@ import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
-import de.SparkArmy.util.customTypes.GuildConfigType;
+import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.util.customTypes.LogChannelType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.StageChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
@@ -30,7 +31,7 @@ public class WebhookHandler {
 
     public static void createWebhookMessage(@NotNull GuildChannel channel, String webhookName, String webhookAvatarUrl, Message msg) {
         // Add all values from the message to the msgBuilder
-        WebhookMessageBuilder msgBuilder = webhookMessageBuilder(msg);
+        WebhookMessageBuilder msgBuilder = WebhookMessageBuilder.fromJDA(msg);
         msgBuilder.setUsername(webhookName);
         msgBuilder.setAvatarUrl(webhookAvatarUrl);
 
@@ -69,6 +70,18 @@ public class WebhookHandler {
                 newsChannel.retrieveWebhooks().queue(webhooks -> {
                     if (webhooks.isEmpty()) {
                         newsChannel.createWebhook(jda.getSelfUser().getName()).queue(x -> sendWebhook(x.getUrl(), msgBuilder));
+                        return;
+                    }
+                    if (webhooks.size() > 1) return;
+                    sendWebhook(webhooks.get(0).getUrl(), msgBuilder);
+                });
+            }
+            case STAGE -> {
+                StageChannel stageChannel = jda.getStageChannelById(channel.getId());
+                if (stageChannel == null) return;
+                stageChannel.retrieveWebhooks().queue(webhooks -> {
+                    if (webhooks.isEmpty()) {
+                        stageChannel.createWebhook(jda.getSelfUser().getName()).queue(x -> sendWebhook(x.getUrl(), msgBuilder));
                         return;
                     }
                     if (webhooks.size() > 1) return;
@@ -155,23 +168,21 @@ public class WebhookHandler {
 
         if (!msg.getAttachments().isEmpty()) {
             File directory = FileHandler.getDirectoryInUserDirectory("botstuff/webhookStuff/attachments");
-            if (directory != null) {
-                List<File> attachmentFiles = msg.getAttachments().stream().map(x -> {
-                    File file = FileHandler.getFileInDirectory(directory, x.getFileName());
-                    try {
-                        file = x.getProxy().downloadToFile(file).get();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                    return file;
-                }).toList();
-                attachmentFiles.forEach(file -> {
-                    msgBuilder.addFile(file);
-                    file.delete();
-                });
-            }
+            List<File> attachmentFiles = msg.getAttachments().stream().map(x -> {
+                File file = FileHandler.getFileInDirectory(directory, x.getFileName());
+                try {
+                    file = x.getProxy().downloadToFile(file).get();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+                return file;
+            }).toList();
+            attachmentFiles.forEach(file -> {
+                msgBuilder.addFile(file);
+                file.delete();
+            });
         }
 
         if (!msg.getContentRaw().isEmpty()) {

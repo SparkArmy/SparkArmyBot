@@ -10,7 +10,6 @@ import de.SparkArmy.springApplication.SpringApp;
 import de.SparkArmy.util.Utils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -24,7 +23,6 @@ public class Main {
     private final Logger logger;
     private final ConfigController controller;
     private final EventWaiter waiter;
-    private final Guild storageServer;
     private final CommandRegisterer commandRegisterer;
     private final Postgres postgres;
 
@@ -74,13 +72,6 @@ public class Main {
         // Add a static JDA
         Utils.jda = this.jda;
 
-
-        // Get StorageServer
-        this.storageServer = this.jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
-        if (this.storageServer == null) {
-            logger.warn("No storage-server registered or the bot is not on storage-server");
-        }
-
         // Start spring
         this.controller.preCreateSpringConfig();
         SpringApplication.run(SpringApp.class, "");
@@ -124,9 +115,6 @@ public class Main {
         return waiter;
     }
 
-    public Guild getStorageServer() {
-        return storageServer;
-    }
 
     public CommandRegisterer getCommandRegisterer() {
         return commandRegisterer;

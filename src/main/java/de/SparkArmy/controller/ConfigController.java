@@ -2,8 +2,7 @@ package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.util.FileHandler;
-import de.SparkArmy.util.customTypes.LoggingMarker;
-import de.SparkArmy.util.customTypes.GuildConfigType;
+import de.SparkArmy.util.customTypes.LogChannelType;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -30,15 +29,10 @@ public class ConfigController {
     public ConfigController(@NotNull Main main) {
         this.main = main;
         this.logger = main.getLogger();
-        if (null == configFolder) main.systemExit(11);
     }
 
     public void preCreateSpringConfig() {
         File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
-        if (configFolder == null) {
-            this.main.systemExit(11);
-            return;
-        }
 
         if (FileHandler.getFileInDirectory(configFolder, "spring.properties").exists()) return;
         String propertiesString = """
@@ -54,7 +48,6 @@ public class ConfigController {
     }
 
     public JSONObject getMainConfigFile(){
-        assert this.configFolder != null;
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
             this.logger.warn(LoggingMarker.CONFIG,"The main-config.json-file not exist, we will created a new");
             JSONObject blankConfig = new JSONObject();
@@ -111,7 +104,6 @@ public class ConfigController {
 
     private @Unmodifiable Collection<File> getGuildConfigs(@NotNull Guild guild){
         File directory = FileHandler.getDirectoryInUserDirectory("configs/" + guild.getId());
-        assert directory != null;
         if (0 == Objects.requireNonNull(directory.listFiles()).length){
             FileHandler.createFile(directory,"config.json");
             FileHandler.createFile(directory,"rules.json");
@@ -135,12 +127,30 @@ public class ConfigController {
         return this.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
     }
 
+    public void writeInGuildMainConfig(Guild guild, JSONObject value) {
+        writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, value);
+    }
+
     public void writeInSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type, JSONObject value) {
         if (this.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server").equals(guild.getId()))
             return;
         File configFile = getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0);
 
         FileHandler.writeValuesInFile(configFile.getAbsolutePath(), value);
+    }
+
+    public void createLogChannelConfig(Guild guild) {
+        JSONObject logConfig = new JSONObject();
+        LogChannelType.getLogChannelTypes().stream()
+                .filter(x -> !x.equals(LogChannelType.UNKNOW))
+                .forEach(type -> logConfig.put(type.getName(), new JSONObject() {{
+                    put("channelId", "");
+                    put("webhookUrl", "");
+                }}));
+        logConfig.put("category", "");
+        JSONObject guildMainConfig = getGuildMainConfig(guild);
+        guildMainConfig.put("log-channel", logConfig);
+        writeInGuildMainConfig(guild, guildMainConfig);
     }
 
     @Contract(" -> new")

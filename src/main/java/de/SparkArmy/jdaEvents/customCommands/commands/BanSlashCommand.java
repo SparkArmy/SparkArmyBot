@@ -2,23 +2,20 @@ package de.SparkArmy.jdaEvents.customCommands.commands;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jdaEvents.customCommands.CustomCommand;
-import de.SparkArmy.util.Utils;
+import de.SparkArmy.util.punishments.Punishment;
+import de.SparkArmy.util.punishments.PunishmentType;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ResourceBundle;
-
-public class UpdateSlashCommand extends CustomCommand {
+public class BanSlashCommand extends CustomCommand {
     @Override
     public String getName() {
-        return "update-commands";
+        return "ban";
     }
 
     @Override
     public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
-        ResourceBundle bundle = Utils.getResourceBundle(getName(), event.getUserLocale());
-
-        controller.getMain().getCommandRegisterer().registerCommands();
-        event.reply(bundle.getString("command.answer")).setEphemeral(true).queue();
+        // Create new Punishment
+        new Punishment(event, PunishmentType.BAN, controller);
     }
 }

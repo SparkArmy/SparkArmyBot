@@ -1,4 +1,4 @@
-package de.SparkArmy.util.customTypes;
+package de.SparkArmy.controller;
 
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;

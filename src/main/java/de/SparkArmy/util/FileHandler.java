@@ -1,6 +1,6 @@
 package de.SparkArmy.util;
 
-import de.SparkArmy.util.customTypes.LoggingMarker;
+import de.SparkArmy.controller.LoggingMarker;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,11 +48,11 @@ public class FileHandler {
         }
     }
 
-    public static @Nullable File getDirectoryInUserDirectory(String directoryName) {
+    public static @NotNull File getDirectoryInUserDirectory(String directoryName) {
         if (createDirectory(directoryName)) {
             return getFile(userDirectory.getAbsolutePath() + "/" + directoryName);
         }
-        return null;
+        throw new RuntimeException("Directory can't be null");
     }
 
     @Contract("_, _ -> new")

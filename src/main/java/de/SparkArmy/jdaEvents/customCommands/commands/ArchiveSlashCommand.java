@@ -3,7 +3,7 @@ package de.SparkArmy.jdaEvents.customCommands.commands;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jdaEvents.customCommands.CustomCommand;
 import de.SparkArmy.util.Utils;
-import de.SparkArmy.util.customTypes.GuildConfigType;
+import de.SparkArmy.controller.GuildConfigType;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;

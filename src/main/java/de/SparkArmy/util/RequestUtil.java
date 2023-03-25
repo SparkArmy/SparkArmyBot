@@ -1,6 +1,6 @@
 package de.SparkArmy.util;
 
-import de.SparkArmy.util.customTypes.LoggingMarker;
+import de.SparkArmy.controller.LoggingMarker;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 

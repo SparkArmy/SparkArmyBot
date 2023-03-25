@@ -1,4 +1,4 @@
-package de.SparkArmy.util.customTypes;
+package de.SparkArmy.controller;
 
 @SuppressWarnings("unused")
 public enum GuildConfigType {

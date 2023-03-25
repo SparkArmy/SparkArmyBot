@@ -27,7 +27,7 @@ public class CommandRegisterer {
 
     final @NotNull LocalizationFunction getLocalizationFunction(@NotNull CommandData data) {
         return ResourceBundleLocalizationFunction.fromBundles(String.format(path, data.getName()),
-                DiscordLocale.GERMAN).build();
+                DiscordLocale.GERMAN, DiscordLocale.ENGLISH_UK).build();
     }
 
     public void registerCommands() {

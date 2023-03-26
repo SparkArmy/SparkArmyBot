@@ -4,6 +4,7 @@ import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jdaEvents.customCommands.commands.ArchiveSlashCommand;
 import de.SparkArmy.jdaEvents.customCommands.commands.BanSlashCommand;
+import de.SparkArmy.jdaEvents.customCommands.commands.KickSlashCommand;
 import de.SparkArmy.jdaEvents.customCommands.commands.UpdateSlashCommand;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -32,6 +33,7 @@ public class CommandDispatcher extends ListenerAdapter {
         registerCommand(new ArchiveSlashCommand());
         registerCommand(new UpdateSlashCommand());
         registerCommand(new BanSlashCommand());
+        registerCommand(new KickSlashCommand());
     }
 
     private void registerCommand(CustomCommand c) {

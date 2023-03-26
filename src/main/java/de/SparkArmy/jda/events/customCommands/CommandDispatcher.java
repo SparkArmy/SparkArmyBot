@@ -32,6 +32,7 @@ public class CommandDispatcher extends ListenerAdapter {
         registerCommand(new BanSlashCommand());
         registerCommand(new KickSlashCommand());
         registerCommand(new MuteSlashCommand());
+        registerCommand(new WarnSlashCommand());
     }
 
     private void registerCommand(CustomCommand c) {

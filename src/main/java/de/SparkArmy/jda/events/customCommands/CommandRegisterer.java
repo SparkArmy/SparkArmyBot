@@ -125,4 +125,17 @@ public class CommandRegisterer {
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .setGuildOnly(true);
     }
+
+    @JDACommandData
+    final @NotNull CommandData warnSlashCommand() {
+        return Commands.slash("warn", "Warn a member")
+                .addOptions(
+                        new OptionData(OptionType.USER, "target-user", "The member you want to warn")
+                                .setRequired(true),
+                        new OptionData(OptionType.STRING, "reason", "The reason for the warn")
+                                .setRequired(true)
+                )
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()))
+                .setGuildOnly(true);
+    }
 }

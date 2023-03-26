@@ -284,10 +284,12 @@ public class Punishment {
             }
         }).queue(null, new ErrorHandler()
                 .handle(ErrorResponse.UNKNOWN_MEMBER, x -> guild.retrieveBanList().queue(y -> {
-                    if (y.stream().noneMatch(z -> z.getUser().equals(target))) {
+                    if (y.stream().noneMatch(z -> z.getUser().equals(target)) && type.equals(PunishmentType.BAN)) {
                         preparePunishment(target, moderator, reason, type, days, hook);
-                    } else {
+                    } else if (y.stream().allMatch(z -> z.getUser().equals(target)) && type.equals(PunishmentType.BAN)) {
                         hook.editOriginal(bundle.getString("checkPreconditions.userIsBanned")).queue();
+                    } else {
+                        hook.editOriginal(bundle.getString("checkPreconditions.userIsNotAMember")).queue();
                     }
                 }))
                 .handle(ErrorResponse.UNKNOWN_USER, x -> hook.editOriginal(bundle.getString("checkPreconditions.retrieveMember.unknownUser")).queue()));

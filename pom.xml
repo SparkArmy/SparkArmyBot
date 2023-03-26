@@ -67,6 +67,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.twitch4j</groupId>
+            <artifactId>twitch4j</artifactId>
+            <version>1.14.0</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>

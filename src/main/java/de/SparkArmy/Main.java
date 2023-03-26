@@ -3,8 +3,9 @@ package de.SparkArmy;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.controller.LoggingController;
 import de.SparkArmy.db.Postgres;
-import de.SparkArmy.jda.JdaFramework;
+import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.springApplication.SpringApp;
+import de.SparkArmy.twitch.TwitchApi;
 import de.SparkArmy.utils.Util;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
@@ -14,7 +15,9 @@ public class Main {
     private final Logger logger;
     private final ConfigController controller;
 
-    private final JdaFramework jdaFramework;
+    private final JdaApi jdaApi;
+
+    private final TwitchApi twitchApi;
     private final Postgres postgres;
 
 
@@ -27,7 +30,11 @@ public class Main {
         Util.controller = this.controller;
 
         this.postgres = new Postgres(this);
-        this.jdaFramework = new JdaFramework(this);
+
+        //Register Apis
+        this.jdaApi = new JdaApi(this);
+        this.twitchApi = new TwitchApi(this);
+
 
         // Start spring
         this.controller.preCreateSpringConfig();
@@ -44,10 +51,10 @@ public class Main {
     }
 
     public void systemExit(Integer code) {
-        if (null != this.jdaFramework) {
-            this.jdaFramework.getJda().shutdown();
+        if (null != this.jdaApi) {
+            this.jdaApi.getJda().shutdown();
             try {
-                this.jdaFramework.getJda().awaitShutdown();
+                this.jdaApi.getJda().awaitShutdown();
             } catch (InterruptedException ignored) {
             }
         }
@@ -56,17 +63,23 @@ public class Main {
 
 
     // Getter
-    public JdaFramework getJdaFramework() {
-        return this.jdaFramework;
+    public JdaApi getJdaApi() {
+        return this.jdaApi;
     }
 
     public ConfigController getController() {
         return controller;
     }
+
     public Logger getLogger() {
         return logger;
     }
+
     public Postgres getPostgres() {
         return postgres;
+    }
+
+    public TwitchApi getTwitchApi() {
+        return twitchApi;
     }
 }

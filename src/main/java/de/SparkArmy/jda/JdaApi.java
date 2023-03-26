@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
-public class JdaFramework {
+public class JdaApi {
 
 
     private JDA jda;
@@ -24,7 +24,7 @@ public class JdaFramework {
     private final EventWaiter waiter;
     private final CommandRegisterer commandRegisterer;
 
-    public JdaFramework(@NotNull Main main) {
+    public JdaApi(@NotNull Main main) {
         this.controller = main.getController();
         this.logger = main.getLogger();
 

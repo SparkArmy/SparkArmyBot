@@ -18,7 +18,7 @@ public class UpdateSlashCommand extends CustomCommand {
     public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
         ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
 
-        if (controller.getMain().getJdaFramework().getCommandRegisterer().registerCommands()) {
+        if (controller.getMain().getJdaApi().getCommandRegisterer().registerCommands()) {
             event.reply(bundle.getString("command.answer.successfully")).setEphemeral(true).queue();
         } else {
             event.reply(bundle.getString("command.answer.failed")).setEphemeral(true).queue();

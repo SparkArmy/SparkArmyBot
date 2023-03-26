@@ -1,7 +1,7 @@
 package de.SparkArmy.jda.events.customCommands;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.JdaFramework;
+import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.customCommands.commands.*;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -20,9 +20,9 @@ public class CommandDispatcher extends ListenerAdapter {
     private final ConfigController controller;
     private final Logger logger;
 
-    public CommandDispatcher(@NotNull JdaFramework jdaFramework) {
-        this.controller = jdaFramework.getController();
-        this.logger = jdaFramework.getLogger();
+    public CommandDispatcher(@NotNull JdaApi jdaApi) {
+        this.controller = jdaApi.getController();
+        this.logger = jdaApi.getLogger();
         registerCommands();
     }
 

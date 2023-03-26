@@ -1,6 +1,6 @@
 package de.SparkArmy.jda.events.customCommands;
 
-import de.SparkArmy.jda.JdaFramework;
+import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.annotations.JDACommandData;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -26,9 +26,9 @@ public class CommandRegisterer {
     private final JDA jda;
     private final Logger logger;
 
-    public CommandRegisterer(@NotNull JdaFramework jdaFramework) {
-        this.jda = jdaFramework.getJda();
-        this.logger = jdaFramework.getLogger();
+    public CommandRegisterer(@NotNull JdaApi jdaApi) {
+        this.jda = jdaApi.getJda();
+        this.logger = jdaApi.getLogger();
     }
 
     final String path = "LocalizationData/%s";

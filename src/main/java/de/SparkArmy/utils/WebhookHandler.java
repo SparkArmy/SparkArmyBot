@@ -1,4 +1,4 @@
-package de.SparkArmy.util;
+package de.SparkArmy.utils;
 
 import club.minnced.discord.webhook.WebhookCluster;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
@@ -6,7 +6,7 @@ import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import de.SparkArmy.controller.GuildConfigType;
-import de.SparkArmy.util.customTypes.LogChannelType;
+import de.SparkArmy.utils.customTypes.LogChannelType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutionException;
 
 public class WebhookHandler {
 
-    private static final JDA jda = Utils.jda;
+    private static final JDA jda = Util.jda;
 
     public static void createWebhookMessage(@NotNull GuildChannel channel, String webhookName, String webhookAvatarUrl, Message msg) {
         // Add all values from the message to the msgBuilder
@@ -92,7 +92,7 @@ public class WebhookHandler {
     }
 
     public static void createLogWebhookMessage(LogChannelType logChannelType, Guild guild, Message msg) {
-        JSONObject guildConfig = Utils.controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
+        JSONObject guildConfig = Util.controller.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
         if (guildConfig.isNull("log-channel")) {
             JSONObject logChannelConfig = new JSONObject();
             guild.createCategory("logchannel").queue(category -> {
@@ -101,7 +101,7 @@ public class WebhookHandler {
                     logChannelConfig.put(logChannelType.getName(), textChannel.getId());
 
                     guildConfig.put("log-channel", logChannelConfig);
-                    Utils.controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, guildConfig);
+                    Util.controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, guildConfig);
                 });
             });
         }

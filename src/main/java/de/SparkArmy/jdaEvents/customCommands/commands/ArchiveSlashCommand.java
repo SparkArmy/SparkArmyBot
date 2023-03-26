@@ -2,7 +2,7 @@ package de.SparkArmy.jdaEvents.customCommands.commands;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jdaEvents.customCommands.CustomCommand;
-import de.SparkArmy.util.Utils;
+import de.SparkArmy.utils.Util;
 import de.SparkArmy.controller.GuildConfigType;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -29,7 +29,7 @@ public class ArchiveSlashCommand extends CustomCommand {
     @Override
     public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
 
-        bundle = Utils.getResourceBundle(event.getName(), event.getUserLocale());
+        bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
 
         @SuppressWarnings("ConstantConditions") // Channel is a required option
         GuildChannel targetChannel = event.getOption("channel").getAsChannel();

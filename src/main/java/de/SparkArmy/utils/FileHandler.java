@@ -1,4 +1,4 @@
-package de.SparkArmy.util;
+package de.SparkArmy.utils;
 
 import de.SparkArmy.controller.LoggingMarker;
 import org.jetbrains.annotations.Contract;
@@ -20,7 +20,7 @@ import java.util.Objects;
 public class FileHandler {
 
     public static final File userDirectory = new File(System.getProperty("user.dir"));
-    private static final Logger logger = Utils.logger;
+    private static final Logger logger = Util.logger;
 
     public static boolean createDirectory(String path, String directoryName) {
         File newDirectory = new File(path + "/" + directoryName);

@@ -2,7 +2,7 @@ package de.SparkArmy.db;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.util.Utils;
+import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
@@ -90,7 +90,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Utils.handleSQLExeptions(e);
+            Util.handleSQLExeptions(e);
             return false;
         }
     }
@@ -131,7 +131,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Utils.handleSQLExeptions(e);
+            Util.handleSQLExeptions(e);
             return false;
         }
     }
@@ -177,7 +177,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Utils.handleSQLExeptions(e);
+            Util.handleSQLExeptions(e);
             return false;
         }
     }
@@ -267,7 +267,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Utils.handleSQLExeptions(e);
+            Util.handleSQLExeptions(e);
             return false;
         }
     }
@@ -319,7 +319,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Utils.handleSQLExeptions(e);
+            Util.handleSQLExeptions(e);
             return false;
         }
     }
@@ -360,7 +360,7 @@ public class Postgres {
             conn.close();
             return rs.getLong(1);
         } catch (SQLException e) {
-            Utils.handleSQLExeptions(e);
+            Util.handleSQLExeptions(e);
             return -1;
         }
     }
@@ -401,7 +401,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Utils.handleSQLExeptions(e);
+            Util.handleSQLExeptions(e);
             return false;
         }
     }

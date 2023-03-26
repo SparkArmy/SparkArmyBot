@@ -2,8 +2,8 @@ package de.SparkArmy.jdaEvents.customCommands.commands;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jdaEvents.customCommands.CustomCommand;
-import de.SparkArmy.util.punishments.Punishment;
-import de.SparkArmy.util.punishments.PunishmentType;
+import de.SparkArmy.utils.punishments.Punishment;
+import de.SparkArmy.utils.punishments.PunishmentType;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 

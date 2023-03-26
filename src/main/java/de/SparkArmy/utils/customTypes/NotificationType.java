@@ -1,4 +1,4 @@
-package de.SparkArmy.util.customTypes;
+package de.SparkArmy.utils.customTypes;
 
 import org.jetbrains.annotations.NotNull;
 

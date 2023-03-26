@@ -1,7 +1,7 @@
-package de.SparkArmy.util;
+package de.SparkArmy.utils;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.util.customTypes.LogChannelType;
+import de.SparkArmy.utils.customTypes.LogChannelType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class Utils {
+public class Util {
     public static Logger logger;
     public static ConfigController controller;
     public static JDA jda;

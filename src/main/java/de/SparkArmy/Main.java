@@ -7,7 +7,7 @@ import de.SparkArmy.db.Postgres;
 import de.SparkArmy.jdaEvents.customCommands.CommandDispatcher;
 import de.SparkArmy.jdaEvents.customCommands.CommandRegisterer;
 import de.SparkArmy.springApplication.SpringApp;
-import de.SparkArmy.util.Utils;
+import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -29,11 +29,11 @@ public class Main {
 
     public Main() {        // Initialize Logger variables
         this.logger = LoggingController.logger;
-        Utils.logger = this.logger;
+        Util.logger = this.logger;
 
         // Initialize ConfigController
         this.controller = new ConfigController(this);
-        Utils.controller = this.controller;
+        Util.controller = this.controller;
         JSONObject mainConfig = controller.getMainConfigFile();
 
         // Start building JDA
@@ -70,7 +70,7 @@ public class Main {
         this.jda.addEventListener(new CommandDispatcher(this));
 
         // Add a static JDA
-        Utils.jda = this.jda;
+        Util.jda = this.jda;
 
         // Start spring
         this.controller.preCreateSpringConfig();
@@ -78,7 +78,7 @@ public class Main {
 
         this.commandRegisterer = new CommandRegisterer(this);
 
-        Utils.logger.info("I`m ready.");
+        Util.logger.info("I`m ready.");
 
 
     }

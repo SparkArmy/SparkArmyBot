@@ -1,4 +1,4 @@
-package de.SparkArmy.util;
+package de.SparkArmy.utils;
 
 import de.SparkArmy.controller.LoggingMarker;
 import org.jetbrains.annotations.NotNull;
@@ -147,7 +147,7 @@ public enum RequestUtil {
                 } catch (IOException e) {
                     //This catch block is by me not the original author
                     e.printStackTrace();
-                    Utils.logger.error(LoggingMarker.REQUESTS, entry.getValue().toString());
+                    Util.logger.error(LoggingMarker.REQUESTS, entry.getValue().toString());
                     throw new RuntimeException("An error accrued whilst trying to make the body for a request");
                 }
             } else {

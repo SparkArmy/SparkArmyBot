@@ -1,4 +1,4 @@
-package de.SparkArmy.util;
+package de.SparkArmy.utils;
 
 import java.util.HashMap;
 import java.util.Map;

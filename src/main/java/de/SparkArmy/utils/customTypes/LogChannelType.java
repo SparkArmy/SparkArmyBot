@@ -1,4 +1,4 @@
-package de.SparkArmy.util.customTypes;
+package de.SparkArmy.utils.customTypes;
 
 import java.util.Arrays;
 import java.util.List;

@@ -107,6 +107,19 @@ public class CommandRegisterer {
     }
 
     @JDACommandData
+    final @NotNull CommandData muteSlashCommand() {
+        return Commands.slash("mute", "Mute a member")
+                .addOptions(
+                        new OptionData(OptionType.USER, "target-user", "The member you want to mute")
+                                .setRequired(true),
+                        new OptionData(OptionType.STRING, "reason", "The reason for the mute")
+                                .setRequired(true)
+                )
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()))
+                .setGuildOnly(true);
+    }
+
+    @JDACommandData
     final @NotNull CommandData updateCommandsSlashCommand() {
         return Commands.slash("update-commands", "Update the commands")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))

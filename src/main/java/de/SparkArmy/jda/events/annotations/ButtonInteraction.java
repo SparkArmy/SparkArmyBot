@@ -1,4 +1,4 @@
-package de.SparkArmy.jdaEvents.annotations;
+package de.SparkArmy.jda.events.annotations;
 
 public @interface ButtonInteraction {
     String name();

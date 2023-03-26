@@ -1,4 +1,4 @@
-package de.SparkArmy.jdaEvents;
+package de.SparkArmy.jda.events;
 
 public abstract class CustomEvent {
 

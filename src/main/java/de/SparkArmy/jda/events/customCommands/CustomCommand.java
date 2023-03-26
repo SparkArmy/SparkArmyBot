@@ -1,4 +1,4 @@
-package de.SparkArmy.jdaEvents.customCommands;
+package de.SparkArmy.jda.events.customCommands;
 
 import de.SparkArmy.controller.ConfigController;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;

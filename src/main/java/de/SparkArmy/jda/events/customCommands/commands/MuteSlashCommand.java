@@ -1,9 +1,9 @@
-package de.SparkArmy.jdaEvents.customCommands.commands;
+package de.SparkArmy.jda.events.customCommands.commands;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jdaEvents.customCommands.CustomCommand;
-import de.SparkArmy.utils.punishments.Punishment;
-import de.SparkArmy.utils.punishments.PunishmentType;
+import de.SparkArmy.jda.events.customCommands.CustomCommand;
+import de.SparkArmy.jda.utils.punishments.Punishment;
+import de.SparkArmy.jda.utils.punishments.PunishmentType;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 public class MuteSlashCommand extends CustomCommand {

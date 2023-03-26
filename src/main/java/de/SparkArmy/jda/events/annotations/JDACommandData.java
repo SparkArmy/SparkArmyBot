@@ -1,4 +1,4 @@
-package de.SparkArmy.jdaEvents.annotations;
+package de.SparkArmy.jda.events.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

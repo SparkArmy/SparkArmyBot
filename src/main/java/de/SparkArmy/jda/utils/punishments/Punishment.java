@@ -1,12 +1,12 @@
-package de.SparkArmy.utils.punishments;
+package de.SparkArmy.jda.utils.punishments;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
+import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
-import de.SparkArmy.utils.customTypes.LogChannelType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -21,7 +21,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
-import org.slf4j.Logger;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
@@ -34,7 +33,6 @@ public class Punishment {
     private final Postgres db;
     private final ConfigController controller;
     private final Guild guild;
-    private final Logger logger;
 
 
     public Punishment(@NotNull SlashCommandInteractionEvent event, PunishmentType type, @NotNull ConfigController controller) {
@@ -50,7 +48,6 @@ public class Punishment {
         InteractionHook hook = event.getHook();
         //noinspection ConstantConditions // Target is a requiered option and all punishment event are guild events
         checkPreconditions(target, moderator, type, reason, days, hook);
-        this.logger = controller.getMain().getLogger();
     }
 
     public Punishment(@NotNull SlashCommandInteractionEvent event, PunishmentType type, @NotNull ConfigController controller, OffsetDateTime duration) {
@@ -59,7 +56,6 @@ public class Punishment {
         this.controller = controller;
         this.guild = event.getGuild();
         new TemporaryPunishment();
-        this.logger = controller.getMain().getLogger();
     }
 
 

@@ -2,7 +2,7 @@ package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.utils.FileHandler;
-import de.SparkArmy.utils.customTypes.LogChannelType;
+import de.SparkArmy.jda.utils.LogChannelType;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

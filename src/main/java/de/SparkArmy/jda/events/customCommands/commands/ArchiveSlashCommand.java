@@ -1,7 +1,7 @@
-package de.SparkArmy.jdaEvents.customCommands.commands;
+package de.SparkArmy.jda.events.customCommands.commands;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jdaEvents.customCommands.CustomCommand;
+import de.SparkArmy.jda.events.customCommands.CustomCommand;
 import de.SparkArmy.utils.Util;
 import de.SparkArmy.controller.GuildConfigType;
 import net.dv8tion.jda.api.Permission;

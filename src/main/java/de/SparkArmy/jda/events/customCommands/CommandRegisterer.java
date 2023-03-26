@@ -1,7 +1,7 @@
-package de.SparkArmy.jdaEvents.customCommands;
+package de.SparkArmy.jda.events.customCommands;
 
-import de.SparkArmy.Main;
-import de.SparkArmy.jdaEvents.annotations.JDACommandData;
+import de.SparkArmy.jda.JdaFramework;
+import de.SparkArmy.jda.events.annotations.JDACommandData;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
@@ -26,9 +26,9 @@ public class CommandRegisterer {
     private final JDA jda;
     private final Logger logger;
 
-    public CommandRegisterer(@NotNull Main main) {
-        this.jda = main.getJda();
-        this.logger = main.getLogger();
+    public CommandRegisterer(@NotNull JdaFramework jdaFramework) {
+        this.jda = jdaFramework.getJda();
+        this.logger = jdaFramework.getLogger();
     }
 
     final String path = "LocalizationData/%s";

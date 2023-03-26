@@ -1,8 +1,8 @@
-package de.SparkArmy.jdaEvents.customCommands;
+package de.SparkArmy.jda.events.customCommands;
 
-import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jdaEvents.customCommands.commands.*;
+import de.SparkArmy.jda.JdaFramework;
+import de.SparkArmy.jda.events.customCommands.commands.*;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -20,9 +20,9 @@ public class CommandDispatcher extends ListenerAdapter {
     private final ConfigController controller;
     private final Logger logger;
 
-    public CommandDispatcher(@NotNull Main main) {
-        this.controller = main.getController();
-        this.logger = main.getLogger();
+    public CommandDispatcher(@NotNull JdaFramework jdaFramework) {
+        this.controller = jdaFramework.getController();
+        this.logger = jdaFramework.getLogger();
         registerCommands();
     }
 

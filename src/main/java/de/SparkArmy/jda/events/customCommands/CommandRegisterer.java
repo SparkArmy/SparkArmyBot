@@ -41,9 +41,10 @@ public class CommandRegisterer {
     public boolean registerCommands() {
         ArrayList<CommandData> commandData = new ArrayList<>();
 
+
         for (Method m : this.getClass().getDeclaredMethods()) {
             JDACommandData annotation = m.getAnnotation(JDACommandData.class);
-            if (annotation != null || !m.getReturnType().equals(CommandData.class)) {
+            if (annotation != null && m.getReturnType().equals(CommandData.class)) {
                 try {
                     CommandData data = (CommandData) m.invoke(this);
                     data.setLocalizationFunction(getLocalizationFunction(data));
@@ -123,6 +124,19 @@ public class CommandRegisterer {
     final @NotNull CommandData updateCommandsSlashCommand() {
         return Commands.slash("update-commands", "Update the commands")
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .setGuildOnly(true);
+    }
+
+    @JDACommandData
+    final @NotNull CommandData unbanSlashCommand() {
+        return Commands.slash("unban", "Unban a user")
+                .addOptions(
+                        new OptionData(OptionType.USER, "target-user", "The target user")
+                                .setRequired(true),
+                        new OptionData(OptionType.STRING, "reason", "The reason for the unban")
+                                .setRequired(true)
+                )
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()))
                 .setGuildOnly(true);
     }
 

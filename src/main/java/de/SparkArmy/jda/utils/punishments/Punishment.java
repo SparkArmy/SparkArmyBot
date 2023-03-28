@@ -115,7 +115,7 @@ public class Punishment {
 
     private void preparePunishment(User target, Member moderator, String reason, PunishmentType type, Integer days, InteractionHook hook) {
 
-        if (!db.getIsPostgresDisabled()) {
+        if (db.getIsPostgresEnabled()) {
             if (!db.putPunishmentDataInPunishmentTable(target, moderator, type.getId(), reason)) {
                 hook.sendMessage(bundle.getString("preparePunishment.putDataInDbFailed")).setEphemeral(true).queue();
                 return;

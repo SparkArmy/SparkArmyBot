@@ -26,6 +26,7 @@ public class UnbanSlashCommand extends CustomCommand {
         return "unban";
     }
 
+
     @Override
     public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
         event.deferReply(true).queue();
@@ -42,7 +43,7 @@ public class UnbanSlashCommand extends CustomCommand {
                 return;
             }
             Postgres db = controller.getMain().getPostgres();
-            if (!db.getIsPostgresDisabled()) {
+            if (db.getIsPostgresEnabled()) {
 
                 event.getGuild().unban(target).reason(reason).queue(x -> {
                             if (!controller.getMain().getPostgres().putPunishmentDataInPunishmentTable(target, moderator, PunishmentType.UNBAN.getId(), reason)) {

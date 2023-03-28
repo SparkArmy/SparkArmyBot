@@ -83,8 +83,7 @@ public class Postgres {
             }
 
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblGuild\" (\"gldId\")" +
-                            "VALUES (?);");
+                    "INSERT INTO guilddata.\"tblGuild\" (\"gldId\")VALUES (?);");
             prepStmt.setLong(1, guildId);
             prepStmt.execute();
             conn.close();
@@ -98,8 +97,7 @@ public class Postgres {
     private void putGuildIdInGuildTable(@NotNull Connection conn, long guildId) throws SQLException {
         if (isGuildIdInDatabase(conn, guildId)) return;
         PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblGuild\" (\"gldId\")" +
-                        "VALUES (?);");
+                "INSERT INTO guilddata.\"tblGuild\" (\"gldId\")VALUES (?);");
         prepStmt.setLong(1, guildId);
         prepStmt.execute();
     }
@@ -124,8 +122,7 @@ public class Postgres {
             }
 
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblUser\" (\"usrId\")" +
-                            "VALUES (?);");
+                    "INSERT INTO guilddata.\"tblUser\" (\"usrId\")VALUES (?);");
             prepStmt.setLong(1, userId);
             prepStmt.execute();
             conn.close();
@@ -139,8 +136,7 @@ public class Postgres {
     private void putUserIdInUserTable(@NotNull Connection conn, long userId) throws SQLException {
         if (isUserIdInDatabase(conn, userId)) return;
         PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblUser\" (\"usrId\")" +
-                        "VALUES (?);");
+                "INSERT INTO guilddata.\"tblUser\" (\"usrId\")VALUES (?);");
         prepStmt.setLong(1, userId);
         prepStmt.execute();
     }
@@ -169,8 +165,7 @@ public class Postgres {
             putGuildIdInGuildTable(conn, guildId);
 
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblMember\" (\"fk_mbrUserId\",\"fk_mbrGuildId\") " +
-                            "VALUES (?,?);");
+                    "INSERT INTO guilddata.\"tblMember\" (\"fk_mbrUserId\",\"fk_mbrGuildId\") VALUES (?,?);");
             prepStmt.setLong(1, userId);
             prepStmt.setLong(2, guildId);
             prepStmt.execute();
@@ -189,8 +184,7 @@ public class Postgres {
         putGuildIdInGuildTable(conn, guildId);
 
         PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblMember\" (\"fk_mbrUserId\",\"fk_mbrGuildId\") " +
-                        "VALUES (?,?);");
+                "INSERT INTO guilddata.\"tblMember\" (\"fk_mbrUserId\",\"fk_mbrGuildId\") VALUES (?,?);");
         prepStmt.setLong(1, userId);
         prepStmt.setLong(2, guildId);
         prepStmt.execute();
@@ -237,8 +231,7 @@ public class Postgres {
                     return true;
                 }
                 PreparedStatement prepStmt = conn.prepareStatement(
-                        "INSERT INTO guilddata.\"tblJoinLeaveMember\" (\"fk_jlmMemberId\",\"jlmJoinTime\") " +
-                                "VALUES (?,?);");
+                        "INSERT INTO guilddata.\"tblJoinLeaveMember\" (\"fk_jlmMemberId\",\"jlmJoinTime\") VALUES (?,?);");
                 prepStmt.setLong(1, mbrId);
                 prepStmt.setTimestamp(2, Timestamp.valueOf(member.getTimeJoined().toLocalDateTime()));
                 prepStmt.execute();
@@ -246,9 +239,7 @@ public class Postgres {
             } else {
                 if (isMemberInJoinLeaveMemberTable(conn, memberId)) {
                     PreparedStatement prepStmt = conn.prepareStatement(
-                            "UPDATE guilddata.\"tblJoinLeaveMember\"" +
-                                    "SET \"jlmLeaveTime\" = now() " +
-                                    "WHERE \"fk_jlmMemberId\" = ?;");
+                            "UPDATE guilddata.\"tblJoinLeaveMember\"SET \"jlmLeaveTime\" = now() WHERE \"fk_jlmMemberId\" = ?;");
                     prepStmt.setLong(1, mbrId);
                     prepStmt.execute();
                 } else {
@@ -257,9 +248,7 @@ public class Postgres {
                         return false;
                     }
                     PreparedStatement prepStmt = conn.prepareStatement(
-                            "UPDATE guilddata.\"tblJoinLeaveMember\"" +
-                                    "SET \"jlmLeaveTime\" = now() " +
-                                    "WHERE \"fk_jlmMemberId\" = ?;");
+                            "UPDATE guilddata.\"tblJoinLeaveMember\"SET \"jlmLeaveTime\" = now() WHERE \"fk_jlmMemberId\" = ?;");
                     prepStmt.setLong(1, mbrId);
                     prepStmt.execute();
                 }
@@ -274,8 +263,7 @@ public class Postgres {
 
     private boolean isModeratorInModeratorTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM guilddata.\"tblModerator\" " +
-                        "WHERE \"fk_modMemberId\" = ?;");
+                "SELECT COUNT(*) FROM guilddata.\"tblModerator\" WHERE \"fk_modMemberId\" = ?;");
         prepStmt.setLong(1, databaseMemberId);
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) {
@@ -287,8 +275,7 @@ public class Postgres {
     private long getModeratorIdFromModeratorTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
         putDataInModeratorTable(conn, databaseMemberId);
         PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT \"modId\" FROM guilddata.\"tblModerator\" " +
-                        "WHERE \"fk_modMemberId\" = ?;");
+                "SELECT \"modId\" FROM guilddata.\"tblModerator\" WHERE \"fk_modMemberId\" = ?;");
         prepStmt.setLong(1, databaseMemberId);
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) return -1;
@@ -312,8 +299,7 @@ public class Postgres {
             }
 
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblModerator\" (\"fk_modMemberId\")" +
-                            "VALUES (?);");
+                    "INSERT INTO guilddata.\"tblModerator\" (\"fk_modMemberId\")VALUES (?);");
             prepStmt.setLong(1, mbrId);
             prepStmt.execute();
             conn.close();
@@ -327,8 +313,7 @@ public class Postgres {
     private void putDataInModeratorTable(Connection conn, long databaseMemberId) throws SQLException {
         if (isModeratorInModeratorTable(conn, databaseMemberId)) return;
         PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblModerator\" (\"fk_modMemberId\")" +
-                        "VALUES (?);");
+                "INSERT INTO guilddata.\"tblModerator\" (\"fk_modMemberId\")VALUES (?);");
         prepStmt.setLong(1, databaseMemberId);
         prepStmt.execute();
     }
@@ -386,9 +371,11 @@ public class Postgres {
             long psmCount = getPunishmentCountFromGuild(conn, guildId) + 1; // Get the Count and add one
 
             PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblPunishment\" " +
-                            "(\"fk_psmMemberId\",\"fk_psmModeratorId\",\"fk_psmPunishmentTypeId\",\"psmReason\",\"psmTimestamp\",\"psmGuildCount\",\"fk_psmGuildId\") " +
-                            "VALUES (?,?,?,?,now(),?,?);");
+                    """
+                                INSERT INTO guilddata."tblPunishment" ("fk_psmMemberId","fk_psmModeratorId",
+                                "fk_psmPunishmentTypeId","psmReason","psmTimestamp","psmGuildCount","fk_psmGuildId")
+                                VALUES (?,?,?,?,now(),?,?);
+                            """);
 
             prepStmt.setLong(1, targetMemberId);
             prepStmt.setLong(2, modId);
@@ -417,8 +404,8 @@ public class Postgres {
         return rs.getLong(1) > 0;
     }
 
-    public boolean getIsPostgresDisabled() {
-        return isPostgresDisabled;
+    public boolean getIsPostgresEnabled() {
+        return !isPostgresDisabled;
     }
 
 }

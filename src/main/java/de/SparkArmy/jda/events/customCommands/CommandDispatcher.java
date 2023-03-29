@@ -7,14 +7,14 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CommandDispatcher extends ListenerAdapter {
+public class CommandDispatcher {
 
     private final Set<CustomCommand> commands = ConcurrentHashMap.newKeySet();
     private final ConfigController controller;
@@ -44,8 +44,8 @@ public class CommandDispatcher extends ListenerAdapter {
         commands.add(c);
     }
 
-    @Override
-    public void onGenericCommandInteraction(@NotNull GenericCommandInteractionEvent event) {
+    @SubscribeEvent
+    public void onCommandInteraction(@NotNull GenericCommandInteractionEvent event) {
         for (CustomCommand c : commands) {
             if (event instanceof SlashCommandInteractionEvent && event.getName().equals(c.getName())) {
                 c.dispatchSlashEvent((SlashCommandInteractionEvent) event, controller);

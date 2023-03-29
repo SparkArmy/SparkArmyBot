@@ -5,9 +5,11 @@ import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.events.customCommands.CommandDispatcher;
 import de.SparkArmy.jda.events.customCommands.CommandRegisterer;
+import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -58,8 +60,10 @@ public class JdaApi {
         this.waiter = new EventWaiter();
         jda.addEventListener(waiter);
 
-        // Add Command Handler
-        this.jda.addEventListener(new CommandDispatcher(this));
+        // Add Command Handler and EventHandler
+        this.jda.setEventManager(new AnnotatedEventManager());
+        this.jda.addEventListener(new CommandDispatcher(this), new EventDispatcher(this));
+
 
         this.commandRegisterer = new CommandRegisterer(this);
 

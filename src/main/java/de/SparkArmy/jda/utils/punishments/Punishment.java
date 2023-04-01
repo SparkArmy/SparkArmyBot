@@ -109,6 +109,12 @@ public class Punishment {
                                     .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.ban.missingPermissions")).queue())
                                     .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.ban.unknownMember")).queue()));
 
+            case SOFTBAN -> guild.ban(target, 1, TimeUnit.DAYS).reason(reason)
+                    .delay(3, TimeUnit.SECONDS)
+                    .onSuccess(x -> guild.unban(target).reason(reason)).queue(x -> hook.editOriginal(bundle.getString("executePunishment.softban.successfully")).queue(),
+                            new ErrorHandler()
+                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.softban.missingPermissions")).queue())
+                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.softban.unknownMember")).queue()));
             default -> hook.editOriginal(bundle.getString("executePunishment.default.reply")).queue();
         }
     }
@@ -177,6 +183,10 @@ public class Punishment {
                 userEmbedDescriptionString = bundle.getString("preparePunishment.userEmbed.description.ban");
                 userEmbedReasonFieldString = bundle.getString("preparePunishment.userEmbed.field.reason.description.kick|ban");
             }
+            case SOFTBAN -> {
+                userEmbedDescriptionString = bundle.getString("preparePunishment.userEmbed.description.softban");
+                userEmbedReasonFieldString = bundle.getString("preparePunishment.userEmbed.field.reason.description.softban");
+            }
             default -> {
                 hook.editOriginal(bundle.getString("preparePunishment.unexpectedError")).queue();
                 return;
@@ -190,14 +200,14 @@ public class Punishment {
                 .queue(x -> executePunishment(type, target, reason, hook, days), new ErrorHandler()
                         .ignore(ErrorResponse.UNKNOWN_CHANNEL)
                         .handle(ErrorResponse.CANNOT_SEND_TO_USER, x -> {
-                            hook.sendMessage(bundle.getString("preparePunishemnt.userHasDmDisabled")).setEphemeral(true).queue();
+                            hook.sendMessage(bundle.getString("preparePunishment.userHasDmDisabled")).setEphemeral(true).queue();
                             executePunishment(type, target, reason, hook, days);
                         }));
     }
 
     private void checkPreconditions(@NotNull User target, @NotNull Member moderator, @NotNull PunishmentType type, String reason, Integer days, InteractionHook hook) {
         // Conditions to not execute the punishment to yourself, a bot, a member with a higher role, an admin
-        moderator.getGuild().retrieveMember(target).onSuccess(x -> {
+        moderator.getGuild().retrieveMember(target).queue(x -> {
             if (type.equals(PunishmentType.UNKNOWN) || type.equals(PunishmentType.TIMEOUT) || type.equals(PunishmentType.UNBAN)) {
                 hook.editOriginal(bundle.getString("checkPreconditions.falsePunishmentType")).queue();
             } else if (x.equals(moderator)) {
@@ -211,7 +221,7 @@ public class Punishment {
             } else {
                 preparePunishment(target, moderator, reason, type, days, hook);
             }
-        }).queue(null, new ErrorHandler()
+        }, new ErrorHandler()
                 .handle(ErrorResponse.UNKNOWN_MEMBER, x -> guild.retrieveBanList().queue(y -> {
                     if (y.stream().noneMatch(z -> z.getUser().equals(target)) && type.equals(PunishmentType.BAN)) {
                         preparePunishment(target, moderator, reason, type, days, hook);
@@ -222,7 +232,6 @@ public class Punishment {
                     }
                 }))
                 .handle(ErrorResponse.UNKNOWN_USER, x -> hook.editOriginal(bundle.getString("checkPreconditions.retrieveMember.unknownUser")).queue()));
-
     }
 
 }

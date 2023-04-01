@@ -43,7 +43,7 @@ public class UnbanSlashCommand extends CustomCommand {
                 return;
             }
             Postgres db = controller.getMain().getPostgres();
-            if (db.getIsPostgresEnabled()) {
+            if (!db.getIsPostgresEnabled()) {
 
                 event.getGuild().unban(target).reason(reason).queue(x -> {
                             if (!controller.getMain().getPostgres().putPunishmentDataInPunishmentTable(target, moderator, PunishmentType.UNBAN.getId(), reason)) {
@@ -63,15 +63,15 @@ public class UnbanSlashCommand extends CustomCommand {
                             WebhookEmbedBuilder logEmbed = new WebhookEmbedBuilder();
                             logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, getName()), null));
                             logEmbed.addField(new WebhookEmbed.EmbedField(false,
-                                    guildBundle.getString("preparePunishment.logEmbed.field.offender.name"),
+                                    guildBundle.getString("command.logEmbed.field.offender.name"),
                                     String.format("%s (%s)", target.getAsTag(), target.getAsMention())));
                             //noinspection ConstantConditions // Punishment events are all guild events
                             logEmbed.addField(new WebhookEmbed.EmbedField(false,
-                                    guildBundle.getString("preparePunishment.logEmbed.field.moderator.name"),
+                                    guildBundle.getString("command.logEmbed.field.moderator.name"),
                                     String.format("%s (%s)", moderator.getEffectiveName(), moderator.getAsMention())));
                             //noinspection ConstantConditions // Reason is a requiered option
                             logEmbed.addField(new WebhookEmbed.EmbedField(false,
-                                    guildBundle.getString("preparePunishment.logEmbed.field.reason.name"),
+                                    guildBundle.getString("command.logEmbed.field.reason.name"),
                                     reason));
                             logEmbed.setAuthor(new WebhookEmbed.EmbedAuthor(selfUser.getName(), selfUser.getEffectiveAvatarUrl(), null));
                             logEmbed.setTimestamp(OffsetDateTime.now());

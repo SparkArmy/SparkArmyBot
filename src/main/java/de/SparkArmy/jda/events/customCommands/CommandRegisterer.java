@@ -152,4 +152,16 @@ public class CommandRegisterer {
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()))
                 .setGuildOnly(true);
     }
+
+    @JDACommandData
+    final @NotNull CommandData softbanSlashCommand() {
+        return Commands.slash("softban", "Ban and unban a user and delete his messages")
+                .addOptions(
+                        new OptionData(OptionType.USER, "target-user", "The user you want to softban")
+                                .setRequired(true),
+                        new OptionData(OptionType.STRING, "reason", "the reason for the softban")
+                                .setRequired(true))
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()))
+                .setGuildOnly(true);
+    }
 }

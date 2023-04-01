@@ -14,6 +14,8 @@ public enum PunishmentType {
     BAN(4, "ban"),
     TIMEOUT(5, "timeout"),
     UNBAN(6, "unban"),
+    SOFTBAN(7, "softban"),
+
     ;
     private final Integer id;
     private final String name;

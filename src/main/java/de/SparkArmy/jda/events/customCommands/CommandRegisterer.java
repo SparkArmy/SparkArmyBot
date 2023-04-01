@@ -164,4 +164,11 @@ public class CommandRegisterer {
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()))
                 .setGuildOnly(true);
     }
+
+    @JDACommandData
+    final @NotNull CommandData pingSlashCommand() {
+        return Commands.slash("ping", "Replies with pong")
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.ENABLED);
+    }
 }

@@ -36,6 +36,7 @@ public class CommandDispatcher {
         registerCommand(new UnbanSlashCommand());
         registerCommand(new SoftbanSlashCommand());
         registerCommand(new PingSlashCommand());
+        registerCommand(new NoteSlashCommand());
     }
 
     private void registerCommand(CustomCommand c) {

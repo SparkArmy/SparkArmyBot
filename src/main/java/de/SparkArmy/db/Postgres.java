@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.sql.*;
+import java.util.HashMap;
 import java.util.Properties;
 
 public class Postgres {
@@ -282,6 +283,15 @@ public class Postgres {
         return rs.getLong(1);
     }
 
+    private long getMemberIdFromModeratorId(@NotNull Connection conn, long databaseModeratorId) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT "fk_mbrUserId" FROM guilddata."tblMember" WHERE "mbrId" = (SELECT "fk_modMemberId" FROM guilddata."tblModerator" WHERE "modId" = ?);""");
+        prepStmt.setLong(1, databaseModeratorId);
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) return -1;
+        return rs.getLong(1);
+    }
+
     public boolean putDataInModeratorTable(Member member) {
         if (isPostgresDisabled) return false;
         try {
@@ -404,8 +414,104 @@ public class Postgres {
         return rs.getLong(1) > 0;
     }
 
+    public boolean putDataInNoteTable(String note, Member mbr, Member mod) {
+        if (isPostgresDisabled) return false;
+        try {
+            Connection conn = connection();
+            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
+            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, mod.getIdLong(), mod.getGuild().getIdLong()));
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO guilddata."tblNote" ("fk_notMemberId", "notContent", "fk_notModeratorId","notTimestamp") VALUES (?,?,?,now());
+                    """);
+            prepStmt.setLong(1, databaseMemberId);
+            prepStmt.setLong(2, databaseModeratorId);
+            prepStmt.setString(3, note);
+
+            prepStmt.execute();
+            conn.close();
+            return true;
+        } catch (SQLException e) {
+            Util.handleSQLExeptions(e);
+            return false;
+        }
+    }
+
+    public boolean updateDataFromNoteTable(String note, Member mbr, Member mod, Timestamp timestamp) {
+        if (isPostgresDisabled) return false;
+        try {
+            Connection conn = connection();
+            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
+            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, mod.getIdLong(), mod.getGuild().getIdLong()));
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE guilddata."tblNote" SET "notContent" = ? WHERE "fk_notMemberId" = ? AND "fk_notModeratorId" = ? AND "notTimestamp" = ?;
+                    """);
+            prepStmt.setString(1, note);
+            prepStmt.setLong(2, databaseMemberId);
+            prepStmt.setLong(3, databaseModeratorId);
+            prepStmt.setTimestamp(4, timestamp);
+            prepStmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Util.handleSQLExeptions(e);
+            return false;
+        }
+    }
+
+    public boolean deleteDataFromNoteTable(Member mbr, Member mod, Timestamp timestamp) {
+        if (isPostgresDisabled) return false;
+        try {
+            Connection conn = connection();
+            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
+            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, mod.getIdLong(), mod.getGuild().getIdLong()));
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guilddata."tblNote" WHERE "notTimestamp" = ? AND "fk_notModeratorId" = ?AND  "fk_notMemberId" = ?;
+                    """);
+            prepStmt.setTimestamp(1, timestamp);
+            prepStmt.setLong(2, databaseModeratorId);
+            prepStmt.setLong(3, databaseMemberId);
+            prepStmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Util.handleSQLExeptions(e);
+            return false;
+        }
+    }
+
+    public HashMap<Timestamp, HashMap<Long, String>> getDataFromNoteTable(Member mbr) {
+        if (isPostgresDisabled) return null;
+        try {
+            Connection conn = connection();
+            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guilddata."tblNote" WHERE "fk_notMemberId" = ?;
+                    """);
+
+            prepStmt.setLong(1, databaseMemberId);
+
+            ResultSet rs = prepStmt.executeQuery();
+
+            HashMap<Timestamp, HashMap<Long, String>> results = new HashMap<>();
+
+            while (rs.next()) {
+                Timestamp timestamp = rs.getTimestamp("notTimestamp");
+                Long moderatorMemberId = getMemberIdFromModeratorId(conn, rs.getLong("fk_notModeratorId"));
+                String content = rs.getString("notContent");
+                results.put(timestamp, new HashMap<>() {{
+                    put(moderatorMemberId, content);
+                }});
+            }
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExeptions(e);
+            return null;
+        }
+    }
+
     public boolean getIsPostgresEnabled() {
         return !isPostgresDisabled;
     }
-
 }

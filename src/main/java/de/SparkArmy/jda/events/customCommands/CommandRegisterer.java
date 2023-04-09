@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction;
 import net.dv8tion.jda.api.interactions.commands.localization.ResourceBundleLocalizationFunction;
 import org.jetbrains.annotations.Contract;
@@ -168,7 +169,25 @@ public class CommandRegisterer {
     @JDACommandData
     final @NotNull CommandData pingSlashCommand() {
         return Commands.slash("ping", "Replies with pong")
-                .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.ENABLED);
+    }
+
+    @JDACommandData
+    final @NotNull CommandData noteSlashCommand() {
+        return Commands.slash("note", "Add, edit or remove a note from member")
+                .addSubcommands(
+                        new SubcommandData("add", "Add a note to a member")
+                                .addOptions(
+                                        new OptionData(OptionType.USER, "user", "The target user"),
+                                        new OptionData(OptionType.STRING, "note", "The note")
+                                ),
+                        new SubcommandData("show", "Show the notes from a member, you can remove or edit the notes")
+                                .addOptions(
+                                        new OptionData(OptionType.USER, "user", "The target user")
+                                                .setRequired(true)
+                                )
+                )
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
     }
 }

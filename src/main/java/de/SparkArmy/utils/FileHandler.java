@@ -1,6 +1,5 @@
 package de.SparkArmy.utils;
 
-import de.SparkArmy.controller.LoggingMarker;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -109,7 +108,7 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.error(LoggingMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
+            logger.error("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
@@ -119,23 +118,23 @@ public class FileHandler {
         try {
             return Files.readString(Path.of(file.getAbsolutePath()));
         } catch (IOException e) {
-            logger.error(LoggingMarker.FILHANDLER,"Can't read the File content from " + file.getAbsolutePath());
+            logger.error("Can't read the File content from " + file.getAbsolutePath());
             return null;
         }
     }
 
     public static @Nullable List<File> getFilesInDirectory(File path){
         if (null == path){
-            logger.info(LoggingMarker.FILHANDLER,"FILEHANDLER: The path is null");
+            logger.info("FILEHANDLER: The path is null");
             return null;
         }
 
         if (path.isFile()){
-            logger.info(LoggingMarker.FILHANDLER,"FILEHANDLER: The path is a file");
+            logger.info("FILEHANDLER: The path is a file");
             return null;
         }
         if (null == path.listFiles()){
-            logger.info(LoggingMarker.FILHANDLER,"FILEHANDLER: Error to listFiles");
+            logger.info("FILEHANDLER: Error to listFiles");
             return null;
         }
         return Arrays.stream(Objects.requireNonNull(path.listFiles())).toList();
@@ -150,7 +149,7 @@ public class FileHandler {
         try {
             return new FileWriter(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            logger.error(LoggingMarker.FILHANDLER,"Can't create a file-writer");
+            logger.error("Can't create a file-writer");
             return null;
         }
     }

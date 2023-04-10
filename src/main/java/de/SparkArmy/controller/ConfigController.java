@@ -49,7 +49,7 @@ public class ConfigController {
 
     public JSONObject getMainConfigFile(){
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
-            this.logger.warn(LoggingMarker.CONFIG,"The main-config.json-file not exist, we will created a new");
+            this.logger.warn("The main-config.json-file not exist, we will created a new");
             JSONObject blankConfig = new JSONObject();
             JSONObject discord = new JSONObject(){{
                 put("discord-token","Write here your Discord-Bot-Token");
@@ -69,25 +69,25 @@ public class ConfigController {
             JSONObject postgres = new JSONObject(){{
                 put("url","The url for the database");
                 put("user","Database-User");
-                put("password","User-Password");
+                put("password", "User-Password");
             }};
-            blankConfig.put("postgres",postgres);
-            JSONObject otherKeys = new JSONObject(){{
-                put("virustotal-api-key","[Optional] Write here your API-Key from VirusTotal");
-                put("storage-server","Please setup a new server, delete all included channels and put the id in this field");
-                put("twitter_bearer","Please copy the twitter bearer in this field");
+            blankConfig.put("postgres", postgres);
+            JSONObject otherKeys = new JSONObject() {{
+                put("virustotal-api-key", "[Optional] Write here your API-Key from VirusTotal");
+                put("storage-server", "Please setup a new server, delete all included channels and put the id in this field");
+                put("twitter_bearer", "Please copy the twitter bearer in this field");
             }};
-            blankConfig.put("otherKeys",otherKeys);
+            blankConfig.put("otherKeys", otherKeys);
 
-            if(FileHandler.writeValuesInFile(this.configFolder,"main-config.json",blankConfig)){
-                this.logger.info(LoggingMarker.CONFIG,"main-config.json was successful created");
-                this.logger.warn(LoggingMarker.CONFIG,"Please finish your configuration");
+            if (FileHandler.writeValuesInFile(this.configFolder, "main-config.json", blankConfig)) {
+                this.logger.info("main-config.json was successful created");
+                this.logger.warn("Please finish your configuration");
                 try {
-                   Desktop.getDesktop().open(FileHandler.getFileInDirectory(this.configFolder, "main-config.json"));
+                    Desktop.getDesktop().open(FileHandler.getFileInDirectory(this.configFolder, "main-config.json"));
                 } catch (Exception ignored) {
                 }
-            }else {
-                this.logger.error(LoggingMarker.CONFIG, "Can't create a main-config.json");
+            } else {
+                this.logger.error("Can't create a main-config.json");
                 this.main.systemExit(1);
             }
 
@@ -95,7 +95,7 @@ public class ConfigController {
         }
         String mainConfigAsString = FileHandler.getFileContent(this.configFolder,"main-config.json");
         if (mainConfigAsString == null) {
-            this.logger.error(LoggingMarker.CONFIG, "The main-config.json is null");
+            this.logger.error("The main-config.json is null");
             this.main.systemExit(12);
         }
         assert mainConfigAsString != null;

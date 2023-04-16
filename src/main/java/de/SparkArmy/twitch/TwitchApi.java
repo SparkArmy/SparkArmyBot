@@ -26,8 +26,6 @@ public class TwitchApi {
                 .withClientSecret(mainConfig.getJSONObject("twitch").getString("twitch-client-secret"))
                 .withDefaultEventHandler(SimpleEventHandler.class)
                 .build();
-
-        registerEventListener("JonWichi");
     }
 
     public void registerEventListener(String twitchUserName) {

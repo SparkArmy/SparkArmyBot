@@ -178,8 +178,10 @@ public class CommandRegisterer {
                 .addSubcommands(
                         new SubcommandData("add", "Add a note to a member")
                                 .addOptions(
-                                        new OptionData(OptionType.USER, "user", "The target user"),
+                                        new OptionData(OptionType.USER, "user", "The target user")
+                                                .setRequired(true),
                                         new OptionData(OptionType.STRING, "note", "The note")
+                                                .setRequired(true)
                                 ),
                         new SubcommandData("show", "Show the notes from a member, you can remove or edit the notes")
                                 .addOptions(

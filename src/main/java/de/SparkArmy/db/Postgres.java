@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.sql.*;
-import java.util.HashMap;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 public class Postgres {
@@ -414,19 +414,19 @@ public class Postgres {
         return rs.getLong(1) > 0;
     }
 
-    public boolean putDataInNoteTable(String note, Member mbr, Member mod) {
+    public boolean putDataInNoteTable(String note, long targetMemberId, long moderatorId, long guildId) {
         if (isPostgresDisabled) return false;
         try {
             Connection conn = connection();
-            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
-            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, mod.getIdLong(), mod.getGuild().getIdLong()));
+            long databaseMemberId = getMemberIdFromMemberTable(conn, targetMemberId, guildId);
+            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, moderatorId, guildId));
 
             PreparedStatement prepStmt = conn.prepareStatement("""
                     INSERT INTO guilddata."tblNote" ("fk_notMemberId", "notContent", "fk_notModeratorId","notTimestamp") VALUES (?,?,?,now());
                     """);
             prepStmt.setLong(1, databaseMemberId);
-            prepStmt.setLong(2, databaseModeratorId);
-            prepStmt.setString(3, note);
+            prepStmt.setLong(3, databaseModeratorId);
+            prepStmt.setString(2, note);
 
             prepStmt.execute();
             conn.close();
@@ -480,34 +480,35 @@ public class Postgres {
         }
     }
 
-    public HashMap<Timestamp, HashMap<Long, String>> getDataFromNoteTable(Member mbr) {
-        if (isPostgresDisabled) return null;
+    public JSONObject getDataFromNoteTable(long targetId, long guildId) {
+        if (isPostgresDisabled) return new JSONObject();
         try {
             Connection conn = connection();
-            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
+            long databaseMemberId = getMemberIdFromMemberTable(conn, targetId, guildId);
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT * FROM guilddata."tblNote" WHERE "fk_notMemberId" = ?;
-                    """);
+                    SELECT * FROM guilddata."tblNote" WHERE "fk_notMemberId" = ? ORDER BY "notTimestamp";
+                                        """);
 
             prepStmt.setLong(1, databaseMemberId);
 
             ResultSet rs = prepStmt.executeQuery();
 
-            HashMap<Timestamp, HashMap<Long, String>> results = new HashMap<>();
+            JSONObject results = new JSONObject();
 
             while (rs.next()) {
                 Timestamp timestamp = rs.getTimestamp("notTimestamp");
                 Long moderatorMemberId = getMemberIdFromModeratorId(conn, rs.getLong("fk_notModeratorId"));
                 String content = rs.getString("notContent");
-                results.put(timestamp, new HashMap<>() {{
-                    put(moderatorMemberId, content);
-                }});
+                JSONObject entry = new JSONObject();
+                entry.put("moderatorId", moderatorMemberId);
+                entry.put("noteContent", content);
+                results.put(timestamp.toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), entry);
             }
             return results;
         } catch (SQLException e) {
             Util.handleSQLExeptions(e);
-            return null;
+            return new JSONObject();
         }
     }
 

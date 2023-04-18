@@ -24,20 +24,19 @@ public class NoteSlashCommand extends CustomCommand {
         return "note";
     }
 
-    private Logger logger;
     private Postgres db;
 
     @Override
     public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
-        logger = controller.getMain().getLogger();
+        Logger logger = controller.getMain().getLogger();
         db = controller.getMain().getPostgres();
         ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
         String subcommandName = event.getSubcommandName();
 
         //noinspection DataFlowIssue
         switch (subcommandName) {
-            case "add" -> addNoteCommand(event, controller);
-            case "show" -> showNoteCommand(event, controller);
+            case "add" -> addNoteCommand(event);
+            case "show" -> showNoteCommand(event);
             default -> {
                 logger.warn(getName() + " has a default value in switch(subcommandName) with value: " + subcommandName);
                 event.reply(bundle.getString("command.dispatchSlashEvent.defaultReply")).setEphemeral(true).queue();
@@ -46,7 +45,7 @@ public class NoteSlashCommand extends CustomCommand {
 
     }
 
-    private void showNoteCommand(@NotNull SlashCommandInteractionEvent event, ConfigController controller) {
+    private void showNoteCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
 
         User member = event.getOption("user", OptionMapping::getAsUser);
@@ -92,11 +91,17 @@ public class NoteSlashCommand extends CustomCommand {
                 .queue();
     }
 
-    private void addNoteCommand(@NotNull SlashCommandInteractionEvent event, ConfigController controller) {
+    private void addNoteCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
 
         User targetUser = event.getOption("user", OptionMapping::getAsUser); // Option is required
         String note = event.getOption("note", OptionMapping::getAsString); // Option is required
+
+        //noinspection DataFlowIssue
+        if (note.length() > 1024) {
+            event.reply(bundle.getString("command.addNoteCommand.noteIsToLong")).setEphemeral(true).queue();
+            return;
+        }
 
         //noinspection DataFlowIssue // Command is guild-only
         if (db.putDataInNoteTable(note, targetUser.getIdLong(), event.getUser().getIdLong(), event.getGuild().getIdLong())) {

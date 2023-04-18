@@ -437,12 +437,12 @@ public class Postgres {
         }
     }
 
-    public boolean updateDataFromNoteTable(String note, Member mbr, Member mod, Timestamp timestamp) {
+    public boolean updateDataFromNoteTable(String note, long mbrId, long modId, long guildId, Timestamp timestamp) {
         if (isPostgresDisabled) return false;
         try {
             Connection conn = connection();
-            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
-            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, mod.getIdLong(), mod.getGuild().getIdLong()));
+            long databaseMemberId = getMemberIdFromMemberTable(conn, mbrId, guildId);
+            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, modId, guildId));
 
             PreparedStatement prepStmt = conn.prepareStatement("""
                     UPDATE guilddata."tblNote" SET "notContent" = ? WHERE "fk_notMemberId" = ? AND "fk_notModeratorId" = ? AND "notTimestamp" = ?;
@@ -459,15 +459,15 @@ public class Postgres {
         }
     }
 
-    public boolean deleteDataFromNoteTable(Member mbr, Member mod, Timestamp timestamp) {
+    public boolean deleteDataFromNoteTable(long mbrId, long modId, long guildId, Timestamp timestamp) {
         if (isPostgresDisabled) return false;
         try {
             Connection conn = connection();
-            long databaseMemberId = getMemberIdFromMemberTable(conn, mbr.getIdLong(), mbr.getGuild().getIdLong());
-            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, mod.getIdLong(), mod.getGuild().getIdLong()));
+            long databaseMemberId = getMemberIdFromMemberTable(conn, mbrId, guildId);
+            long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, modId, guildId));
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    DELETE FROM guilddata."tblNote" WHERE "notTimestamp" = ? AND "fk_notModeratorId" = ?AND  "fk_notMemberId" = ?;
+                    DELETE FROM guilddata."tblNote" WHERE "notTimestamp" = ? AND "fk_notModeratorId" = ? AND  "fk_notMemberId" = ?;
                     """);
             prepStmt.setTimestamp(1, timestamp);
             prepStmt.setLong(2, databaseModeratorId);

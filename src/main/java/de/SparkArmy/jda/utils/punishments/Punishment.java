@@ -43,18 +43,8 @@ public class Punishment {
         String reason = event.getOption("reason", OptionMapping::getAsString);
         Integer days = event.getOption("days", 0, OptionMapping::getAsInt);
         InteractionHook hook = event.getHook();
-        //noinspection ConstantConditions // Target is a requiered option and all punishment event are guild events
         checkPreconditions(target, moderator, type, reason, days, hook);
     }
-
-    public Punishment(@NotNull SlashCommandInteractionEvent event, PunishmentType type, @NotNull ConfigController controller, OffsetDateTime duration) {
-        this.bundle = Util.getResourceBundle("PunishmentClazz", event.getUserLocale());
-        this.db = controller.getMain().getPostgres();
-        this.controller = controller;
-        this.guild = event.getGuild();
-        new TemporaryPunishment();
-    }
-
 
     private void executePunishment(@NotNull PunishmentType type, User target, String reason, InteractionHook hook, Integer days) {
         JSONObject guildConfig = controller.getGuildMainConfig(guild);
@@ -67,55 +57,55 @@ public class Punishment {
         switch (type) {
             case WARN -> {
                 if (punishmentRoles.isNull("warn") || punishmentRoles.getString("warn").isBlank()) {
-                    hook.editOriginal(bundle.getString("executePunishment.warn.config.warnIsNull")).queue();
+                    hook.editOriginal(bundle.getString("executePunishment.switchType.warn.config.warnIsNull")).queue();
                     return;
                 }
                 Role role = guild.getRoleById(punishmentRoles.getString("warn"));
                 if (role == null) {
-                    hook.editOriginal(bundle.getString("executePunishment.warn.role.roleIsNull")).queue();
+                    hook.editOriginal(bundle.getString("executePunishment.switchType.warn.role.roleIsNull")).queue();
                     return;
                 }
-                guild.addRoleToMember(target, role).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.warn.successfully")).queue(),
+                guild.addRoleToMember(target, role).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.warn.successfully")).queue(),
                         new ErrorHandler()
-                                .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.warn.addRoleToMember.missingPermissions")).queue())
-                                .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.warn.addRoleToMember.unknownMember")).queue())
-                                .handle(ErrorResponse.UNKNOWN_ROLE, x -> hook.editOriginal(bundle.getString("executePunishment.warn.role.roleIsNull")).queue()));
+                                .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.warn.addRoleToMember.missingPermissions")).queue())
+                                .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.warn.addRoleToMember.unknownMember")).queue())
+                                .handle(ErrorResponse.UNKNOWN_ROLE, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.warn.role.roleIsNull")).queue()));
             }
             case MUTE -> {
                 if (punishmentRoles.isNull("mute") || punishmentRoles.getString("mute").isBlank()) {
-                    hook.editOriginal(bundle.getString("executePunishment.mute.config.muteIsNull")).queue();
+                    hook.editOriginal(bundle.getString("executePunishment.switchType.mute.config.muteIsNull")).queue();
                     return;
                 }
                 Role role = guild.getRoleById(punishmentRoles.getString("mute"));
                 if (role == null) {
-                    hook.editOriginal(bundle.getString("executePunishment.mute.role.roleIsNull")).queue();
+                    hook.editOriginal(bundle.getString("executePunishment.switchType.mute.role.roleIsNull")).queue();
                     return;
                 }
-                guild.addRoleToMember(target, role).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.mute.successfully")).queue(),
+                guild.addRoleToMember(target, role).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.mute.successfully")).queue(),
                         new ErrorHandler()
-                                .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.mute.addRoleToMember.missingPermissions")).queue())
-                                .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.mute.addRoleToMember.unknownMember")).queue())
+                                .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.mute.addRoleToMember.missingPermissions")).queue())
+                                .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.mute.addRoleToMember.unknownMember")).queue())
                                 .handle(ErrorResponse.UNKNOWN_ROLE, x -> hook.editOriginal(bundle.getString("executePunishment.mute.roleIsNull")).queue()));
             }
             case KICK ->
-                    guild.kick(target).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.kick.successfully")).queue(),
+                    guild.kick(target).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.successfully")).queue(),
                             new ErrorHandler()
-                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.kick.missingPermissions")).queue())
-                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.kick.unknownMember")).queue()));
+                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.missingPermissions")).queue())
+                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.unknownMember")).queue()));
 
             case BAN ->
-                    guild.ban(target, days, TimeUnit.DAYS).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.ban.successfully")).queue(),
+                    guild.ban(target, days, TimeUnit.DAYS).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.successfully")).queue(),
                             new ErrorHandler()
-                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.ban.missingPermissions")).queue())
-                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.ban.unknownMember")).queue()));
+                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.missingPermissions")).queue())
+                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.unknownMember")).queue()));
 
             case SOFTBAN -> guild.ban(target, 1, TimeUnit.DAYS).reason(reason)
                     .delay(3, TimeUnit.SECONDS)
-                    .onSuccess(x -> guild.unban(target).reason(reason)).queue(x -> hook.editOriginal(bundle.getString("executePunishment.softban.successfully")).queue(),
+                    .onSuccess(x -> guild.unban(target).reason(reason)).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.softban.successfully")).queue(),
                             new ErrorHandler()
-                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.softban.missingPermissions")).queue())
-                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.softban.unknownMember")).queue()));
-            default -> hook.editOriginal(bundle.getString("executePunishment.default.reply")).queue();
+                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.softban.missingPermissions")).queue())
+                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.softban.unknownMember")).queue()));
+            default -> hook.editOriginal(bundle.getString("executePunishment.switchType.default.reply")).queue();
         }
     }
 
@@ -128,7 +118,6 @@ public class Punishment {
             }
         }
         User selfUser = hook.getJDA().getSelfUser();
-        Guild guild = hook.getInteraction().getGuild();
 
         // Get punishmentNumber from guild
         long punishmentCount = db.getPunishmentCountFromGuild(hook.getInteraction().getGuild());
@@ -151,7 +140,6 @@ public class Punishment {
         logEmbed.setAuthor(new WebhookEmbed.EmbedAuthor(selfUser.getName(), selfUser.getEffectiveAvatarUrl(), null));
         logEmbed.setTimestamp(OffsetDateTime.now());
         logEmbed.setColor(new Color(255, 0, 0).getRGB());
-        //noinspection ConstantConditions // Punishment interaction allways comes from guild
         logEmbed.setFooter(new WebhookEmbed.EmbedFooter(guild.getName(), guild.getIconUrl()));
 
         Util.prepareSendingModLogEmbed(logEmbed.build(), guild);
@@ -205,19 +193,31 @@ public class Punishment {
                         }));
     }
 
-    private void checkPreconditions(@NotNull User target, @NotNull Member moderator, @NotNull PunishmentType type, String reason, Integer days, InteractionHook hook) {
+    private void checkPreconditions(User target, Member moderator, @NotNull PunishmentType type, String reason, Integer days, InteractionHook hook) {
+
+        if (guild == null || moderator == null) {
+            hook.editOriginal(bundle.getString("checkPreconditions.nullChecks.guildIsNull")).queue();
+            return;
+        }
+
+        if (target == null) {
+            hook.editOriginal(bundle.getString("checkPreconditions.nullChecks.targetIsNull")).queue();
+            return;
+        }
+
+
         // Conditions to not execute the punishment to yourself, a bot, a member with a higher role, an admin
-        moderator.getGuild().retrieveMember(target).queue(x -> {
+        guild.retrieveMember(target).queue(x -> {
             if (type.equals(PunishmentType.UNKNOWN) || type.equals(PunishmentType.TIMEOUT) || type.equals(PunishmentType.UNBAN)) {
-                hook.editOriginal(bundle.getString("checkPreconditions.falsePunishmentType")).queue();
+                hook.editOriginal(bundle.getString("checkPreconditions.retrieveMember.falsePunishmentType")).queue();
             } else if (x.equals(moderator)) {
-                hook.editOriginal(bundle.getString(String.format("checkPreconditions.%s.targetEqualsModerator", type.getName()))).queue();
+                hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetEqualsModerator", type.getName()))).queue();
             } else if (target.isBot()) {
-                hook.editOriginal(bundle.getString(String.format("checkPreconditions.%s.targetIsBot", type.getName()))).queue();
+                hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetIsBot", type.getName()))).queue();
             } else if (!x.getRoles().isEmpty() && !moderator.canInteract(x.getRoles().get(0))) {
-                hook.editOriginal(bundle.getString(String.format("checkPreconditions.%s.targetHaveHigherRole", type.getName()))).queue();
+                hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetHaveHigherRole", type.getName()))).queue();
             } else if (x.hasPermission(Permission.ADMINISTRATOR)) {
-                hook.editOriginal(bundle.getString(String.format("checkPreconditions.%s.targetIsAdmin", type.getName()))).queue();
+                hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetIsAdmin", type.getName()))).queue();
             } else {
                 preparePunishment(target, moderator, reason, type, days, hook);
             }
@@ -226,12 +226,12 @@ public class Punishment {
                     if (y.stream().noneMatch(z -> z.getUser().equals(target)) && type.equals(PunishmentType.BAN)) {
                         preparePunishment(target, moderator, reason, type, days, hook);
                     } else if (y.stream().allMatch(z -> z.getUser().equals(target)) && type.equals(PunishmentType.BAN)) {
-                        hook.editOriginal(bundle.getString("checkPreconditions.userIsBanned")).queue();
+                        hook.editOriginal(bundle.getString("checkPreconditions.retrieveMember.errorHandler.userIsBanned")).queue();
                     } else {
-                        hook.editOriginal(bundle.getString("checkPreconditions.userIsNotAMember")).queue();
+                        hook.editOriginal(bundle.getString("checkPreconditions.retrieveMember.errorHandler.userIsNotAMember")).queue();
                     }
                 }))
-                .handle(ErrorResponse.UNKNOWN_USER, x -> hook.editOriginal(bundle.getString("checkPreconditions.retrieveMember.unknownUser")).queue()));
+                .handle(ErrorResponse.UNKNOWN_USER, x -> hook.editOriginal(bundle.getString("checkPreconditions.retrieveMember.errorHandler.unknownUser")).queue()));
     }
 
 }

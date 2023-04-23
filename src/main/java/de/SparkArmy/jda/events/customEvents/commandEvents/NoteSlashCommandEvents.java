@@ -131,6 +131,7 @@ public class NoteSlashCommandEvents {
     }
 
     private void sendInitialEmbed(@NotNull ButtonInteractionEvent event, NoteEmbedActionType actionType) {
+        if (event.getGuild() == null) return;
         event.deferEdit().queue();
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
@@ -138,7 +139,6 @@ public class NoteSlashCommandEvents {
         String targetUserId = ids[1];
         if (!event.getUser().getId().equals(commandUserId)) return;
 
-        @SuppressWarnings("DataFlowIssue") // Event triggered by guild-only interaction
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(targetUserId), event.getGuild().getIdLong());
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
@@ -170,6 +170,7 @@ public class NoteSlashCommandEvents {
     }
 
     private void sendShowEmbed(@NotNull ButtonInteractionEvent event, ClickType clicktype, NoteEmbedActionType actionType) {
+        if (event.getGuild() == null) return;
         event.deferEdit().queue();
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
@@ -184,7 +185,6 @@ public class NoteSlashCommandEvents {
         StringSelectMenu.Builder menuBuilder = StringSelectMenu.create(
                 String.format("noteCommand_showNoteEmbed_%sMenu;%s,%s", actionType.getName(), commandUserId, targetUserId));
 
-        @SuppressWarnings("DataFlowIssue") // Parent event is guild-only
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(targetUserId), event.getGuild().getIdLong());
 
         RestAction.allOf(setEmbedFieldsAndGetModerators(showNoteEmbed, menuBuilder, count, notes)).mapToResult()
@@ -228,12 +228,13 @@ public class NoteSlashCommandEvents {
 
     @JDAStringMenu(startWith = "noteCommand_showNoteEmbed_editMenu")
     public void noteEditSelectEvent(@NotNull StringSelectInteractionEvent event) {
+        if (event.getGuild() == null) return;
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
         if (!event.getUser().getId().equals(ids[0])) return;
         TextInput.Builder noteContent = TextInput.create(event.getValues().get(0), "Note Content", TextInputStyle.PARAGRAPH);
         noteContent.setMaxLength(1024);
-        //noinspection DataFlowIssue // Parent Event is guild-only
+
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong());
         noteContent.setValue(notes.getJSONObject(event.getValues().get(0)).getString("noteContent"));
 
@@ -248,13 +249,13 @@ public class NoteSlashCommandEvents {
 
     @JDAStringMenu(startWith = "noteCommand_showNoteEmbed_removeMenu")
     public void noteRemoveSelectEvent(@NotNull StringSelectInteractionEvent event) {
+        if (event.getGuild() == null) return;
         event.deferEdit().queue();
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
         if (!event.getUser().getId().equals(ids[0])) return;
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-        //noinspection DataFlowIssue // parent event is guild-only
         if (db.deleteDataFromNoteTable(
                 Long.parseLong(ids[1]),
                 Long.parseLong(ids[0]),
@@ -274,6 +275,7 @@ public class NoteSlashCommandEvents {
 
     @JDAModal(startWith = "noteCommand_editNoteModal")
     public void noteModalEvent(@NotNull ModalInteractionEvent event) {
+        if (event.getGuild() == null) return;
         event.deferReply(true).queue();
         String[] splitId = event.getModalId().split(";");
         String[] ids = splitId[1].split(",");
@@ -282,7 +284,6 @@ public class NoteSlashCommandEvents {
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
         ModalMapping noteContentField = event.getValues().get(0);
 
-        //noinspection DataFlowIssue // parent event is guild only
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong());
 
         if (notes.getJSONObject(noteContentField.getId()).getString("noteContent").equals(noteContentField.getAsString())) {
@@ -302,7 +303,8 @@ public class NoteSlashCommandEvents {
         }
     }
 
-    private @NotNull Collection<RestAction<User>> setEmbedFieldsAndGetModerators(EmbedBuilder showNoteEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject notes) {
+    private @NotNull Collection<RestAction<User>> setEmbedFieldsAndGetModerators(
+            EmbedBuilder showNoteEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject notes) {
         Collection<RestAction<User>> restActions = new ArrayList<>();
         int i = 0;
 

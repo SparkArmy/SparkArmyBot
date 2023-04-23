@@ -5,6 +5,9 @@ import de.SparkArmy.db.Postgres;
 import de.SparkArmy.jda.events.customCommands.CustomCommand;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -33,10 +36,27 @@ public class NoteSlashCommand extends CustomCommand {
         ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
         String subcommandName = event.getSubcommandName();
 
-        //noinspection DataFlowIssue
+        if (subcommandName == null) {
+            event.reply(bundle.getString("command.dispatchSlashEvent.subcommandNameIsNull")).setEphemeral(true).queue();
+            return;
+        }
+
+        Member commandMember = event.getMember();
+        Guild eventGuild = event.getGuild();
+        if (commandMember == null || eventGuild == null) {
+            event.reply(bundle.getString("command.dispatchSlashEvent.eventNotFromGuild")).setEphemeral(true).queue();
+            return;
+        }
+
+        User targetUser = event.getOption("user", OptionMapping::getAsUser);
+        if (targetUser == null) {
+            event.reply(bundle.getString("command.dispatchSlashEvent.targetIsNull")).setEphemeral(true).queue();
+            return;
+        }
+
         switch (subcommandName) {
-            case "add" -> addNoteCommand(event);
-            case "show" -> showNoteCommand(event);
+            case "add" -> addNoteCommand(event, targetUser, eventGuild);
+            case "show" -> showNoteCommand(event, commandMember, targetUser, eventGuild);
             default -> {
                 logger.warn(getName() + " has a default value in switch(subcommandName) with value: " + subcommandName);
                 event.reply(bundle.getString("command.dispatchSlashEvent.defaultReply")).setEphemeral(true).queue();
@@ -45,14 +65,11 @@ public class NoteSlashCommand extends CustomCommand {
 
     }
 
-    private void showNoteCommand(@NotNull SlashCommandInteractionEvent event) {
+    private void showNoteCommand(@NotNull SlashCommandInteractionEvent event, Member commandExecutor, @NotNull User targetUser, @NotNull Guild guild) {
         ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
 
-        User member = event.getOption("user", OptionMapping::getAsUser);
 
-
-        @SuppressWarnings("DataFlowIssue") // Command is guild only and Option is required
-        JSONObject notes = db.getDataFromNoteTable(member.getIdLong(), event.getGuild().getIdLong());
+        JSONObject notes = db.getDataFromNoteTable(targetUser.getIdLong(), guild.getIdLong());
 
         if (notes.isEmpty()) {
             event.reply(bundle.getString("command.showNoteCommand.notesIsEmpty")).setEphemeral(true).queue();
@@ -60,7 +77,7 @@ public class NoteSlashCommand extends CustomCommand {
         }
 
         EmbedBuilder initialShowNoteEmbed = new EmbedBuilder();
-        initialShowNoteEmbed.setTitle(String.format(bundle.getString("command.showNoteCommand.initialShowNoteEmbed.title"), member.getName()));
+        initialShowNoteEmbed.setTitle(String.format(bundle.getString("command.showNoteCommand.initialShowNoteEmbed.title"), targetUser.getName()));
         initialShowNoteEmbed.setDescription(bundle.getString("command.showNoteCommand.initialShowNoteEmbed.description"));
         initialShowNoteEmbed.addField(
                 bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.show.name"),
@@ -74,7 +91,7 @@ public class NoteSlashCommand extends CustomCommand {
 
         String buttonIdPreset = "noteCommand_initialShowEmbed_%s;%s,%s";
         String commandUserId = event.getUser().getId();
-        String targetId = member.getId();
+        String targetId = targetUser.getId();
         Button editButton = Button.of(ButtonStyle.SECONDARY,
                 String.format(buttonIdPreset, "edit", commandUserId, targetId),
                 bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.edit.name"));
@@ -85,26 +102,40 @@ public class NoteSlashCommand extends CustomCommand {
                 String.format(buttonIdPreset, "show", commandUserId, targetId),
                 bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.show.name"));
 
-        event.replyEmbeds(initialShowNoteEmbed.build())
-                .setComponents(ActionRow.of(listButton, editButton, removeButton))
-                .setEphemeral(true)
-                .queue();
+
+        if (commandExecutor.getPermissions().contains(Permission.ADMINISTRATOR)) {
+            event.replyEmbeds(initialShowNoteEmbed.build())
+                    .setComponents(ActionRow.of(listButton, editButton, removeButton))
+                    .setEphemeral(true)
+                    .queue();
+        } else {
+            event.replyEmbeds(initialShowNoteEmbed.build())
+                    .setComponents(ActionRow.of(listButton, editButton, removeButton.asDisabled()))
+                    .setEphemeral(true)
+                    .queue();
+        }
+
+
     }
 
-    private void addNoteCommand(@NotNull SlashCommandInteractionEvent event) {
+    private void addNoteCommand(@NotNull SlashCommandInteractionEvent event, User targetUser, Guild guild) {
         ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
 
-        User targetUser = event.getOption("user", OptionMapping::getAsUser); // Option is required
+
         String note = event.getOption("note", OptionMapping::getAsString); // Option is required
 
-        //noinspection DataFlowIssue
+        if (note == null || note.isEmpty()) {
+            event.reply(bundle.getString("command.addNoteCommand.noteIsNullOrEmpty")).setEphemeral(true).queue();
+            return;
+        }
+
         if (note.length() > 1024) {
             event.reply(bundle.getString("command.addNoteCommand.noteIsToLong")).setEphemeral(true).queue();
             return;
         }
 
-        //noinspection DataFlowIssue // Command is guild-only
-        if (db.putDataInNoteTable(note, targetUser.getIdLong(), event.getUser().getIdLong(), event.getGuild().getIdLong())) {
+
+        if (db.putDataInNoteTable(note, targetUser.getIdLong(), event.getUser().getIdLong(), guild.getIdLong())) {
             event.reply(bundle.getString("command.addNoteCommand.success")).setEphemeral(true).queue();
         } else {
             event.reply(bundle.getString("command.addNoteCommand.putInDBFailed")).setEphemeral(true).queue();

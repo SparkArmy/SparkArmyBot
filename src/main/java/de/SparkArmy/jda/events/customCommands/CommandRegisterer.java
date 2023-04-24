@@ -192,4 +192,22 @@ public class CommandRegisterer {
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
     }
+
+    @JDACommandData
+    final @NotNull CommandData nicknameSlashCommand() {
+        return Commands.slash("nickname", "Change or remove a nickname from member")
+                .addSubcommands(
+                        new SubcommandData("remove", "Remove the nickname from the member")
+                                .addOptions(
+                                        new OptionData(OptionType.USER, "member", "The target member")
+                                                .setRequired(true)
+                                ),
+                        new SubcommandData("change", "Change the nickname from the member")
+                                .addOptions(new OptionData(OptionType.USER, "member", "The target member")
+                                        .setRequired(true)
+                                )
+                )
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
+    }
 }

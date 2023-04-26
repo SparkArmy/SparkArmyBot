@@ -1,14 +1,12 @@
 package de.SparkArmy;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.controller.LoggingController;
 import de.SparkArmy.db.Postgres;
 import de.SparkArmy.jda.JdaApi;
-import de.SparkArmy.springApplication.SpringApp;
 import de.SparkArmy.twitch.TwitchApi;
 import de.SparkArmy.utils.Util;
 import org.slf4j.Logger;
-import org.springframework.boot.SpringApplication;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
@@ -22,7 +20,7 @@ public class Main {
 
 
     public Main() {        // Initialize Logger variables
-        this.logger = LoggingController.logger;
+        this.logger = LoggerFactory.getLogger(this.getClass());
         Util.logger = this.logger;
 
         // Initialize ConfigController
@@ -35,14 +33,7 @@ public class Main {
         this.jdaApi = new JdaApi(this);
         this.twitchApi = new TwitchApi(this);
 
-
-        // Start spring
-        this.controller.preCreateSpringConfig();
-        SpringApplication.run(SpringApp.class, "");
-
-
-        Util.logger.info("I`m ready.");
-
+        logger.info("I`m ready.");
 
     }
 
@@ -51,7 +42,7 @@ public class Main {
     }
 
     public void systemExit(Integer code) {
-        if (null != this.jdaApi) {
+        if (null != this.jdaApi.getJda()) {
             this.jdaApi.getJda().shutdown();
             try {
                 this.jdaApi.getJda().awaitShutdown();

@@ -31,22 +31,6 @@ public class ConfigController {
         this.logger = main.getLogger();
     }
 
-    public void preCreateSpringConfig() {
-        File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
-
-        if (FileHandler.getFileInDirectory(configFolder, "spring.properties").exists()) return;
-        String propertiesString = """
-                #server.port= Your server port
-                #server.ssl.key-store=Your key-store for https
-                    #server.ssl.key-store-password=your key-store password
-                    #
-                    ## JKS or PKCS12
-                    #server.ssl.keyStoreType= your key-store-type
-                    """;
-
-        FileHandler.writeValuesInFile(configFolder,"spring.properties",propertiesString);
-    }
-
     public JSONObject getMainConfigFile(){
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
             this.logger.warn("The main-config.json-file not exist, we will created a new");

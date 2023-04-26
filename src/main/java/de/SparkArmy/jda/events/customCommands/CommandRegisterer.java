@@ -203,8 +203,11 @@ public class CommandRegisterer {
                                                 .setRequired(true)
                                 ),
                         new SubcommandData("change", "Change the nickname from the member")
-                                .addOptions(new OptionData(OptionType.USER, "member", "The target member")
-                                        .setRequired(true)
+                                .addOptions(
+                                        new OptionData(OptionType.USER, "member", "The target member")
+                                                .setRequired(true),
+                                        new OptionData(OptionType.STRING, "nickname", "The new nickname")
+                                                .setRequired(true)
                                 )
                 )
                 .setGuildOnly(true)

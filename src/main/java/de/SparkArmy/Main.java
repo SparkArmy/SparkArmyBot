@@ -26,8 +26,8 @@ public class Main {
         // Initialize ConfigController
         this.controller = new ConfigController(this);
         Util.controller = this.controller;
-
         this.postgres = new Postgres(this);
+
 
         //Register Apis
         this.jdaApi = new JdaApi(this);
@@ -42,7 +42,7 @@ public class Main {
     }
 
     public void systemExit(Integer code) {
-        if (null != this.jdaApi.getJda()) {
+        if (this.jdaApi != null && this.jdaApi.getJda() != null) {
             this.jdaApi.getJda().shutdown();
             try {
                 this.jdaApi.getJda().awaitShutdown();

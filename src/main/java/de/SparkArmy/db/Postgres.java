@@ -1,7 +1,6 @@
 package de.SparkArmy.db;
 
 import de.SparkArmy.Main;
-import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -12,56 +11,33 @@ import org.slf4j.Logger;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Properties;
 
 public class Postgres {
 
     private final boolean isPostgresDisabled;
     private final Logger logger;
 
-    private String url;
-
-    private final Properties properties = new Properties();
-
     public Postgres(@NotNull Main main) {
         this.logger = main.getLogger();
-
-        ConfigController controller = main.getController();
-        JSONObject mainConfig = controller.getMainConfigFile();
         boolean disabled = true;
-        if (mainConfig.isNull("postgres")) {
-            this.logger.warn("postgres not exist in main-config.json");
-        }
-        JSONObject pstgsConfig = mainConfig.getJSONObject("postgres");
-        if (pstgsConfig.getString("url").isEmpty()) {
-            this.logger.warn("postgres-url is empty");
-        } else if (pstgsConfig.getString("user").isEmpty()) {
-            this.logger.warn("postgres-user is empty");
-        } else if (pstgsConfig.getString("password").isEmpty()) {
-            this.logger.warn("postgres-password is empty");
-        } else {
-            this.url = "jdbc:postgresql://" + pstgsConfig.getString("url");
-            this.properties.setProperty("password", pstgsConfig.getString("password"));
-            this.properties.setProperty("user", pstgsConfig.getString("user"));
-
-            // try connection
-            try {
-                Connection conn = DriverManager.getConnection(this.url, this.properties);
-                this.logger.info("postgres-connected");
-                conn.close();
-                // set config global and set postgresEnabled
-                disabled = false;
-            } catch (SQLException e) {
-                this.logger.error(e.getMessage());
-                this.logger.error("Please setup a PostgresDatabase and establish a connection");
-                //                main.systemExit(40);
-            }
+        // try connection
+        try {
+            Connection conn = DatabaseSource.connection();
+            this.logger.info("postgres-connected");
+            conn.close();
+            // set config global and set postgresEnabled
+            disabled = false;
+        } catch (SQLException e) {
+            this.logger.error(e.getMessage());
+            this.logger.error("Please setup a PostgresDatabase and establish a connection");
+            main.systemExit(40);
         }
         this.isPostgresDisabled = disabled;
     }
 
+
     private Connection connection() throws SQLException {
-        return DriverManager.getConnection(url, properties);
+        return DatabaseSource.connection();
     }
 
     private boolean isGuildIdInDatabase(@NotNull Connection conn, long guildId) throws SQLException {
@@ -90,7 +66,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -129,7 +105,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -173,7 +149,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -257,7 +233,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -315,7 +291,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -355,7 +331,7 @@ public class Postgres {
             conn.close();
             return rs.getLong(1);
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return -1;
         }
     }
@@ -398,7 +374,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -432,7 +408,7 @@ public class Postgres {
             conn.close();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -454,7 +430,7 @@ public class Postgres {
             prepStmt.execute();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -475,7 +451,7 @@ public class Postgres {
             prepStmt.execute();
             return true;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return false;
         }
     }
@@ -507,11 +483,10 @@ public class Postgres {
             }
             return results;
         } catch (SQLException e) {
-            Util.handleSQLExeptions(e);
+            Util.handleSQLExceptions(e);
             return new JSONObject();
         }
     }
-
     public boolean getIsPostgresEnabled() {
         return !isPostgresDisabled;
     }

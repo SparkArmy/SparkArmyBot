@@ -7,7 +7,7 @@
               class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>
-                %green(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{0}): %msg%n%throwable
+                %green(%d{ISO8601}) %highlight(%-5level) %yellow(%C{0}): %msg%n%throwable
             </Pattern>
         </encoder>
     </appender>

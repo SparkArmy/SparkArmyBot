@@ -18,13 +18,14 @@ import org.slf4j.Logger;
 import java.sql.SQLException;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Util {
     public static Logger logger;
     public static ConfigController controller;
     public static JDA jda;
 
-    public static void handleSQLExeptions(@NotNull SQLException e) {
+    public static void handleSQLExceptions(@NotNull SQLException e) {
         logger.error(e.getMessage());
     }
 
@@ -55,7 +56,7 @@ public class Util {
         return c.createTextChannel(type.getName()).syncPermissionOverrides();
     }
 
-    public static void prepareSendingModLogEmbed(WebhookEmbed embed, Guild guild) {
+    public static void sendingModLogEmbed(WebhookEmbed embed, Guild guild) {
         String modLogName = LogChannelType.MOD.getName();
         // Create LogChannelConfig if none exist
         if (controller.getGuildMainConfig(guild).isNull("log-channel")) {
@@ -64,6 +65,8 @@ public class Util {
 
         final JSONObject guildConfig = controller.getGuildMainConfig(guild);
         JSONObject logConfig = guildConfig.getJSONObject("log-channel");
+
+        AtomicReference<String> webhookUrl = new AtomicReference<>();
 
         if (logConfig.isNull("category") || logConfig.getString("category").isBlank()) {
             Util.createLogChannelCategory(guild)
@@ -75,7 +78,7 @@ public class Util {
                         logConfig.getJSONObject(modLogName).put("webhookUrl", webhook.getUrl());
                         guildConfig.put("log-channel", logConfig);
                         controller.writeInGuildMainConfig(guild, guildConfig);
-                        sendModLogEmbed(webhook.getUrl(), embed);
+                        webhookUrl.set(webhook.getUrl());
                     });
         } else {
             Category category = guild.getCategoryById(logConfig.getString("category"));
@@ -89,7 +92,7 @@ public class Util {
                             logConfig.getJSONObject(modLogName).put("webhookUrl", webhook.getUrl());
                             guildConfig.put("log-channel", logConfig);
                             controller.writeInGuildMainConfig(guild, guildConfig);
-                            sendModLogEmbed(webhook.getUrl(), embed);
+                            webhookUrl.set(webhook.getUrl());
                         });
             } else {
                 if (logConfig.getJSONObject(modLogName).isEmpty() || logConfig.getJSONObject(modLogName).getString("channelId").isBlank() || logConfig.getJSONObject(modLogName).getString("webhookUrl").isBlank()) {
@@ -100,19 +103,16 @@ public class Util {
                                 logConfig.getJSONObject(modLogName).put("webhookUrl", webhook.getUrl());
                                 guildConfig.put("log-channel", logConfig);
                                 controller.writeInGuildMainConfig(guild, guildConfig);
-                                sendModLogEmbed(webhook.getUrl(), embed);
+                                webhookUrl.set(webhook.getUrl());
                             });
                 } else {
-                    String url = logConfig.getJSONObject(modLogName).getString("webhookUrl");
-                    sendModLogEmbed(url, embed);
+                    webhookUrl.set(logConfig.getJSONObject(modLogName).getString("webhookUrl"));
                 }
             }
         }
-    }
 
-    public static void sendModLogEmbed(String url, WebhookEmbed embed) {
         try {
-            WebhookClient.withUrl(url).send(embed);
+            WebhookClient.withUrl(webhookUrl.get()).send(embed);
         } catch (NullPointerException | NumberFormatException ignored) {
         }
     }

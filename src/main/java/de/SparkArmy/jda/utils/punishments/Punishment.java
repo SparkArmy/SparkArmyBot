@@ -142,7 +142,7 @@ public class Punishment {
         logEmbed.setColor(new Color(255, 0, 0).getRGB());
         logEmbed.setFooter(new WebhookEmbed.EmbedFooter(guild.getName(), guild.getIconUrl()));
 
-        Util.prepareSendingModLogEmbed(logEmbed.build(), guild);
+        Util.sendingModLogEmbed(logEmbed.build(), guild);
 
 //        User Embed
         EmbedBuilder userEmbed = new EmbedBuilder();

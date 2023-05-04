@@ -49,6 +49,9 @@ public class Main {
             } catch (InterruptedException ignored) {
             }
         }
+        if (this.twitchApi != null) {
+            twitchApi.closeClient();
+        }
         System.exit(code);
     }
 

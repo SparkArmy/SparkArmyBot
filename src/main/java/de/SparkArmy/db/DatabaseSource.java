@@ -4,12 +4,9 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import de.SparkArmy.Main;
 import de.SparkArmy.utils.Util;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -21,9 +18,7 @@ public class DatabaseSource {
     private static final HikariConfig hikariConfig = new HikariConfig();
     private static final HikariDataSource hikariDataSource;
 
-    static @NotNull DataSource dataSource() {
-        PGSimpleDataSource simpleDataSource = new PGSimpleDataSource();
-        simpleDataSource.setLoginTimeout(2);
+    static {
 
         JSONObject postgresConfig = mainConfig.getJSONObject("postgres");
         if (postgresConfig.getString("url").isEmpty()) {
@@ -36,15 +31,12 @@ public class DatabaseSource {
             logger.error("postgres-password is empty");
             main.systemExit(112);
         } else {
-            simpleDataSource.setUrl("jdbc:postgresql://" + postgresConfig.getString("url"));
-            simpleDataSource.setUser(postgresConfig.getString("user"));
-            simpleDataSource.setPassword(postgresConfig.getString("password"));
+            hikariConfig.setJdbcUrl("jdbc:postgresql://" + postgresConfig.getString("url"));
+            hikariConfig.setUsername(postgresConfig.getString("user"));
+            hikariConfig.setPassword(postgresConfig.getString("password"));
         }
-        return simpleDataSource;
-    }
-
-    static {
-        hikariConfig.setDataSource(dataSource());
+        hikariConfig.setConnectionTimeout(2000);
+        hikariConfig.setValidationTimeout(2000);
         hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
         hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
         hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");

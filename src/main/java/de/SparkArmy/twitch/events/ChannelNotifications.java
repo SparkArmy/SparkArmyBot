@@ -1,6 +1,6 @@
 package de.SparkArmy.twitch.events;
 
-import com.github.philippheuer.events4j.simple.SimpleEventHandler;
+import com.github.philippheuer.events4j.reactor.ReactorEventHandler;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import de.SparkArmy.controller.ConfigController;
 import net.dv8tion.jda.api.JDA;
@@ -11,13 +11,13 @@ public class ChannelNotifications {
     private final JDA jda;
 
 
-    public ChannelNotifications(@NotNull ConfigController controller, @NotNull SimpleEventHandler eventHandler) {
+    public ChannelNotifications(@NotNull ConfigController controller, @NotNull ReactorEventHandler eventHandler) {
         this.controller = controller;
         this.jda = controller.getMain().getJdaApi().getJda();
         eventHandler.onEvent(ChannelGoLiveEvent.class, this::onGoLive);
     }
 
-    public void onGoLive(ChannelGoLiveEvent event) {
-        // TODO do some stuff
+    public void onGoLive(@NotNull ChannelGoLiveEvent event) {
+        controller.getMain().getLogger().info(event.getStream().getUserName());
     }
 }

@@ -1,6 +1,7 @@
 package de.SparkArmy.db;
 
 import de.SparkArmy.Main;
+import de.SparkArmy.utils.NotificationService;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 
 public class Postgres {
 
@@ -28,8 +30,7 @@ public class Postgres {
             // set config global and set postgresEnabled
             disabled = false;
         } catch (SQLException e) {
-            this.logger.error(e.getMessage());
-            this.logger.error("Please setup a PostgresDatabase and establish a connection");
+            this.logger.error("Please setup a PostgresDatabase and establish a connection", e);
             main.systemExit(40);
         }
         this.isPostgresDisabled = disabled;
@@ -487,6 +488,65 @@ public class Postgres {
             return new JSONObject();
         }
     }
+
+    private long getServiceIdByNotificationService(@NotNull Connection conn, @NotNull NotificationService service) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT "srvId" FROM notification."tblService" WHERE "srvName" = ?;
+                   """);
+        prepStmt.setString(1, service.getServiceName());
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) {
+            throw new IllegalArgumentException("The service " + service.getServiceName() + " not exist");
+        }
+        return rs.getLong(1);
+    }
+
+    public HashMap<String, String> getServiceIdAndNameByNotificationService(NotificationService service) {
+        if (isPostgresDisabled) return new HashMap<>();
+        try {
+            Connection conn = connection();
+
+            long databaseServiceId = getServiceIdByNotificationService(conn, service);
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT "ctcName","ctcServiceId" FROM notification."tblContentCreator" WHERE "fk_ctcService" = ?;
+                    """);
+            prepStmt.setLong(1, databaseServiceId);
+
+            ResultSet rs = prepStmt.executeQuery();
+            HashMap<String, String> results = new HashMap<>();
+            while (rs.next()) {
+                results.put(rs.getString(1), rs.getString(2));
+            }
+            conn.close();
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new HashMap<>();
+        }
+    }
+
+    public boolean putDataInContentCreatorTable(NotificationService service, String channelName, String channelId) {
+        if (isPostgresDisabled) return false;
+        try {
+            Connection conn = connection();
+            long databaseServiceId = getServiceIdByNotificationService(conn, service);
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO notification."tblContentCreator" ("ctcName", "fk_ctcService", "ctcServiceId") VALUES (?,?,?);
+                    """);
+            prepStmt.setString(1, channelName);
+            prepStmt.setLong(2, databaseServiceId);
+            prepStmt.setString(3, channelId);
+            prepStmt.execute();
+            conn.close();
+            return true;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return false;
+        }
+    }
+
     public boolean getIsPostgresEnabled() {
         return !isPostgresDisabled;
     }

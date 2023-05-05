@@ -1,10 +1,12 @@
-package de.SparkArmy.jda.events.customCommands.commands;
+package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
-import de.SparkArmy.jda.events.customCommands.CustomCommand;
+import de.SparkArmy.jda.events.annotations.JDASlashCommand;
+import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.utils.punishments.Punishment;
 import de.SparkArmy.jda.utils.punishments.PunishmentType;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,17 +22,43 @@ import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.ResourceBundle;
 
-public class UnbanSlashCommand extends CustomCommand {
-    @Override
-    public String getName() {
-        return "unban";
+public class PunishmentCommandEvents {
+
+    private final ConfigController controller;
+
+    public PunishmentCommandEvents(@NotNull EventDispatcher dispatcher) {
+        this.controller = dispatcher.getController();
     }
 
+    @JDASlashCommand(name = "ban")
+    public void banSlashCommand(SlashCommandInteractionEvent event) {
+        new Punishment(event, PunishmentType.BAN, controller);
+    }
 
-    @Override
-    public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
+    @JDASlashCommand(name = "kick")
+    public void kickSlashCommand(SlashCommandInteractionEvent event) {
+        new Punishment(event, PunishmentType.KICK, controller);
+    }
+
+    @JDASlashCommand(name = "mute")
+    public void muteSlashCommand(SlashCommandInteractionEvent event) {
+        new Punishment(event, PunishmentType.MUTE, controller);
+    }
+
+    @JDASlashCommand(name = "softban")
+    public void softbanSlashCommand(SlashCommandInteractionEvent event) {
+        new Punishment(event, PunishmentType.SOFTBAN, controller);
+    }
+
+    @JDASlashCommand(name = "warn")
+    public void warnSlashCommand(SlashCommandInteractionEvent event) {
+        new Punishment(event, PunishmentType.WARN, controller);
+    }
+
+    @JDASlashCommand(name = "unban")
+    public void unbanSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
-        ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
+        ResourceBundle bundle = Util.getResourceBundle("unban", event.getUserLocale());
         InteractionHook hook = event.getHook();
         User target = event.getOption("target-user", OptionMapping::getAsUser);
         String reason = event.getOption("reason", OptionMapping::getAsString); // Option is required
@@ -52,7 +80,7 @@ public class UnbanSlashCommand extends CustomCommand {
                                 hook.editOriginal(bundle.getString("command.putInDB.unban.successfully")).queue();
                             }
 
-                            ResourceBundle guildBundle = Util.getResourceBundle(getName(), event.getGuildLocale());
+                            ResourceBundle guildBundle = Util.getResourceBundle("unban", event.getGuildLocale());
                             User selfUser = event.getJDA().getSelfUser();
 
                             // Get punishmentNumber from guild
@@ -61,7 +89,7 @@ public class UnbanSlashCommand extends CustomCommand {
                                 punishmentCount = 1; // Fallback if postgres disabled or another error occur
 
                             WebhookEmbedBuilder logEmbed = new WebhookEmbedBuilder();
-                            logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, getName()), null));
+                            logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, "unban"), null));
                             logEmbed.addField(new WebhookEmbed.EmbedField(false,
                                     guildBundle.getString("command.logEmbed.field.offender.name"),
                                     String.format("%s (%s)", target.getAsTag(), target.getAsMention())));
@@ -88,5 +116,6 @@ public class UnbanSlashCommand extends CustomCommand {
             }
         }, new ErrorHandler()
                 .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("command.missingPermissionToGetBanList")).queue()));
+
     }
 }

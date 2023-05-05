@@ -1,15 +1,17 @@
-package de.SparkArmy.jda.events.customCommands.commands;
+package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.customCommands.CustomCommand;
-import de.SparkArmy.utils.Util;
 import de.SparkArmy.controller.GuildConfigType;
+import de.SparkArmy.jda.events.annotations.JDASlashCommand;
+import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -18,23 +20,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ResourceBundle;
 
-public class ArchiveSlashCommand extends CustomCommand {
-    @Override
-    public String getName() {
-        return "archive";
+public class ArchiveSlashCommandEvents {
+
+
+    private final ConfigController controller;
+
+    public ArchiveSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
+        this.controller = dispatcher.getController();
     }
 
-    private ResourceBundle bundle;
+    @JDASlashCommand(name = "archive")
+    public void initialSlashEvent(@NotNull SlashCommandInteractionEvent event) {
+        GuildChannel targetChannel = event.getOption("channel", OptionMapping::getAsChannel);
 
-    @Override
-    public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, @NotNull ConfigController controller) {
-
-        bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
-
-        @SuppressWarnings("ConstantConditions") // Channel is a required option
-        GuildChannel targetChannel = event.getOption("channel").getAsChannel();
         Guild guild = event.getGuild();
-        if (guild == null) return;
+        if (guild == null || targetChannel == null) return;
 
         JSONObject guildConfig = controller.getGuildMainConfig(guild);
 
@@ -68,7 +68,8 @@ public class ArchiveSlashCommand extends CustomCommand {
     }
 
 
-    private void moveChannel(SlashCommandInteractionEvent event, Guild guild, @NotNull Category archiveCategory, @NotNull GuildChannel targetChannel) {
+    private void moveChannel(@NotNull SlashCommandInteractionEvent event, Guild guild, @NotNull Category archiveCategory, @NotNull GuildChannel targetChannel) {
+        ResourceBundle bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
         if (archiveCategory.getChannels().contains(targetChannel)) {
             event.reply(bundle.getString("command.error.channelIsInCategory")).setEphemeral(true).queue();
             return;

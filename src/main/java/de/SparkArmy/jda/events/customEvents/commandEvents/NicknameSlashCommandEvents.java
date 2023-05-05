@@ -1,7 +1,7 @@
-package de.SparkArmy.jda.events.customCommands.commands;
+package de.SparkArmy.jda.events.customEvents.commandEvents;
 
-import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.customCommands.CustomCommand;
+import de.SparkArmy.jda.events.annotations.JDASlashCommand;
+import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -14,14 +14,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ResourceBundle;
 
-public class NicknameSlashCommand extends CustomCommand {
-    @Override
-    public String getName() {
-        return "nickname";
+public class NicknameSlashCommandEvents {
+
+    public NicknameSlashCommandEvents(EventDispatcher ignoredDispatcher) {
+
     }
 
-    @Override
-    public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event, ConfigController controller) {
+    @JDASlashCommand(name = "nickname")
+    public void dispatchSlashEvent(@NotNull SlashCommandInteractionEvent event) {
         String subcommandName = event.getSubcommandName();
         ResourceBundle bundle = Util.getResourceBundle("nickname", event.getUserLocale());
 
@@ -38,7 +38,7 @@ public class NicknameSlashCommand extends CustomCommand {
     }
 
     private void removeNickname(@NotNull SlashCommandInteractionEvent event) {
-        ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
+        ResourceBundle bundle = Util.getResourceBundle("nickname", event.getUserLocale());
         Guild guild = event.getGuild();
 
         if (guild == null) {
@@ -64,7 +64,7 @@ public class NicknameSlashCommand extends CustomCommand {
     }
 
     private void changeNickname(@NotNull SlashCommandInteractionEvent event) {
-        ResourceBundle bundle = Util.getResourceBundle(getName(), event.getUserLocale());
+        ResourceBundle bundle = Util.getResourceBundle("nickname", event.getUserLocale());
         Guild guild = event.getGuild();
 
         if (guild == null) {

@@ -1,11 +1,9 @@
 package de.SparkArmy.jda;
 
-import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.customCommands.CommandDispatcher;
-import de.SparkArmy.jda.events.customCommands.CommandRegisterer;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.utils.CommandRegisterer;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -23,7 +21,6 @@ public class JdaApi {
     private JDA jda;
     private final Logger logger;
     private final ConfigController controller;
-    private final EventWaiter waiter;
     private final CommandRegisterer commandRegisterer;
 
     public JdaApi(@NotNull Main main) {
@@ -56,13 +53,9 @@ public class JdaApi {
             main.systemExit(1);
         }
 
-        // Add a EventWaiter
-        this.waiter = new EventWaiter();
-        jda.addEventListener(waiter);
-
         // Add Command Handler and EventHandler
         this.jda.setEventManager(new AnnotatedEventManager());
-        this.jda.addEventListener(new CommandDispatcher(this), new EventDispatcher(this));
+        this.jda.addEventListener(new EventDispatcher(this));
 
 
         this.commandRegisterer = new CommandRegisterer(this);
@@ -73,10 +66,6 @@ public class JdaApi {
 
     public JDA getJda() {
         return jda;
-    }
-
-    public EventWaiter getWaiter() {
-        return waiter;
     }
 
     public Logger getLogger() {

@@ -2,15 +2,17 @@ package de.SparkArmy.jda.events.customEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.JdaApi;
-import de.SparkArmy.jda.events.annotations.JDAButton;
-import de.SparkArmy.jda.events.annotations.JDAEntityMenu;
-import de.SparkArmy.jda.events.annotations.JDAModal;
-import de.SparkArmy.jda.events.annotations.JDAStringMenu;
-import de.SparkArmy.jda.events.customEvents.commandEvents.NoteSlashCommandEvents;
+import de.SparkArmy.jda.events.annotations.*;
+import de.SparkArmy.jda.events.customEvents.commandEvents.*;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.GenericSelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import org.jetbrains.annotations.NotNull;
@@ -38,81 +40,90 @@ public class EventDispatcher {
     }
 
     @SubscribeEvent
-    public void buttonEvents(@NotNull ButtonInteractionEvent event) {
-        for (Object o : events) {
-            for (Method m : o.getClass().getDeclaredMethods()) {
-                JDAButton button = m.getAnnotation(JDAButton.class);
-                if (button != null && m.getParameterCount() == 1) {
-                    try {
-                        Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
-                        if (event.getComponentId().startsWith(button.startWith()))
-                            m.invoke(constructor.newInstance(this), event);
-                        else if (event.getComponentId().equals(button.name()))
-                            m.invoke(constructor.newInstance(this), event);
-                    } catch (IllegalAccessException | InvocationTargetException | InstantiationException |
-                             NoSuchMethodException e) {
-                        logger.error("Error to dispatch buttonEvent with component-id: " + event.getComponentId() + " in Method: " + m.getName(), e);
-                    }
-                }
-            }
+    public void dispatchEvent(GenericEvent event) {
+        if (event instanceof GenericInteractionCreateEvent) {
+            interactionEvents((GenericInteractionCreateEvent) event);
         }
     }
 
-    @SubscribeEvent
-    public void selectEvents(GenericSelectMenuInteractionEvent<?, ?> event) {
-        for (Object o : events) {
-            if (event instanceof StringSelectInteractionEvent) {
-                for (Method m : o.getClass().getDeclaredMethods()) {
-                    JDAStringMenu stringMenu = m.getAnnotation(JDAStringMenu.class);
-                    if (stringMenu != null && m.getParameterCount() == 1) {
-                        try {
-                            Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
-                            if (event.getComponentId().startsWith(stringMenu.startWith()))
-                                m.invoke(constructor.newInstance(this), event);
-                            else if (event.getComponentId().equals(stringMenu.name()))
-                                m.invoke(constructor.newInstance(this), event);
-                        } catch (IllegalAccessException | InvocationTargetException | InstantiationException |
-                                 NoSuchMethodException e) {
-                            logger.error("Error to dispatch stringSelectEvent with component-id: " + event.getComponentId() + " in Method: " + m.getName(), e);
-                        }
-                    }
-                }
-            } else if (event instanceof EntitySelectInteractionEvent) {
-                for (Method m : o.getClass().getDeclaredMethods()) {
-                    JDAEntityMenu stringMenu = m.getAnnotation(JDAEntityMenu.class);
-                    if (stringMenu != null && m.getParameterCount() == 1) {
-                        try {
-                            Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
-                            if (event.getComponentId().startsWith(stringMenu.startWith()))
-                                m.invoke(constructor.newInstance(this), event);
-                            else if (event.getComponentId().equals(stringMenu.name()))
-                                m.invoke(constructor.newInstance(this), event);
-                        } catch (IllegalAccessException | InvocationTargetException | InstantiationException |
-                                 NoSuchMethodException e) {
-                            logger.error("Error to dispatch entitySelectEvent with component-id: " + event.getComponentId() + " in Method: " + m.getName(), e);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void modalEvents(ModalInteractionEvent event) {
+    private void interactionEvents(GenericInteractionCreateEvent event) {
         for (Object o : events) {
             for (Method m : o.getClass().getDeclaredMethods()) {
-                JDAModal stringMenu = m.getAnnotation(JDAModal.class);
-                if (stringMenu != null && m.getParameterCount() == 1) {
-                    try {
-                        Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
-                        if (event.getModalId().startsWith(stringMenu.startWith()))
-                            m.invoke(constructor.newInstance(this), event);
-                        else if (event.getModalId().equals(stringMenu.name()))
-                            m.invoke(constructor.newInstance(this), event);
-                    } catch (IllegalAccessException | InvocationTargetException | InstantiationException |
-                             NoSuchMethodException e) {
-                        logger.error("Error to dispatch entitySelectEvent with component-id: " + event.getModalId() + " in Method: " + m.getName(), e);
+                try {
+                    Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
+                    if (event instanceof ButtonInteractionEvent) {
+                        JDAButton annotation = m.getAnnotation(JDAButton.class);
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            String componentId = ((ButtonInteractionEvent) event).getComponentId();
+                            if (componentId.startsWith(annotation.startWith())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            } else if (componentId.equals(annotation.name())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
+                    } else if (event instanceof CommandAutoCompleteInteractionEvent) {
+                        JDAAutoComplete annotation = m.getAnnotation(JDAAutoComplete.class);
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            if (((CommandAutoCompleteInteractionEvent) event).getName().equals(annotation.commandName())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
+                    } else if (event instanceof EntitySelectInteractionEvent) {
+                        JDAEntityMenu annotation = m.getAnnotation(JDAEntityMenu.class);
+                        String componentId = ((EntitySelectInteractionEvent) event).getComponentId();
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            if (componentId.startsWith(annotation.startWith())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            } else if (componentId.equals(annotation.name())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
+                    } else if (event instanceof MessageContextInteractionEvent) {
+                        JDAMessageCommand annotation = m.getAnnotation(JDAMessageCommand.class);
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            if (((MessageContextInteractionEvent) event).getName().equals(annotation.name())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
+                    } else if (event instanceof ModalInteractionEvent) {
+                        JDAModal annotation = m.getAnnotation(JDAModal.class);
+                        String componentId = ((ModalInteractionEvent) event).getModalId();
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            if (componentId.startsWith(annotation.startWith())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            } else if (componentId.equals(annotation.name())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
+                    } else if (event instanceof SlashCommandInteractionEvent) {
+                        JDASlashCommand annotation = m.getAnnotation(JDASlashCommand.class);
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            if (((SlashCommandInteractionEvent) event).getName().equals(annotation.name())) {
+                                logger.info("event equals name");
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
+                    } else if (event instanceof StringSelectInteractionEvent) {
+                        JDAStringMenu annotation = m.getAnnotation(JDAStringMenu.class);
+                        String componentId = ((StringSelectInteractionEvent) event).getComponentId();
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            if (componentId.startsWith(annotation.startWith())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            } else if (componentId.equals(annotation.name())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
+                    } else if (event instanceof UserContextInteractionEvent) {
+                        JDAUserCommand annotation = m.getAnnotation(JDAUserCommand.class);
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            if (((UserContextInteractionEvent) event).getName().equals(annotation.name())) {
+                                m.invoke(constructor.newInstance(this), event);
+                            }
+                        }
                     }
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
+                         InstantiationException e) {
+                    logger.error("Error to dispatch interactionEvent in %s | %s".formatted(o.getClass().getName(), m.getName()), e);
                 }
             }
         }
@@ -120,7 +131,11 @@ public class EventDispatcher {
 
 
     private void registerEvents() {
+        registerEvent(new ArchiveSlashCommandEvents(this));
+        registerEvent(new GeneralCommandEvents(this));
+        registerEvent(new NicknameSlashCommandEvents(this));
         registerEvent(new NoteSlashCommandEvents(this));
+        registerEvent(new PunishmentCommandEvents(this));
     }
 
     private void registerEvent(Object o) {

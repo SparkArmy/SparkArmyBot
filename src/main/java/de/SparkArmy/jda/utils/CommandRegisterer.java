@@ -1,4 +1,4 @@
-package de.SparkArmy.jda.events.customCommands;
+package de.SparkArmy.jda.utils;
 
 import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.annotations.JDACommandData;
@@ -212,5 +212,16 @@ public class CommandRegisterer {
                 )
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
+    }
+
+    @JDACommandData
+    final @NotNull CommandData notificationSlashCommand() {
+        return Commands.slash("notification", "Add, remove or change notifications from YouTube, Twitch or Twitter")
+                .addOptions(
+                        new OptionData(OptionType.STRING, "notification-service", "The notification service")
+                                .setAutoComplete(true)
+                )
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 }

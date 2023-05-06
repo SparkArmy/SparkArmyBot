@@ -30,7 +30,7 @@ public class Postgres {
             // set config global and set postgresEnabled
             disabled = false;
         } catch (SQLException e) {
-            this.logger.error("Please setup a PostgresDatabase and establish a connection", e);
+            this.logger.error("Please setup a PostgresDatabase and establish a connection");
             main.systemExit(40);
         }
         this.isPostgresDisabled = disabled;

@@ -99,7 +99,6 @@ public class EventDispatcher {
                         JDASlashCommand annotation = m.getAnnotation(JDASlashCommand.class);
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (((SlashCommandInteractionEvent) event).getName().equals(annotation.name())) {
-                                logger.info("event equals name");
                                 m.invoke(constructor.newInstance(this), event);
                             }
                         }
@@ -136,6 +135,7 @@ public class EventDispatcher {
         registerEvent(new NicknameSlashCommandEvents(this));
         registerEvent(new NoteSlashCommandEvents(this));
         registerEvent(new PunishmentCommandEvents(this));
+        registerEvent(new NotificationSlashCommandEvents(this));
     }
 
     private void registerEvent(Object o) {

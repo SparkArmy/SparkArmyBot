@@ -218,7 +218,7 @@ public class CommandRegisterer {
     final @NotNull CommandData notificationSlashCommand() {
         return Commands.slash("notification", "Add, remove or change notifications from YouTube, Twitch or Twitter")
                 .addOptions(
-                        new OptionData(OptionType.STRING, "notification-service", "The notification service")
+                        new OptionData(OptionType.STRING, "platform", "The notification platform")
                                 .setAutoComplete(true)
                 )
                 .setGuildOnly(true)

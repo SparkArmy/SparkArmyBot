@@ -6,31 +6,32 @@ import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.HashMap;
 
 public class Postgres {
 
     private final boolean isPostgresDisabled;
-    private final Logger logger;
 
     public Postgres(@NotNull Main main) {
-        this.logger = main.getLogger();
+        Logger logger = main.getLogger();
         boolean disabled = true;
         // try connection
         try {
             Connection conn = DatabaseSource.connection();
-            this.logger.info("postgres-connected");
+            logger.info("postgres-connected");
             conn.close();
             // set config global and set postgresEnabled
             disabled = false;
         } catch (SQLException e) {
-            this.logger.error("Please setup a PostgresDatabase and establish a connection");
+            logger.error("Please setup a PostgresDatabase and establish a connection");
             main.systemExit(40);
         }
         this.isPostgresDisabled = disabled;
@@ -526,11 +527,26 @@ public class Postgres {
         }
     }
 
+    private boolean isContentCreatorInContentCreatorTable(@NotNull Connection conn, String channelId, long databaseServiceId) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM notification."tblContentCreator" WHERE "ctcServiceId" = ? AND "fk_ctcService" = ?;
+                """);
+        prepStmt.setString(1, channelId);
+        prepStmt.setLong(2, databaseServiceId);
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) {
+            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
+        }
+        return rs.getLong(1) > 0;
+    }
+
     public boolean putDataInContentCreatorTable(NotificationService service, String channelName, String channelId) {
         if (isPostgresDisabled) return false;
         try {
             Connection conn = connection();
             long databaseServiceId = getServiceIdByNotificationService(conn, service);
+
+            if (isContentCreatorInContentCreatorTable(conn, channelId, databaseServiceId)) return true;
 
             PreparedStatement prepStmt = conn.prepareStatement("""
                     INSERT INTO notification."tblContentCreator" ("ctcName", "fk_ctcService", "ctcServiceId") VALUES (?,?,?);
@@ -541,6 +557,71 @@ public class Postgres {
             prepStmt.execute();
             conn.close();
             return true;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return false;
+        }
+    }
+
+    private boolean existRowInSubscribedChannelTable(@NotNull Connection conn, long guildChannelId, String contentCreatorId) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
+                """);
+        prepStmt.setLong(1, guildChannelId);
+        prepStmt.setString(2, contentCreatorId);
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) {
+            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
+        }
+        return rs.getLong(1) > 0;
+    }
+
+    public boolean existRowInSubscribedChannelTable(long guildChannelId, String contentCreatorId) {
+        if (isPostgresDisabled) return true;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT COUNT(*) FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
+                    """);
+            prepStmt.setLong(1, guildChannelId);
+            prepStmt.setString(2, contentCreatorId);
+            ResultSet rs = prepStmt.executeQuery();
+            if (!rs.next()) {
+                conn.close();
+                throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
+            }
+            boolean result = rs.getLong(1) > 0;
+            conn.close();
+            return result;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return true;
+        }
+    }
+
+    public boolean putDataInSubscribedChannelTable(Collection<GuildChannel> guildChannels, String userId, String message) {
+        if (isPostgresDisabled) return false;
+        try {
+            Connection conn = connection();
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO notification."tblSubscribedChannel" ("sbcChannelld", "fk_sbcGuildId", "fk_sbcContentCreatorId", "sctMessageText") VALUES (?,?,?,?);
+                    """);
+            prepStmt.setString(3, userId);
+            prepStmt.setString(4, message);
+
+            for (GuildChannel guildChannel : guildChannels) {
+                long guildId = guildChannel.getGuild().getIdLong();
+                long channelId = guildChannel.getIdLong();
+                prepStmt.setLong(1, channelId);
+                prepStmt.setLong(2, guildId);
+                if (!existRowInSubscribedChannelTable(conn, channelId, userId)) {
+                    prepStmt.execute();
+                }
+            }
+            conn.close();
+            return true;
+
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return false;

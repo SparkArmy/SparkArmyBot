@@ -4,7 +4,6 @@ import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.utils.LogChannelType;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
@@ -23,7 +22,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Util {
     public static Logger logger;
     public static ConfigController controller;
-    public static JDA jda;
 
     public static void handleSQLExceptions(@NotNull SQLException e) {
         logger.error(e.getMessage());
@@ -36,15 +34,6 @@ public class Util {
         // Check if language german
         if (discordLocale.equals(DiscordLocale.GERMAN)) locale = Locale.GERMAN;
         return ResourceBundle.getBundle(localizationBundle, locale);
-    }
-
-    public static Guild getStorageServer() {
-        // Get StorageServer
-        Guild storageServer = jda.getGuildById(controller.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server"));
-        if (storageServer == null) {
-            logger.warn("No storage-server found");
-        }
-        return storageServer;
     }
 
     public static @NotNull ChannelAction<Category> createLogChannelCategory(@NotNull Guild guild) {

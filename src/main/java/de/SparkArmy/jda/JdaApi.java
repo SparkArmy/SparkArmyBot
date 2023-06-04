@@ -4,13 +4,11 @@ import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.jda.utils.CommandRegisterer;
-import de.SparkArmy.utils.Util;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
+import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -18,7 +16,7 @@ import org.slf4j.Logger;
 public class JdaApi {
 
 
-    private JDA jda;
+    private final ShardManager shardManager;
     private final Logger logger;
     private final ConfigController controller;
     private final CommandRegisterer commandRegisterer;
@@ -29,43 +27,30 @@ public class JdaApi {
 
         JSONObject mainConfig = controller.getMainConfigFile();
 
-        // Start building JDA
-        JDABuilder jdaBuilder = JDABuilder.createDefault(mainConfig.getJSONObject("discord").getString("discord-token"));
-        jdaBuilder.enableIntents(GatewayIntent.GUILD_MEMBERS);
-        jdaBuilder.enableIntents(GatewayIntent.GUILD_PRESENCES);
-        jdaBuilder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
-        jdaBuilder.enableCache(CacheFlag.getPrivileged());
-        jdaBuilder.setMemberCachePolicy(MemberCachePolicy.ALL);
-        logger.info("JDA-Builder was successful initialized");
+        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createLight(mainConfig.getJSONObject("discord").getString("discord-token"));
+        builder.enableIntents(
+                GatewayIntent.GUILD_MEMBERS,
+                GatewayIntent.GUILD_MODERATION,
+                GatewayIntent.GUILD_EMOJIS_AND_STICKERS,
+                GatewayIntent.GUILD_WEBHOOKS,
+                GatewayIntent.GUILD_INVITES,
+                GatewayIntent.GUILD_PRESENCES,
+                GatewayIntent.GUILD_MESSAGES,
+                GatewayIntent.GUILD_MESSAGE_REACTIONS,
+                GatewayIntent.GUILD_MESSAGE_TYPING,
+                GatewayIntent.DIRECT_MESSAGES,
+                GatewayIntent.DIRECT_MESSAGE_TYPING,
+                GatewayIntent.MESSAGE_CONTENT,
+                GatewayIntent.SCHEDULED_EVENTS);
+        builder.setMemberCachePolicy(MemberCachePolicy.NONE);
+        builder.setEventManagerProvider(value -> new AnnotatedEventManager());
+        logger.info("Shard-Builder was successful initialized");
 
-        try {
-            this.jda = jdaBuilder.build();
-            logger.info("JDA successful build");
-        } catch (Exception e) {
-            logger.error("JDA Failed to build  - " + e.getMessage());
-            main.systemExit(1);
-        }
+        this.shardManager = builder.build();
 
-        try {
-            this.jda.awaitReady();
-        } catch (InterruptedException e) {
-            this.logger.error(e.getMessage());
-            main.systemExit(1);
-        }
-
-        // Add Command Handler and EventHandler
-        this.jda.setEventManager(new AnnotatedEventManager());
-        this.jda.addEventListener(new EventDispatcher(this));
-
+        shardManager.addEventListener(new EventDispatcher(this));
 
         this.commandRegisterer = new CommandRegisterer(this);
-
-        // Add a static JDA
-        Util.jda = this.jda;
-    }
-
-    public JDA getJda() {
-        return jda;
     }
 
     public Logger getLogger() {
@@ -78,5 +63,9 @@ public class JdaApi {
 
     public CommandRegisterer getCommandRegisterer() {
         return commandRegisterer;
+    }
+
+    public ShardManager getShardManager() {
+        return shardManager;
     }
 }

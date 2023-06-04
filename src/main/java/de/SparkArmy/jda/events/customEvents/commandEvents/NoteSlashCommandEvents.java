@@ -9,7 +9,6 @@ import de.SparkArmy.jda.events.annotations.JDAStringMenu;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -28,6 +27,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.sharding.ShardManager;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -40,15 +40,13 @@ import java.util.ResourceBundle;
 import static de.SparkArmy.utils.Util.logger;
 
 public class NoteSlashCommandEvents {
-
-    private final JDA jda;
-
     private final Postgres db;
+    private final ShardManager shardManager;
 
     public NoteSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
         ConfigController controller = dispatcher.getController();
-        this.jda = dispatcher.getApi().getJda();
         this.db = controller.getMain().getPostgres();
+        this.shardManager = dispatcher.getApi().getShardManager();
     }
 
     final @NotNull Button nextButton(@NotNull ResourceBundle bundle, String @NotNull [] ids, int count, @NotNull NoteEmbedActionType actionType) {
@@ -139,7 +137,8 @@ public class NoteSlashCommandEvents {
     }
 
     private void sendInitialEmbed(@NotNull ButtonInteractionEvent event, NoteEmbedActionType actionType) {
-        if (event.getGuild() == null) return;
+        Guild guild = event.getGuild();
+        if (guild == null) return;
         event.deferEdit().queue();
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
@@ -147,7 +146,7 @@ public class NoteSlashCommandEvents {
         String targetUserId = ids[1];
         if (!event.getUser().getId().equals(commandUserId)) return;
 
-        JSONObject notes = db.getDataFromNoteTable(Long.parseLong(targetUserId), event.getGuild().getIdLong());
+        JSONObject notes = db.getDataFromNoteTable(Long.parseLong(targetUserId), guild.getIdLong());
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
 
@@ -178,7 +177,8 @@ public class NoteSlashCommandEvents {
     }
 
     private void sendShowEmbed(@NotNull ButtonInteractionEvent event, ClickType clicktype, NoteEmbedActionType actionType) {
-        if (event.getGuild() == null) return;
+        Guild guild = event.getGuild();
+        if (guild == null) return;
         event.deferEdit().queue();
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
@@ -433,7 +433,7 @@ public class NoteSlashCommandEvents {
                 i++;
                 JSONObject entry = notes.getJSONObject(keyString);
                 String timeString = keyString.replace("T", " ").replaceAll(".\\d{5,}", " ");
-                restActions.add(jda.retrieveUserById(entry.getLong("moderatorId"))
+                restActions.add(shardManager.retrieveUserById(entry.getLong("moderatorId"))
                         .onSuccess(user -> showNoteEmbed.addField(timeString + " from " + user.getAsTag(), entry.getString("noteContent"), false)));
                 if (menuBuilder != null) menuBuilder.addOption(timeString, keyString);
                 if (i == 25) break;

@@ -42,13 +42,6 @@ public class Main {
     }
 
     public void systemExit(Integer code) {
-        if (this.jdaApi != null && this.jdaApi.getJda() != null) {
-            this.jdaApi.getJda().shutdown();
-            try {
-                this.jdaApi.getJda().awaitShutdown();
-            } catch (InterruptedException ignored) {
-            }
-        }
         if (this.twitchApi != null) {
             twitchApi.closeClient();
         }

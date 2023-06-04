@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction;
 import net.dv8tion.jda.api.interactions.commands.localization.ResourceBundleLocalizationFunction;
+import net.dv8tion.jda.api.sharding.ShardManager;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -24,11 +25,11 @@ import java.util.Collection;
 
 public class CommandRegisterer {
 
-    private final JDA jda;
     private final Logger logger;
+    private final ShardManager shardManager;
 
     public CommandRegisterer(@NotNull JdaApi jdaApi) {
-        this.jda = jdaApi.getJda();
+        this.shardManager = jdaApi.getShardManager();
         this.logger = jdaApi.getLogger();
     }
 
@@ -56,7 +57,9 @@ public class CommandRegisterer {
                 }
             }
         }
-        jda.updateCommands().addCommands(commandData).queue();
+        for (JDA jda : shardManager.getShards()) {
+            jda.updateCommands().addCommands(commandData).queue();
+        }
         return true;
     }
 

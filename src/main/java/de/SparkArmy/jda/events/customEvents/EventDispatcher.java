@@ -4,6 +4,7 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.annotations.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -15,6 +16,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
+import net.dv8tion.jda.api.sharding.ShardManager;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -26,17 +28,38 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class EventDispatcher {
 
+    private final ShardManager shardManager;
     private final ConfigController controller;
     private final Logger logger;
     private final JdaApi api;
 
     private final Set<Object> events = ConcurrentHashMap.newKeySet();
 
+
     public EventDispatcher(@NotNull JdaApi api) {
         this.api = api;
         this.controller = api.getController();
         this.logger = api.getLogger();
+        this.shardManager = api.getShardManager();
+        awaitJdaLoading();
         registerEvents();
+    }
+
+    private void awaitJdaLoading() {
+        for (int i = 0; i < shardManager.getShardsTotal(); i++) {
+            try {
+                JDA jda = shardManager.getShardById(i);
+                if (jda == null) {
+                    logger.error("Shard %d is null".formatted(i));
+                    controller.getMain().systemExit(1);
+                    return;
+                }
+                jda.awaitReady();
+                logger.info("Shard %d is ready".formatted(i));
+            } catch (InterruptedException e) {
+                controller.getMain().systemExit(1);
+            }
+        }
     }
 
     @SubscribeEvent

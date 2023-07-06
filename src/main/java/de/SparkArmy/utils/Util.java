@@ -101,7 +101,9 @@ public class Util {
         }
 
         try {
-            WebhookClient.withUrl(webhookUrl.get()).send(embed);
+            WebhookClient client = WebhookClient.withUrl(webhookUrl.get());
+            client.send(embed);
+            client.close();
         } catch (NullPointerException | NumberFormatException ignored) {
         }
     }

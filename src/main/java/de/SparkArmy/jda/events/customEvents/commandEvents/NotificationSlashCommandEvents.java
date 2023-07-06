@@ -189,6 +189,18 @@ public class NotificationSlashCommandEvents {
         event.replyModal(modal.build()).queue();
     }
 
+    @JDAButton(startWith = "notification_sendSpecificPlatformEmbed_platformEmbed_edit")
+    public void editNotificationServiceButtonEvent(@NotNull ButtonInteractionEvent event) {
+        String componentId = event.getComponentId();
+        String[] splitId = componentId.split(";");
+        String componentOwnerId = splitId[1];
+        String serviceString = splitId[2];
+        if (!event.getUser().getId().equals(componentOwnerId)) return;
+        NotificationService notificationService = NotificationService.getNotificationServiceByName(serviceString);
+        if (notificationService == null) return;
+
+    }
+
     @JDAModal(startWith = "notification_addServiceModal")
     public void addServiceModalEvent(@NotNull ModalInteractionEvent event) {
         String componentId = event.getModalId();
@@ -336,6 +348,8 @@ public class NotificationSlashCommandEvents {
                 bundle.getString("notificationEvents.editNotificationMessageClickEvent.modal.textInput.label"),
                 TextInputStyle.PARAGRAPH);
         notificationMessageInput.setRequired(true);
+        // TODO Add Value for NotificationMessage - get from embed
+//        notificationMessageInput.setValue()
 
         Modal.Builder editNotificationModal = Modal.create(
                 "notification_editNotificationMessageModal;%s;%s".formatted(componentOwnerId, userChannelId),
@@ -480,6 +494,7 @@ public class NotificationSlashCommandEvents {
         }
 
         if (db.putDataInSubscribedChannelTable(guildChannels, userChannelId, notificationMessage.getValue())) {
+            controller.getMain().getTwitchApi().getChannelNotifications().updateListenedChannels();
             hook.editOriginalEmbeds()
                     .setComponents()
                     .setContent(bundle.getString("notificationEvents.notificationChannelSelectOkClickEvent.successReply"))

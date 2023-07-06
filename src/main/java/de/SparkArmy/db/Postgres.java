@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -625,6 +626,81 @@ public class Postgres {
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return false;
+        }
+    }
+
+    public JSONArray getDataFromSubscribedChannelTableByService(NotificationService service) {
+        if (isPostgresDisabled) return new JSONArray();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT  "ctcServiceId","ctcName","sbcChannelld","fk_sbcGuildId","sctMessageText" FROM notification."tblSubscribedChannel"
+                    INNER JOIN notification."tblContentCreator" tCC on tCC."ctcServiceId" = "tblSubscribedChannel"."fk_sbcContentCreatorId"
+                    WHERE tCC."fk_ctcService" = ?;
+                    """);
+            prepStmt.setLong(1, getServiceIdByNotificationService(conn, service));
+            ResultSet rs = prepStmt.executeQuery();
+            JSONArray results = new JSONArray();
+            while (rs.next()) {
+                String contentCreatorId = rs.getString(1);
+                String contentCreatorName = rs.getString(2);
+                long channelId = rs.getLong(3);
+                long guildId = rs.getLong(4);
+                String messageText = rs.getString(5);
+
+                JSONObject content = new JSONObject();
+                content.put("contentCreatorId", contentCreatorId);
+                content.put("contentCreatorName", contentCreatorName);
+                content.put("messageChannelId", channelId);
+                content.put("guildId", guildId);
+                content.put("messageText", messageText);
+
+                results.put(content);
+            }
+            conn.close();
+            return results;
+
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new JSONArray();
+        }
+    }
+
+    public JSONArray getDataFromSubscribedChannelTableByContentCreatorId(String contentCreatorId) {
+        if (isPostgresDisabled) return new JSONArray();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT  "ctcServiceId","ctcName","sbcChannelld","fk_sbcGuildId","sctMessageText" FROM notification."tblSubscribedChannel"
+                    INNER JOIN notification."tblContentCreator" tCC on tCC."ctcServiceId" = "tblSubscribedChannel"."fk_sbcContentCreatorId"
+                    WHERE tCC."ctcServiceId" = ?
+                    """);
+
+            prepStmt.setString(1, contentCreatorId);
+
+            ResultSet rs = prepStmt.executeQuery();
+            JSONArray results = new JSONArray();
+            while (rs.next()) {
+                String contentCreatorName = rs.getString(2);
+                long channelId = rs.getLong(3);
+                long guildId = rs.getLong(4);
+                String messageText = rs.getString(5);
+
+                JSONObject content = new JSONObject();
+                content.put("contentCreatorId", contentCreatorId);
+                content.put("contentCreatorName", contentCreatorName);
+                content.put("messageChannelId", channelId);
+                content.put("guildId", guildId);
+                content.put("messageText", messageText);
+
+                results.put(content);
+            }
+            conn.close();
+            return results;
+
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new JSONArray();
         }
     }
 

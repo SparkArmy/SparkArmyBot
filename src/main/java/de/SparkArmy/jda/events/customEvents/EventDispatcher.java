@@ -57,6 +57,7 @@ public class EventDispatcher {
                 jda.awaitReady();
                 logger.info("Shard %d is ready".formatted(i));
             } catch (InterruptedException e) {
+                logger.error("Error in shard loading", e);
                 controller.getMain().systemExit(1);
             }
         }

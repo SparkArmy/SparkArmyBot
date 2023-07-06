@@ -17,7 +17,10 @@ public class TwitchApi {
 
     private final TwitchClient twitchClient;
 
+    private final ChannelNotifications channelNotifications;
+
     private final Main main;
+
     public TwitchApi(@NotNull Main main) {
         this.main = main;
         Logger logger = main.getLogger();
@@ -28,13 +31,10 @@ public class TwitchApi {
                 .withClientSecret(mainConfig.getJSONObject("twitch").getString("twitch-client-secret"))
                 .withDefaultEventHandler(ReactorEventHandler.class)
                 .build();
-        registerEvents();
-        logger.info("TwitchListeners successfully build");
-    }
 
-    private void registerEvents() {
         ReactorEventHandler eventHandler = twitchClient.getEventManager().getEventHandler(ReactorEventHandler.class);
-        new ChannelNotifications(main.getController(), eventHandler);
+        this.channelNotifications = new ChannelNotifications(main.getController(), eventHandler, twitchClient);
+        logger.info("TwitchListeners successfully build");
     }
 
     public List<User> getUserInformation(String userName) {
@@ -45,6 +45,9 @@ public class TwitchApi {
         twitchClient.close();
     }
 
+    public ChannelNotifications getChannelNotifications() {
+        return channelNotifications;
+    }
 
     public Main getMain() {
         return main;

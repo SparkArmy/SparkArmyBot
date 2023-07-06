@@ -3,8 +3,9 @@ package de.SparkArmy.twitter;
 import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.twitter.utils.TwitterUser;
-import de.andre.Requests.Request;
+import de.SparkArmy.utils.RequestUtil;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 
 public class TwitterApi {
     private final String twitter_bearer;
@@ -20,6 +21,8 @@ public class TwitterApi {
 
     public TwitterUser getUserDataByUsername(String username) {
         String url = String.format(hostUrl + getUserByUsername, username);
-        return new TwitterUser(new Request(url).setHeader("Authorization", String.format("Bearer %s", twitter_bearer)).makeRequest());
+        JSONObject header = new JSONObject();
+        header.put("Authorization", String.format("Bearer %s", twitter_bearer));
+        return new TwitterUser(RequestUtil.get(url, header));
     }
 }

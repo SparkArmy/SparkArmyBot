@@ -6,7 +6,6 @@ public enum NotificationType {
     UNKNOW(-1,"unknow"),
     NEWS(1,"news"),
     YOUTUBE(2,"youtube"),
-    TWITTER(3,"twitter"),
     TWITCH(4,"twitch"),
     TIKTOK(5,"ticktok")
     ;
@@ -35,9 +34,6 @@ public enum NotificationType {
             }
             case "youtube" -> {
                 return YOUTUBE;
-            }
-            case "twitter" -> {
-                return TWITTER;
             }
             case "twitch" -> {
                 return TWITCH;

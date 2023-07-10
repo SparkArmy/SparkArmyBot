@@ -6,8 +6,6 @@ import de.SparkArmy.db.Postgres;
 import de.SparkArmy.jda.events.annotations.*;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.twitch.TwitchApi;
-import de.SparkArmy.twitter.TwitterApi;
-import de.SparkArmy.twitter.utils.TwitterUser;
 import de.SparkArmy.utils.NotificationService;
 import de.SparkArmy.utils.Util;
 import de.SparkArmy.youtube.YouTubeApi;
@@ -250,16 +248,6 @@ public class NotificationSlashCommandEvents {
                                 URL: https://twitch.tv/%s
                                 """.formatted(user.getId(), user.getLogin()),
                         false));
-            }
-            case TWITTER -> {
-                TwitterApi twitterApi = controller.getMain().getTwitterApi();
-                TwitterUser twitterUser = twitterApi.getUserDataByUsername(userName);
-                showAddResultEmbed.addField(twitterUser.getUsername(),
-                        """
-                                ID: %s
-                                URL: https://twitter.com/%s
-                                """.formatted(twitterUser.getId(), twitterUser.getName()),
-                        false);
             }
         }
         String buttonPattern = "notification_addServiceResultEmbed_%s;%s;%s";

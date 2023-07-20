@@ -39,6 +39,7 @@ public class YouTubeApi {
             YouTube service = getYouTubeService();
             YouTube.Channels.List request = service.channels().list(parts);
             ChannelListResponse response = request.setForUsername(channelName).execute();
+            if (response.getPageInfo().getTotalResults() == 0) return "";
             return response.getItems().get(0).getId();
         } catch (GeneralSecurityException | IOException e) {
             return "";

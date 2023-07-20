@@ -331,8 +331,9 @@ public class Postgres {
             if (!rs.next()) {
                 throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
             }
+            long result = rs.getLong(1);
             conn.close();
-            return rs.getLong(1);
+            return result;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -1;
@@ -642,20 +643,7 @@ public class Postgres {
             ResultSet rs = prepStmt.executeQuery();
             JSONArray results = new JSONArray();
             while (rs.next()) {
-                String contentCreatorId = rs.getString(1);
-                String contentCreatorName = rs.getString(2);
-                long channelId = rs.getLong(3);
-                long guildId = rs.getLong(4);
-                String messageText = rs.getString(5);
-
-                JSONObject content = new JSONObject();
-                content.put("contentCreatorId", contentCreatorId);
-                content.put("contentCreatorName", contentCreatorName);
-                content.put("messageChannelId", channelId);
-                content.put("guildId", guildId);
-                content.put("messageText", messageText);
-
-                results.put(content);
+                extractContentData(rs, results);
             }
             conn.close();
             return results;
@@ -681,19 +669,7 @@ public class Postgres {
             ResultSet rs = prepStmt.executeQuery();
             JSONArray results = new JSONArray();
             while (rs.next()) {
-                String contentCreatorName = rs.getString(2);
-                long channelId = rs.getLong(3);
-                long guildId = rs.getLong(4);
-                String messageText = rs.getString(5);
-
-                JSONObject content = new JSONObject();
-                content.put("contentCreatorId", contentCreatorId);
-                content.put("contentCreatorName", contentCreatorName);
-                content.put("messageChannelId", channelId);
-                content.put("guildId", guildId);
-                content.put("messageText", messageText);
-
-                results.put(content);
+                extractContentData(rs, results);
             }
             conn.close();
             return results;
@@ -702,6 +678,23 @@ public class Postgres {
             Util.handleSQLExceptions(e);
             return new JSONArray();
         }
+    }
+
+    private void extractContentData(@NotNull ResultSet rs, @NotNull JSONArray results) throws SQLException {
+        String contentCreatorId = rs.getString(1);
+        String contentCreatorName = rs.getString(2);
+        long channelId = rs.getLong(3);
+        long guildId = rs.getLong(4);
+        String messageText = rs.getString(5);
+
+        JSONObject content = new JSONObject();
+        content.put("contentCreatorId", contentCreatorId);
+        content.put("contentCreatorName", contentCreatorName);
+        content.put("messageChannelId", channelId);
+        content.put("guildId", guildId);
+        content.put("messageText", messageText);
+
+        results.put(content);
     }
 
     public boolean getIsPostgresEnabled() {

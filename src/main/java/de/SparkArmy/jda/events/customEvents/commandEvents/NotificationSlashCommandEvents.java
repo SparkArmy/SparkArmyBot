@@ -3,7 +3,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 import com.github.twitch4j.helix.domain.User;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
-import de.SparkArmy.jda.events.annotations.*;
+import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.twitch.TwitchApi;
 import de.SparkArmy.utils.NotificationService;
@@ -20,6 +20,7 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -33,11 +34,14 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.awt.*;
 import java.util.List;
 import java.util.*;
 
+@SuppressWarnings("DuplicatedCode")
 public class NotificationSlashCommandEvents {
 
     private final ConfigController controller;
@@ -126,18 +130,18 @@ public class NotificationSlashCommandEvents {
         EmbedBuilder platformEmbed = new EmbedBuilder();
         platformEmbed.setTitle(String.format(bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.title"), platform.getServiceName()));
         platformEmbed.setDescription(bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.description"));
-        platformEmbed.addField(
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.title"),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.description"),
-                true);
-        platformEmbed.addField(
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.title"),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.description"),
-                true);
-        platformEmbed.addField(
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.title"),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.description"),
-                true);
+//        platformEmbed.addField(
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.title"),
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.description"),
+//                true);
+//        platformEmbed.addField(
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.title"),
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.description"),
+//                true);
+//        platformEmbed.addField(
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.title"),
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.description"),
+//                true);
         platformEmbed.setColor(notificationEmbedColor);
 
         Collection<Button> buttons = new ArrayList<>();
@@ -146,14 +150,14 @@ public class NotificationSlashCommandEvents {
                 ButtonStyle.SECONDARY,
                 buttonPattern.formatted(ActionType.ADD.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
                 bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.title")));
-        buttons.add(Button.of(
-                ButtonStyle.SECONDARY,
-                buttonPattern.formatted(ActionType.EDIT.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.title")));
-        buttons.add(Button.of(
-                ButtonStyle.SECONDARY,
-                buttonPattern.formatted(ActionType.REMOVE.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.title")));
+//        buttons.add(Button.of(
+//                ButtonStyle.SECONDARY,
+//                buttonPattern.formatted(ActionType.EDIT.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.title")));
+//        buttons.add(Button.of(
+//                ButtonStyle.SECONDARY,
+//                buttonPattern.formatted(ActionType.REMOVE.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
+//                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.title")));
 
         hook.editOriginalEmbeds(platformEmbed.build()).setComponents(ActionRow.of(buttons)).queue();
     }
@@ -197,6 +201,22 @@ public class NotificationSlashCommandEvents {
         NotificationService notificationService = NotificationService.getNotificationServiceByName(serviceString);
         if (notificationService == null) return;
 
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        TextInput.Builder userId = TextInput.create(
+                "notification_editServiceModal_userId",
+                bundle.getString("notificationEvents.editNotificationServiceButtonEvent.modal.textInputs.userId.header"),
+                TextInputStyle.SHORT);
+        userId.setRequired(true);
+        userId.setPlaceholder(bundle.getString("notificationEvents.editNotificationServiceButtonEvent.modal.textInputs.userId.placeholder"));
+
+        Modal.Builder editServiceModal = Modal.create(
+                "notification_editServiceModal;%s;%s".formatted(componentOwnerId,serviceString),
+                bundle.getString("notificationEvents.editNotificationServiceButtonEvent.modal.title"));
+
+        editServiceModal.addActionRow(userId.build());
+
+        event.replyModal(editServiceModal.build()).queue();
     }
 
     @JDAModal(startWith = "notification_addServiceModal")
@@ -258,6 +278,96 @@ public class NotificationSlashCommandEvents {
         event.getHook().editOriginalEmbeds(showAddResultEmbed.build()).setComponents(actionRow).queue();
     }
 
+    @JDAModal(startWith = "notification_editServiceModal")
+    public void editServiceModalEvent(@NotNull ModalInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+        String componentId = event.getModalId();
+        String[] splitId = componentId.split(";");
+        String componentOwnerId = splitId[1];
+        String serviceString = splitId[2];
+        if (!event.getUser().getId().equals(componentOwnerId)) return;
+        NotificationService notificationService = NotificationService.getNotificationServiceByName(serviceString);
+        if (notificationService == null) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        ModalMapping userNameMapping = event.getValue("notification_editServiceModal_userId");
+
+        if (userNameMapping == null) {
+            event.reply(bundle.getString("notificationEvents.editServiceModalEvent.userNameMappingIsNull")).queue();
+            return;
+        }
+
+        String userId = "";
+
+        switch (notificationService) {
+
+            case YOUTUBE -> {
+                YouTubeApi youTubeApi = controller.getMain().getYouTubeApi();
+                userId = youTubeApi.getUserId(userNameMapping.getAsString());
+
+            }
+            case TWITCH -> {
+                TwitchApi twitchApi = controller.getMain().getTwitchApi();
+                List<User> users = twitchApi.getUserInformation(userNameMapping.getAsString());
+                if (users.isEmpty()) {
+                    event.reply(
+                            String.format(
+                                    bundle.getString("notificationEvents.editServiceModalEvent.switchNotificationSwitch.twitch.userIsEmpty"),
+                                    userNameMapping.getAsString())).queue();
+                    return;
+                }
+
+                userId = users.get(0).getId();
+            }
+        }
+
+        event.deferEdit().queue();
+
+        EmbedBuilder editNotificationsEmbed = new EmbedBuilder();
+
+        JSONArray tableData = db.getDataFromSubscribedChannelTableByContentCreatorId(userId);
+
+        StringSelectMenu.Builder editChannelMenuBuilder = StringSelectMenu.create(
+                String.format("notification_editServiceEmbed;%s;%s",componentOwnerId,userId));
+
+        for (Object o : tableData){
+            JSONObject jsonObject = (JSONObject) o;
+            if (guild.getIdLong() == (jsonObject.getLong("guildId"))) {
+                GuildChannel channel = guild.getGuildChannelById(jsonObject.getLong("messageChannelId"));
+                if (channel != null) {
+                    MessageEmbed.Field field = new MessageEmbed.Field(
+                            channel.getJumpUrl(),
+                            """
+                                    Message: %s
+                                    """.formatted(jsonObject.getString("messageText")),
+                            false);
+                    editChannelMenuBuilder.addOption(channel.getName(),channel.getId());
+                    editNotificationsEmbed.addField(field);
+                }
+            }
+        }
+
+        editNotificationsEmbed.setTitle(bundle.getString("notificationEvents.editServiceModalEvent.editNotificationEmbed.title"));
+
+        if (editNotificationsEmbed.getFields().isEmpty()) {
+            editNotificationsEmbed.setDescription(bundle.getString("notificationEvents.editServiceModalEvent.editNotificationEmbed.description.fieldsAreEmpty"));
+            event.getHook().editOriginalEmbeds(editNotificationsEmbed.build()).queue();
+        }else {
+            editNotificationsEmbed.setDescription(bundle.getString("notificationEvents.editServiceModalEvent.editNotificationEmbed.description"));
+            event.getHook()
+                    .editOriginalEmbeds(editNotificationsEmbed.build())
+                    .setComponents(ActionRow.of(editChannelMenuBuilder.build()))
+                    .queue();
+        }
+    }
+
+    @JDAStringMenu(startWith = "notification_editServiceEmbed")
+    public void editServiceChannelSelectEvent(StringSelectInteractionEvent event) {
+
+    }
+
     @JDAButton(startWith = "notification_addServiceResultEmbed_ok")
     public void addServiceModalButtonOkClickEvent(@NotNull ButtonInteractionEvent event) {
         event.deferEdit().queue();
@@ -284,7 +394,6 @@ public class NotificationSlashCommandEvents {
         String userId = value.split("\n")[0].split(" ")[1];
 
         ResourceBundle bundle = bundle(event.getUserLocale());
-
         if (!db.putDataInContentCreatorTable(notificationService, userName, userId)) {
             hook.editOriginal(bundle.getString("notificationEvents.addServiceModalButtonOkClickEvent.putInContentCreatorTableFailed")).queue();
             return;

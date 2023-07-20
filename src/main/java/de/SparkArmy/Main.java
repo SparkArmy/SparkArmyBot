@@ -37,6 +37,9 @@ public class Main {
         this.jdaApi = new JdaApi(this);
         this.twitchApi = new TwitchApi(this);
         this.youTubeApi = new YouTubeApi(this);
+
+        // Start web server
+        SpringApplication.run(SpringApp.class,"");
     }
 
     public static void main(String[] args) {

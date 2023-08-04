@@ -2,10 +2,10 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
-import de.SparkArmy.jda.events.annotations.JDAButton;
-import de.SparkArmy.jda.events.annotations.JDAModal;
-import de.SparkArmy.jda.events.annotations.JDASlashCommand;
-import de.SparkArmy.jda.events.annotations.JDAStringMenu;
+import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
+import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
+import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
+import de.SparkArmy.jda.events.annotations.interactions.JDAStringMenu;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -434,7 +434,7 @@ public class NoteSlashCommandEvents {
                 JSONObject entry = notes.getJSONObject(keyString);
                 String timeString = keyString.replace("T", " ").replaceAll(".\\d{5,}", " ");
                 restActions.add(shardManager.retrieveUserById(entry.getLong("moderatorId"))
-                        .onSuccess(user -> showNoteEmbed.addField(timeString + " from " + user.getAsTag(), entry.getString("noteContent"), false)));
+                        .onSuccess(user -> showNoteEmbed.addField(timeString + " from " + user.getEffectiveName(), entry.getString("noteContent"), false)));
                 if (menuBuilder != null) menuBuilder.addOption(timeString, keyString);
                 if (i == 25) break;
             }

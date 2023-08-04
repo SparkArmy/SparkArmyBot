@@ -1,6 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
-import de.SparkArmy.jda.events.annotations.JDASlashCommand;
+import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;

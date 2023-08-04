@@ -4,7 +4,7 @@ import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
-import de.SparkArmy.jda.events.annotations.JDASlashCommand;
+import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.jda.utils.punishments.Punishment;
 import de.SparkArmy.jda.utils.punishments.PunishmentType;
@@ -92,7 +92,7 @@ public class PunishmentCommandEvents {
                             logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, "unban"), null));
                             logEmbed.addField(new WebhookEmbed.EmbedField(false,
                                     guildBundle.getString("command.logEmbed.field.offender.name"),
-                                    String.format("%s (%s)", target.getAsTag(), target.getAsMention())));
+                                    String.format("%s (%s)", target.getEffectiveName(), target.getAsMention())));
                             //noinspection ConstantConditions // Punishment events are all guild events
                             logEmbed.addField(new WebhookEmbed.EmbedField(false,
                                     guildBundle.getString("command.logEmbed.field.moderator.name"),

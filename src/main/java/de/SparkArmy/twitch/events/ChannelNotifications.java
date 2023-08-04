@@ -42,7 +42,6 @@ public class ChannelNotifications {
             JSONObject object = (JSONObject) o;
             channelNames.add(object.getString("contentCreatorName"));
         }
-        controller.getMain().getLogger().info(channelNames.toString());
         clientHelper.enableStreamEventListener(channelNames);
     }
 

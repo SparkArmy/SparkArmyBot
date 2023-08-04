@@ -33,16 +33,23 @@ public class YouTubePubSubMapping {
     @PostMapping(value = "/pubsubservice/youtube", consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_ATOM_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_ATOM_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public void onYoutubeVideoPublished(@RequestBody @NotNull String s) {
-
+        Postgres db = Util.controller.getMain().getPostgres();
         JSONObject requestBody = XML.toJSONObject(s);
         if (requestBody.isEmpty() || requestBody.isNull("feed")) return;
         JSONObject feed = requestBody.getJSONObject("feed");
         if (feed.isEmpty() || feed.isNull("entry")) return;
         JSONObject entry = feed.getJSONObject("entry");
         if (entry.isEmpty()) return;
-        if (!entry.getString("published").equals(entry.getString("updated"))) return;
 
-        Postgres db = Util.controller.getMain().getPostgres();
+        String videoId = entry.getString("yt:videoId");
+
+        if (db.isIdInReceivedVideosTable(videoId)){
+            return;
+        }
+        else {
+            db.putIdInReceivedVideosTable(videoId);
+        }
+
         JSONArray tableData = db.getDataFromSubscribedChannelTableByContentCreatorId(entry.getString("yt:channelId"));
 
         Collection<MessageCreateAction> messageSendActions = new ArrayList<>();
@@ -53,7 +60,7 @@ public class YouTubePubSubMapping {
             MessageCreateBuilder messageData = new MessageCreateBuilder();
             messageData.addContent(
                     object.getString("messageText") +
-                    "\n" + "https://youtu.be/%s".formatted(entry.getString("yt:videoId")));
+                    "\n" + "https://youtu.be/%s".formatted(videoId));
 
             if (messageChannel != null) {
                 messageSendActions.add(messageChannel.sendMessage(messageData.build()));

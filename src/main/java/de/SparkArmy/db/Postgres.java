@@ -587,14 +587,7 @@ public class Postgres {
                     """);
             prepStmt.setLong(1, guildChannelId);
             prepStmt.setString(2, contentCreatorId);
-            ResultSet rs = prepStmt.executeQuery();
-            if (!rs.next()) {
-                conn.close();
-                throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-            }
-            boolean result = rs.getLong(1) > 0;
-            conn.close();
-            return result;
+            return checkResultSetForARow(conn, prepStmt);
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return true;
@@ -678,6 +671,48 @@ public class Postgres {
             Util.handleSQLExceptions(e);
             return new JSONArray();
         }
+    }
+
+    public boolean isIdInReceivedVideosTable(String videoId) {
+        if (isPostgresDisabled) return true;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement(
+                    """
+                                        SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
+                            """);
+            prepStmt.setString(1, videoId);
+            return checkResultSetForARow(conn, prepStmt);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return true;
+        }
+    }
+
+    public void putIdInReceivedVideosTable(String videoId){
+        if (isPostgresDisabled) return;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO notification."tblReceivedVideos" VALUES (?);
+                    """);
+            prepStmt.setString(1,videoId);
+            prepStmt.execute();
+            conn.close();
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+        }
+    }
+
+    private boolean checkResultSetForARow(Connection conn, @NotNull PreparedStatement prepStmt) throws SQLException {
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) {
+            conn.close();
+            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
+        }
+        boolean result = rs.getLong(1) > 0;
+        conn.close();
+        return result;
     }
 
     private void extractContentData(@NotNull ResultSet rs, @NotNull JSONArray results) throws SQLException {

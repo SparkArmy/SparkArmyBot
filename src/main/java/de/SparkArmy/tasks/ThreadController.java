@@ -14,7 +14,7 @@ public class ThreadController {
 
 
     public ThreadController(){
-        this.service = new ScheduledThreadPoolExecutor(10);
+        this.service = new ScheduledThreadPoolExecutor(1);
         this.service.scheduleWithFixedDelay(new YouTubePubSubSubscriber(controller),0,4, TimeUnit.DAYS);
     }
 

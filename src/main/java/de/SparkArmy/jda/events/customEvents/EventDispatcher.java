@@ -2,7 +2,7 @@ package de.SparkArmy.jda.events.customEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.JdaApi;
-import de.SparkArmy.jda.events.annotations.*;
+import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.GenericEvent;

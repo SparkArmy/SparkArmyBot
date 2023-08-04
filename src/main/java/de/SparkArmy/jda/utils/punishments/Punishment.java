@@ -130,7 +130,7 @@ public class Punishment {
         logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, type.getName()), null));
         logEmbed.addField(new WebhookEmbed.EmbedField(false,
                 guildBundle.getString("preparePunishment.logEmbed.field.offender.name"),
-                String.format("%s (%s)", target.getAsTag(), target.getAsMention())));
+                String.format("%s (%s)", target.getEffectiveName(), target.getAsMention())));
         logEmbed.addField(new WebhookEmbed.EmbedField(false,
                 guildBundle.getString("preparePunishment.logEmbed.field.moderator.name"),
                 String.format("%s (%s)", moderator.getEffectiveName(), moderator.getAsMention())));

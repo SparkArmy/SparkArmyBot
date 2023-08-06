@@ -16,6 +16,7 @@ import java.sql.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class Postgres {
 
@@ -655,6 +656,7 @@ public class Postgres {
                     SELECT  "ctcServiceId","ctcName","sbcChannelld","fk_sbcGuildId","sctMessageText" FROM notification."tblSubscribedChannel"
                     INNER JOIN notification."tblContentCreator" tCC on tCC."ctcServiceId" = "tblSubscribedChannel"."fk_sbcContentCreatorId"
                     WHERE tCC."ctcServiceId" = ?
+                    ORDER BY "ctcName";
                     """);
 
             prepStmt.setString(1, contentCreatorId);
@@ -670,6 +672,27 @@ public class Postgres {
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return new JSONArray();
+        }
+    }
+
+    public void removeDataFromSubscribedChannelTable(List<String> channelIds, String contentCreatorId) {
+        if (isPostgresDisabled) return;
+        try {
+            Connection conn = connection();
+            conn.setAutoCommit(false);
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
+                    """);
+            prepStmt.setString(2, contentCreatorId);
+
+            for (String s : channelIds) {
+                prepStmt.setLong(1, Long.parseLong(s));
+                prepStmt.execute();
+            }
+            conn.commit();
+            conn.close();
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
         }
     }
 
@@ -689,14 +712,14 @@ public class Postgres {
         }
     }
 
-    public void putIdInReceivedVideosTable(String videoId){
+    public void putIdInReceivedVideosTable(String videoId) {
         if (isPostgresDisabled) return;
         try {
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
                     INSERT INTO notification."tblReceivedVideos" VALUES (?);
                     """);
-            prepStmt.setString(1,videoId);
+            prepStmt.setString(1, videoId);
             prepStmt.execute();
             conn.close();
         } catch (SQLException e) {

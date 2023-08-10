@@ -675,8 +675,8 @@ public class Postgres {
         }
     }
 
-    public void removeDataFromSubscribedChannelTable(List<String> channelIds, String contentCreatorId) {
-        if (isPostgresDisabled) return;
+    public boolean removeDataFromSubscribedChannelTable(List<String> channelIds, String contentCreatorId) {
+        if (isPostgresDisabled) return false;
         try {
             Connection conn = connection();
             conn.setAutoCommit(false);
@@ -691,10 +691,33 @@ public class Postgres {
             }
             conn.commit();
             conn.close();
+            return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
+            return false;
         }
     }
+
+    public boolean updateDataInSubscribedChannelTable(String message, String channelId, String contentCreatorId) {
+        if (isPostgresDisabled) return false;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE notification."tblSubscribedChannel" SET "sctMessageText" = ? 
+                    WHERE "fk_sbcContentCreatorId" = ? AND "sbcChannelld" = ?;
+                    """);
+            prepStmt.setString(1, message);
+            prepStmt.setString(2, contentCreatorId);
+            prepStmt.setLong(3, Long.parseLong(channelId));
+            prepStmt.execute();
+            conn.close();
+            return true;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return false;
+        }
+    }
+
 
     public boolean isIdInReceivedVideosTable(String videoId) {
         if (isPostgresDisabled) return true;

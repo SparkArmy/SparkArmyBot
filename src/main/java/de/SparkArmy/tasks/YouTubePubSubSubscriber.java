@@ -54,7 +54,6 @@ public class YouTubePubSubSubscriber implements Runnable {
 
                 Call call = client.newCall(request);
                 Response response = call.execute();
-                logger.info(String.valueOf(response.code()));
                 response.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);

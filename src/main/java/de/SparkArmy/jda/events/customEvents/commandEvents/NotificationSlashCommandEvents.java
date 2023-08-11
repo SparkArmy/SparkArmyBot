@@ -148,7 +148,7 @@ public class NotificationSlashCommandEvents {
         switch (splitComponentIds[0]) {
             case "notification_initialSlashCommand_selectPlatformEmbedButton" ->
                     dispatchSelectPlatformButtonClickEvent(event, splitComponentIds);
-            case "notification_sendSpecificPlatformEmbed_platformEmbed_add" ->
+            case "notification_sendSpecificPlatformEmbed_platformEmbed_add", "notification_addServiceResultEmbed_edit" ->
                     addOrEditOrRemoveButtonEvent(event, ActionType.ADD, splitComponentIds);
             case "notification_sendSpecificPlatformEmbed_platformEmbed_edit" ->
                     addOrEditOrRemoveButtonEvent(event, ActionType.EDIT, splitComponentIds);
@@ -240,6 +240,7 @@ public class NotificationSlashCommandEvents {
                 "notificationMessageInput",
                 bundle.getString("notificationEvents.editNotificationMessageClickEvent.modal.textInput.label"),
                 TextInputStyle.PARAGRAPH);
+        notificationMessageInput.setMinLength(10);
         notificationMessageInput.setRequired(true);
         if (!event.getMessage().getEmbeds().isEmpty()) {
             MessageEmbed msgEmbed = event.getMessage().getEmbeds().get(0);
@@ -382,8 +383,7 @@ public class NotificationSlashCommandEvents {
             String buttonPattern = "notification_addServiceResultEmbed_%s;%s;%s";
             Button okButton = Button.of(ButtonStyle.SUCCESS, String.format(buttonPattern, ActionType.OK.name, componentOwnerId, serviceString), "Ok");
             Button editButton = Button.of(ButtonStyle.SECONDARY, String.format(buttonPattern, ActionType.EDIT.name, componentOwnerId, serviceString), "Edit");
-            Button cancelButton = Button.of(ButtonStyle.DANGER, String.format(buttonPattern, ActionType.CANCEL, componentOwnerId, serviceString), "Cancel");
-            ActionRow actionRow = ActionRow.of(okButton, editButton, cancelButton);
+            ActionRow actionRow = ActionRow.of(okButton, editButton);
             EmbedBuilder showAddResultEmbed = new EmbedBuilder();
             showAddResultEmbed.setTitle(bundle.getString("notificationEvents.addServiceModalEvent.showAddResultEmbed.title"));
             showAddResultEmbed.setDescription(bundle.getString("notificationEvents.addServiceModalEvent.showAddResultEmbed.description"));
@@ -605,18 +605,15 @@ public class NotificationSlashCommandEvents {
 
         Message originalMessage = event.getMessage();
         if (originalMessage == null) {
-            Util.logger.info("messageNull");
             return;
         }
 
         EmbedBuilder modifiedEmbed = new EmbedBuilder();
         MessageEmbed.Field notificationMessageField = getFieldAndRemoveEmbedFields(event.getMessage(), modifiedEmbed);
         if (notificationMessageField == null) {
-            Util.logger.info("FieldNull");
             return;
         }
         if (notificationMessageField.getName() == null) {
-            Util.logger.info("NameNull");
             return;
         }
         modifiedEmbed.addField(notificationMessageField.getName(), notificationMessage, notificationMessageField.isInline());

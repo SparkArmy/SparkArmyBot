@@ -74,7 +74,7 @@ public class PunishmentCommandEvents {
             if (!db.getIsPostgresEnabled()) {
 
                 event.getGuild().unban(target).reason(reason).queue(x -> {
-                            if (!controller.getMain().getPostgres().putPunishmentDataInPunishmentTable(target, moderator, PunishmentType.UNBAN.getId(), reason)) {
+                            if (controller.getMain().getPostgres().putPunishmentDataInPunishmentTable(target, moderator, PunishmentType.UNBAN.getId(), reason)) {
                                 hook.editOriginal(bundle.getString("command.putInDB.unban.successfully.errorDB")).queue();
                             } else {
                                 hook.editOriginal(bundle.getString("command.putInDB.unban.successfully")).queue();

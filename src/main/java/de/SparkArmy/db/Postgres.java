@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 import static de.SparkArmy.db.DatabaseSource.connection;
@@ -51,25 +50,6 @@ public class Postgres {
         return rs.getLong(1) > 0;
     }
 
-    public boolean putGuildIdInGuildTable(long guildId) {
-        if (isPostgresDisabled) return false;
-        try {
-            Connection conn = connection();
-            if (isGuildIdInDatabase(conn, guildId)) {
-                return true;
-            }
-
-            PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblGuild\" (\"gldId\")VALUES (?);");
-            prepStmt.setLong(1, guildId);
-            prepStmt.execute();
-            return true;
-        } catch (SQLException e) {
-            Util.handleSQLExceptions(e);
-            return false;
-        }
-    }
-
     private void putGuildIdInGuildTable(@NotNull Connection conn, long guildId) throws SQLException {
         if (isGuildIdInDatabase(conn, guildId)) return;
         PreparedStatement prepStmt = conn.prepareStatement(
@@ -86,25 +66,6 @@ public class Postgres {
             throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
         }
         return rs.getLong(1) > 0;
-    }
-
-    public boolean putUserIdInUserTable(long userId) {
-        if (isPostgresDisabled) return false;
-        try {
-            Connection conn = connection();
-            if (isUserIdInDatabase(conn, userId)) {
-                return true;
-            }
-
-            PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblUser\" (\"usrId\")VALUES (?);");
-            prepStmt.setLong(1, userId);
-            prepStmt.execute();
-            return true;
-        } catch (SQLException e) {
-            Util.handleSQLExceptions(e);
-            return false;
-        }
     }
 
     private void putUserIdInUserTable(@NotNull Connection conn, long userId) throws SQLException {
@@ -127,28 +88,6 @@ public class Postgres {
         return rs.getLong(1) > 0;
     }
 
-    public boolean putMemberInMemberTable(long userId, long guildId) {
-        if (isPostgresDisabled) return false;
-        try {
-            Connection conn = connection();
-            if (isMemberInMemberTable(conn, userId, guildId)) {
-                return true;
-            }
-            putUserIdInUserTable(conn, userId);
-            putGuildIdInGuildTable(conn, guildId);
-
-            PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblMember\" (\"fk_mbrUserId\",\"fk_mbrGuildId\") VALUES (?,?);");
-            prepStmt.setLong(1, userId);
-            prepStmt.setLong(2, guildId);
-            prepStmt.execute();
-            return true;
-        } catch (SQLException e) {
-            Util.handleSQLExceptions(e);
-            return false;
-        }
-    }
-
     private void putMemberInMemberTable(Connection conn, long userId, long guildId) throws SQLException {
         if (isMemberInMemberTable(conn, userId, guildId)) return;
 
@@ -164,70 +103,17 @@ public class Postgres {
 
     private long getMemberIdFromMemberTable(@NotNull Connection conn, long userId, long guildId) throws SQLException {
         putMemberInMemberTable(conn, userId, guildId);
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT \"mbrId\" FROM guilddata.\"tblMember\" WHERE \"fk_mbrUserId\" = ? AND \"fk_mbrGuildId\" = ?;");
-        prepStmt.setLong(1, userId);
-        prepStmt.setLong(2, guildId);
-        ResultSet rs = prepStmt.executeQuery();
+        ResultSet rs;
+        try (PreparedStatement prepStmt = conn.prepareStatement(
+                "SELECT \"mbrId\" FROM guilddata.\"tblMember\" WHERE \"fk_mbrUserId\" = ? AND \"fk_mbrGuildId\" = ?;")) {
+            prepStmt.setLong(1, userId);
+            prepStmt.setLong(2, guildId);
+            rs = prepStmt.executeQuery();
+        }
         if (!rs.next()) return -1;
         return rs.getLong(1);
     }
 
-    private boolean isMemberInJoinLeaveMemberTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM guilddata.\"tblJoinLeaveMember\" WHERE \"fk_jlmMemberId\" = ? AND \"jlmLeaveTime\" IS NULL;");
-        prepStmt.setLong(1, databaseMemberId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
-    }
-
-    public boolean putDataInJoinLeaveMemberTable(Member member, boolean isJoin) {
-        if (isPostgresDisabled) return false;
-        try {
-            // Get Connection
-            Connection conn = connection();
-            // Get Discord userId, Discord guildId and database memberId and returned when getMemberIdFromMemberTable failed
-            long memberId = member.getIdLong(); // memberId equal userId
-            long guildId = member.getGuild().getIdLong();
-            long mbrId = getMemberIdFromMemberTable(conn, memberId, guildId);
-            if (mbrId == -1) {
-                return false;
-            }
-            if (isJoin) {
-                if (isMemberInJoinLeaveMemberTable(conn, mbrId)) {
-                    return true;
-                }
-                PreparedStatement prepStmt = conn.prepareStatement(
-                        "INSERT INTO guilddata.\"tblJoinLeaveMember\" (\"fk_jlmMemberId\",\"jlmJoinTime\") VALUES (?,?);");
-                prepStmt.setLong(1, mbrId);
-                prepStmt.setTimestamp(2, Timestamp.valueOf(member.getTimeJoined().toLocalDateTime()));
-                prepStmt.execute();
-
-            } else {
-                if (isMemberInJoinLeaveMemberTable(conn, memberId)) {
-                    PreparedStatement prepStmt = conn.prepareStatement(
-                            "UPDATE guilddata.\"tblJoinLeaveMember\"SET \"jlmLeaveTime\" = now() WHERE \"fk_jlmMemberId\" = ?;");
-                    prepStmt.setLong(1, mbrId);
-                    prepStmt.execute();
-                } else {
-                    if (putDataInJoinLeaveMemberTable(member, true)) {
-                        return false;
-                    }
-                    PreparedStatement prepStmt = conn.prepareStatement(
-                            "UPDATE guilddata.\"tblJoinLeaveMember\"SET \"jlmLeaveTime\" = now() WHERE \"fk_jlmMemberId\" = ?;");
-                    prepStmt.setLong(1, mbrId);
-                    prepStmt.execute();
-                }
-            }
-            return true;
-        } catch (SQLException e) {
-            Util.handleSQLExceptions(e);
-            return false;
-        }
-    }
 
     private boolean isModeratorInModeratorTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement(
@@ -257,32 +143,6 @@ public class Postgres {
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) return -1;
         return rs.getLong(1);
-    }
-
-    public boolean putDataInModeratorTable(Member member) {
-        if (isPostgresDisabled) return false;
-        try {
-            Connection conn = connection();
-
-            // Get User and Guild Id
-            long userId = member.getIdLong();
-            long guildId = member.getGuild().getIdLong();
-            // Get DatabaseMemberId
-            long mbrId = getMemberIdFromMemberTable(conn, userId, guildId);
-
-            if (isModeratorInModeratorTable(conn, mbrId)) {
-                return true;
-            }
-
-            PreparedStatement prepStmt = conn.prepareStatement(
-                    "INSERT INTO guilddata.\"tblModerator\" (\"fk_modMemberId\")VALUES (?);");
-            prepStmt.setLong(1, mbrId);
-            prepStmt.execute();
-            return true;
-        } catch (SQLException e) {
-            Util.handleSQLExceptions(e);
-            return false;
-        }
     }
 
     private void putDataInModeratorTable(Connection conn, long databaseMemberId) throws SQLException {
@@ -366,17 +226,6 @@ public class Postgres {
             Util.handleSQLExceptions(e);
             return true;
         }
-    }
-
-    private boolean isMessageInMessageTable(@NotNull Connection conn, long messageId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM guilddata.\"tblMessage\" WHERE \"msgId\" = ?;");
-        prepStmt.setLong(1, messageId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
     }
 
     public boolean putDataInNoteTable(String note, long targetMemberId, long moderatorId, long guildId) {
@@ -487,31 +336,6 @@ public class Postgres {
         }
         return rs.getLong(1);
     }
-
-    public HashMap<String, String> getServiceIdAndNameByNotificationService(NotificationService service) {
-        if (isPostgresDisabled) return new HashMap<>();
-        try {
-            Connection conn = connection();
-
-            long databaseServiceId = getServiceIdByNotificationService(conn, service);
-
-            PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT "ctcName","ctcServiceId" FROM notification."tblContentCreator" WHERE "fk_ctcService" = ?;
-                    """);
-            prepStmt.setLong(1, databaseServiceId);
-
-            ResultSet rs = prepStmt.executeQuery();
-            HashMap<String, String> results = new HashMap<>();
-            while (rs.next()) {
-                results.put(rs.getString(1), rs.getString(2));
-            }
-            return results;
-        } catch (SQLException e) {
-            Util.handleSQLExceptions(e);
-            return new HashMap<>();
-        }
-    }
-
     private boolean isContentCreatorInContentCreatorTable(@NotNull Connection conn, String channelId, long databaseServiceId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 SELECT COUNT(*) FROM notification."tblContentCreator" WHERE "ctcServiceId" = ? AND "fk_ctcService" = ?;
@@ -563,10 +387,12 @@ public class Postgres {
     public boolean existRowInSubscribedChannelTable(long guildChannelId, String contentCreatorId) {
         if (isPostgresDisabled) return true;
         try {
-            Connection conn = connection();
-            PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT COUNT(*) FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
-                    """);
+            PreparedStatement prepStmt;
+            try (Connection conn = connection()) {
+                prepStmt = conn.prepareStatement("""
+                        SELECT COUNT(*) FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
+                        """);
+            }
             prepStmt.setLong(1, guildChannelId);
             prepStmt.setString(2, contentCreatorId);
             return checkResultSetForARow(prepStmt);
@@ -681,11 +507,13 @@ public class Postgres {
     public boolean updateDataInSubscribedChannelTable(String message, String channelId, String contentCreatorId) {
         if (isPostgresDisabled) return false;
         try {
-            Connection conn = connection();
-            PreparedStatement prepStmt = conn.prepareStatement("""
-                    UPDATE notification."tblSubscribedChannel" SET "sctMessageText" = ? 
-                    WHERE "fk_sbcContentCreatorId" = ? AND "sbcChannelld" = ?;
-                    """);
+            PreparedStatement prepStmt;
+            try (Connection conn = connection()) {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE notification."tblSubscribedChannel" SET "sctMessageText" = ?
+                        WHERE "fk_sbcContentCreatorId" = ? AND "sbcChannelld" = ?;
+                        """);
+            }
             prepStmt.setString(1, message);
             prepStmt.setString(2, contentCreatorId);
             prepStmt.setLong(3, Long.parseLong(channelId));
@@ -701,11 +529,13 @@ public class Postgres {
     public boolean isIdInReceivedVideosTable(String videoId) {
         if (isPostgresDisabled) return true;
         try {
-            Connection conn = connection();
-            PreparedStatement prepStmt = conn.prepareStatement(
-                    """
-                                        SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
-                            """);
+            PreparedStatement prepStmt;
+            try (Connection conn = connection()) {
+                prepStmt = conn.prepareStatement(
+                        """
+                                            SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
+                                """);
+            }
             prepStmt.setString(1, videoId);
             return checkResultSetForARow(prepStmt);
         } catch (SQLException e) {
@@ -717,10 +547,12 @@ public class Postgres {
     public void putIdInReceivedVideosTable(String videoId) {
         if (isPostgresDisabled) return;
         try {
-            Connection conn = connection();
-            PreparedStatement prepStmt = conn.prepareStatement("""
-                    INSERT INTO notification."tblReceivedVideos" VALUES (?);
-                    """);
+            PreparedStatement prepStmt;
+            try (Connection conn = connection()) {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO notification."tblReceivedVideos" VALUES (?);
+                        """);
+            }
             prepStmt.setString(1, videoId);
             prepStmt.execute();
         } catch (SQLException e) {

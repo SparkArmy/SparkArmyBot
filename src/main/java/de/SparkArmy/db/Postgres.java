@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import static de.SparkArmy.db.DatabaseSource.connection;
+
 public class Postgres {
 
     private final boolean isPostgresDisabled;
@@ -27,7 +29,7 @@ public class Postgres {
         boolean disabled = true;
         // try connection
         try {
-            Connection conn = DatabaseSource.connection();
+            Connection conn = connection();
             logger.info("postgres-connected");
             conn.close();
             // set config global and set postgresEnabled
@@ -37,11 +39,6 @@ public class Postgres {
             main.systemExit(40);
         }
         this.isPostgresDisabled = disabled;
-    }
-
-
-    private Connection connection() throws SQLException {
-        return DatabaseSource.connection();
     }
 
     private boolean isGuildIdInDatabase(@NotNull Connection conn, long guildId) throws SQLException {
@@ -59,7 +56,6 @@ public class Postgres {
         try {
             Connection conn = connection();
             if (isGuildIdInDatabase(conn, guildId)) {
-                conn.close();
                 return true;
             }
 
@@ -67,7 +63,6 @@ public class Postgres {
                     "INSERT INTO guilddata.\"tblGuild\" (\"gldId\")VALUES (?);");
             prepStmt.setLong(1, guildId);
             prepStmt.execute();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -98,7 +93,6 @@ public class Postgres {
         try {
             Connection conn = connection();
             if (isUserIdInDatabase(conn, userId)) {
-                conn.close();
                 return true;
             }
 
@@ -106,7 +100,6 @@ public class Postgres {
                     "INSERT INTO guilddata.\"tblUser\" (\"usrId\")VALUES (?);");
             prepStmt.setLong(1, userId);
             prepStmt.execute();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -139,7 +132,6 @@ public class Postgres {
         try {
             Connection conn = connection();
             if (isMemberInMemberTable(conn, userId, guildId)) {
-                conn.close();
                 return true;
             }
             putUserIdInUserTable(conn, userId);
@@ -150,7 +142,6 @@ public class Postgres {
             prepStmt.setLong(1, userId);
             prepStmt.setLong(2, guildId);
             prepStmt.execute();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -203,12 +194,10 @@ public class Postgres {
             long guildId = member.getGuild().getIdLong();
             long mbrId = getMemberIdFromMemberTable(conn, memberId, guildId);
             if (mbrId == -1) {
-                conn.close();
                 return false;
             }
             if (isJoin) {
                 if (isMemberInJoinLeaveMemberTable(conn, mbrId)) {
-                    conn.close();
                     return true;
                 }
                 PreparedStatement prepStmt = conn.prepareStatement(
@@ -225,7 +214,6 @@ public class Postgres {
                     prepStmt.execute();
                 } else {
                     if (putDataInJoinLeaveMemberTable(member, true)) {
-                        conn.close();
                         return false;
                     }
                     PreparedStatement prepStmt = conn.prepareStatement(
@@ -234,7 +222,6 @@ public class Postgres {
                     prepStmt.execute();
                 }
             }
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -284,7 +271,6 @@ public class Postgres {
             long mbrId = getMemberIdFromMemberTable(conn, userId, guildId);
 
             if (isModeratorInModeratorTable(conn, mbrId)) {
-                conn.close();
                 return true;
             }
 
@@ -292,7 +278,6 @@ public class Postgres {
                     "INSERT INTO guilddata.\"tblModerator\" (\"fk_modMemberId\")VALUES (?);");
             prepStmt.setLong(1, mbrId);
             prepStmt.execute();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -324,17 +309,17 @@ public class Postgres {
         try {
             long guildId = guild.getIdLong();
 
-            Connection conn = connection();
-            PreparedStatement prepStmt = conn.prepareStatement(
-                    "SELECT COUNT(*) FROM guilddata.\"tblPunishment\" WHERE \"fk_psmGuildId\" = ?;");
+            PreparedStatement prepStmt;
+            try (Connection conn = connection()) {
+                prepStmt = conn.prepareStatement(
+                        "SELECT COUNT(*) FROM guilddata.\"tblPunishment\" WHERE \"fk_psmGuildId\" = ?;");
+            }
             prepStmt.setLong(1, guildId);
             ResultSet rs = prepStmt.executeQuery();
             if (!rs.next()) {
                 throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
             }
-            long result = rs.getLong(1);
-            conn.close();
-            return result;
+            return rs.getLong(1);
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -1;
@@ -342,7 +327,7 @@ public class Postgres {
     }
 
     public boolean putPunishmentDataInPunishmentTable(User target, Member moderator, int punishmentType, String reason) {
-        if (isPostgresDisabled) return false;
+        if (isPostgresDisabled) return true;
         try {
             Connection conn = connection();
 
@@ -376,11 +361,10 @@ public class Postgres {
             prepStmt.setLong(6, guildId);
 
             prepStmt.execute();
-            conn.close();
-            return true;
+            return false;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
-            return false;
+            return true;
         }
     }
 
@@ -410,7 +394,6 @@ public class Postgres {
             prepStmt.setString(2, note);
 
             prepStmt.execute();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -522,7 +505,6 @@ public class Postgres {
             while (rs.next()) {
                 results.put(rs.getString(1), rs.getString(2));
             }
-            conn.close();
             return results;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -558,7 +540,6 @@ public class Postgres {
             prepStmt.setLong(2, databaseServiceId);
             prepStmt.setString(3, channelId);
             prepStmt.execute();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -588,7 +569,7 @@ public class Postgres {
                     """);
             prepStmt.setLong(1, guildChannelId);
             prepStmt.setString(2, contentCreatorId);
-            return checkResultSetForARow(conn, prepStmt);
+            return checkResultSetForARow(prepStmt);
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return true;
@@ -615,7 +596,6 @@ public class Postgres {
                     prepStmt.execute();
                 }
             }
-            conn.close();
             return true;
 
         } catch (SQLException e) {
@@ -639,7 +619,6 @@ public class Postgres {
             while (rs.next()) {
                 extractContentData(rs, results);
             }
-            conn.close();
             return results;
 
         } catch (SQLException e) {
@@ -651,13 +630,15 @@ public class Postgres {
     public JSONArray getDataFromSubscribedChannelTableByContentCreatorId(String contentCreatorId) {
         if (isPostgresDisabled) return new JSONArray();
         try {
-            Connection conn = connection();
-            PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT  "ctcServiceId","ctcName","sbcChannelld","fk_sbcGuildId","sctMessageText" FROM notification."tblSubscribedChannel"
-                    INNER JOIN notification."tblContentCreator" tCC on tCC."ctcServiceId" = "tblSubscribedChannel"."fk_sbcContentCreatorId"
-                    WHERE tCC."ctcServiceId" = ?
-                    ORDER BY "ctcName";
-                    """);
+            PreparedStatement prepStmt;
+            try (Connection conn = connection()) {
+                prepStmt = conn.prepareStatement("""
+                        SELECT  "ctcServiceId","ctcName","sbcChannelld","fk_sbcGuildId","sctMessageText" FROM notification."tblSubscribedChannel"
+                        INNER JOIN notification."tblContentCreator" tCC on tCC."ctcServiceId" = "tblSubscribedChannel"."fk_sbcContentCreatorId"
+                        WHERE tCC."ctcServiceId" = ?
+                        ORDER BY "ctcName";
+                        """);
+            }
 
             prepStmt.setString(1, contentCreatorId);
 
@@ -666,7 +647,6 @@ public class Postgres {
             while (rs.next()) {
                 extractContentData(rs, results);
             }
-            conn.close();
             return results;
 
         } catch (SQLException e) {
@@ -678,19 +658,19 @@ public class Postgres {
     public boolean removeDataFromSubscribedChannelTable(List<String> channelIds, String contentCreatorId) {
         if (isPostgresDisabled) return false;
         try {
-            Connection conn = connection();
-            conn.setAutoCommit(false);
-            PreparedStatement prepStmt = conn.prepareStatement("""
-                    DELETE FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
-                    """);
-            prepStmt.setString(2, contentCreatorId);
+            try (Connection conn = connection()) {
+                conn.setAutoCommit(false);
+                PreparedStatement prepStmt = conn.prepareStatement("""
+                        DELETE FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
+                        """);
+                prepStmt.setString(2, contentCreatorId);
 
-            for (String s : channelIds) {
-                prepStmt.setLong(1, Long.parseLong(s));
-                prepStmt.execute();
+                for (String s : channelIds) {
+                    prepStmt.setLong(1, Long.parseLong(s));
+                    prepStmt.execute();
+                }
+                conn.commit();
             }
-            conn.commit();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -710,7 +690,6 @@ public class Postgres {
             prepStmt.setString(2, contentCreatorId);
             prepStmt.setLong(3, Long.parseLong(channelId));
             prepStmt.execute();
-            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -728,7 +707,7 @@ public class Postgres {
                                         SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
                             """);
             prepStmt.setString(1, videoId);
-            return checkResultSetForARow(conn, prepStmt);
+            return checkResultSetForARow(prepStmt);
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return true;
@@ -744,21 +723,17 @@ public class Postgres {
                     """);
             prepStmt.setString(1, videoId);
             prepStmt.execute();
-            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
     }
 
-    private boolean checkResultSetForARow(Connection conn, @NotNull PreparedStatement prepStmt) throws SQLException {
+    private boolean checkResultSetForARow(@NotNull PreparedStatement prepStmt) throws SQLException {
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) {
-            conn.close();
             throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
         }
-        boolean result = rs.getLong(1) > 0;
-        conn.close();
-        return result;
+        return rs.getLong(1) > 0;
     }
 
     private void extractContentData(@NotNull ResultSet rs, @NotNull JSONArray results) throws SQLException {

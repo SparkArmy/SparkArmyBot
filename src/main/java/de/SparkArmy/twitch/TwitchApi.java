@@ -30,6 +30,7 @@ public class TwitchApi {
                 .withClientId(mainConfig.getJSONObject("twitch").getString("twitch-client-id"))
                 .withClientSecret(mainConfig.getJSONObject("twitch").getString("twitch-client-secret"))
                 .withDefaultEventHandler(ReactorEventHandler.class)
+                .withTimeout(10000)
                 .withHelperThreadDelay(30_000)
                 .build();
 

@@ -24,7 +24,7 @@ public class Util {
     public static ConfigController controller;
 
     public static void handleSQLExceptions(@NotNull SQLException e) {
-        logger.error(e.getMessage());
+        logger.error("Error from SQL->", e);
     }
 
     public static ResourceBundle getResourceBundle(String name, @NotNull DiscordLocale discordLocale) {

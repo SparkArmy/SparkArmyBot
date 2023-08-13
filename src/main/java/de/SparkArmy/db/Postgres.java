@@ -109,9 +109,9 @@ public class Postgres {
             prepStmt.setLong(1, userId);
             prepStmt.setLong(2, guildId);
             rs = prepStmt.executeQuery();
+            if (!rs.next()) return -1;
+            return rs.getLong(1);
         }
-        if (!rs.next()) return -1;
-        return rs.getLong(1);
     }
 
 

@@ -72,7 +72,7 @@ public class EventDispatcher {
 
     private void interactionEvents(GenericInteractionCreateEvent event) {
         for (Object o : events) {
-            for (Method m : o.getClass().getDeclaredMethods()) {
+            for (Method m : o.getClass().getMethods()) {
                 try {
                     Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
                     if (event instanceof ButtonInteractionEvent) {
@@ -160,6 +160,7 @@ public class EventDispatcher {
         registerEvent(new NoteSlashCommandEvents(this));
         registerEvent(new PunishmentCommandEvents(this));
         registerEvent(new NotificationSlashCommandEvents(this));
+        registerEvent(new CleanSlashCommandEvents(this));
     }
 
     private void registerEvent(Object o) {

@@ -2,6 +2,7 @@
 <configuration>
 
     <property name="LOGS" value="./logs" />
+    <property name="LOGFILENAME" value="botlog"/>
 
     <appender name="Console"
               class="ch.qos.logback.core.ConsoleAppender">
@@ -14,7 +15,7 @@
 
     <appender name="RollingFile"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS}/spring-boot-logger.log</file>
+        <file>${LOGS}/${LOGFILENAME}.log</file>
         <encoder
                 class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>%d %p %C{0} [%t] %m%n</Pattern>
@@ -22,9 +23,9 @@
 
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS}/archived/spring-boot-logger-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${LOGS}/archived/${LOGFILENAME}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>1</maxHistory>
+            <maxHistory>10</maxHistory>
             <totalSizeCap>2GB</totalSizeCap>
         </rollingPolicy>
     </appender>

@@ -227,4 +227,25 @@ public class CommandRegisterer {
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
+
+    @JDACommandData
+    final @NotNull CommandData cleanSlashCommand() {
+        return Commands.slash("clean", "Remove multiple messages(max. 100)")
+                .addSubcommands(
+                        new SubcommandData("all", "Deletes all messages")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "count", "The amount of messages"),
+                                        new OptionData(OptionType.USER, "user", "The user")),
+                        new SubcommandData("last", "Deletes all messages to a specific time")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "days", "The days")),
+                        new SubcommandData("periodic", "Deletes all messages in a periodic time from the channel")
+                                .addOptions(
+                                        new OptionData(OptionType.CHANNEL, "channel", "The channel"),
+                                        new OptionData(OptionType.INTEGER, "period", "The period in days")
+                                )
+                )
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
+    }
 }

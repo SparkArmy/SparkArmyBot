@@ -7,6 +7,7 @@ import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
 import de.SparkArmy.jda.events.customEvents.otherEvents.MessageEvents;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -80,6 +81,8 @@ public class EventDispatcher {
             interactionEvents((GenericInteractionCreateEvent) event);
         } else if (event instanceof GenericMessageEvent) {
             messageEvents((GenericMessageEvent) event);
+        } else if (event instanceof Event) {
+            otherEvents((Event) event);
         }
     }
 
@@ -212,6 +215,25 @@ public class EventDispatcher {
                 } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
                          InstantiationException e) {
                     logger.error("Error to dispatch messageEvent in %s | %s".formatted(o.getClass().getName(), m.getName()), e);
+                }
+            }
+        }
+    }
+
+    private void otherEvents(Event event) {
+        for (Object o : events) {
+            for (Method m : o.getClass().getMethods()) {
+                try {
+                    if (event instanceof MessageBulkDeleteEvent) {
+                        JDAMessageBulkDeleteEvent annotation = m.getAnnotation(JDAMessageBulkDeleteEvent.class);
+                        if (annotation != null && m.getParameterCount() == 1) {
+                            m.invoke(constructor().newInstance(this), event);
+                        }
+                    }
+                } catch (InvocationTargetException | IllegalAccessException | InstantiationException |
+                         NoSuchMethodException e) {
+                    logger.error("Error to dispatch otherEvents in %s | %s".formatted(o.getClass().getName(), m.getName()), e);
+
                 }
             }
         }

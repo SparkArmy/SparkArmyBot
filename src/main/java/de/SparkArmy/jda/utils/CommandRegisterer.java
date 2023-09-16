@@ -4,13 +4,11 @@ import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.annotations.interactions.JDACommandData;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction;
 import net.dv8tion.jda.api.interactions.commands.localization.ResourceBundleLocalizationFunction;
 import net.dv8tion.jda.api.sharding.ShardManager;
@@ -247,5 +245,69 @@ public class CommandRegisterer {
                 )
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
+    }
+
+    @JDACommandData
+    final @NotNull CommandData configureSlashCommand() {
+        return Commands.slash("configure", "Configures the settings for the bot in the guild")
+                .addSubcommandGroups(
+                        new SubcommandGroupData("channel", "Configure channels")
+                                .addSubcommands(
+                                        new SubcommandData("log-channels", "Configure the Log-Channels")
+                                                .addOptions(
+                                                        new OptionData(OptionType.STRING, "type", "The log-channel-type")
+                                                                .setRequired(true)
+                                                                .setAutoComplete(true),
+                                                        new OptionData(OptionType.CHANNEL, "target-channel", "The channel where the logs will been sent")
+                                                                .setChannelTypes(ChannelType.TEXT, ChannelType.GUILD_PUBLIC_THREAD)
+                                                ),
+                                        new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel")
+                                                .addOptions(
+                                                        new OptionData(OptionType.CHANNEL, "target-channel", "The target channel")
+                                                                .setChannelTypes(
+                                                                        ChannelType.GUILD_PUBLIC_THREAD,
+                                                                        ChannelType.TEXT,
+                                                                        ChannelType.FORUM,
+                                                                        ChannelType.STAGE,
+                                                                        ChannelType.VOICE)
+                                                                .setRequired(true)
+                                                ),
+                                        new SubcommandData("archive-category", "The archive category")
+                                                .addOptions(
+                                                        new OptionData(OptionType.CHANNEL, "category", "The archive category")
+                                                                .setRequired(true)
+                                                                .setChannelTypes(ChannelType.CATEGORY)
+                                                )
+                                ),
+                        new SubcommandGroupData("roles", "Configure the roles")
+                                .addSubcommands(
+                                        new SubcommandData("mod-roles", "Manage the mod roles")
+                                                .addOptions(
+                                                        new OptionData(OptionType.ROLE, "add", "Adds the selected role"),
+                                                        new OptionData(OptionType.ROLE, "remove", "Remove the selected role")
+                                                ),
+                                        new SubcommandData("punishment-roles", "Manage the punishment roles")
+                                                .addOptions(
+                                                        new OptionData(OptionType.ROLE, "warn-role", "Set the warn role"),
+                                                        new OptionData(OptionType.ROLE, "mute-role", "Set the mute role")
+                                                )
+                                ),
+                        new SubcommandGroupData("blacklist", "Manage phrases of the blacklist")
+                                .addSubcommands(
+                                        new SubcommandData("add", "Add a phrase to the blacklist")
+                                                .addOptions(
+                                                        new OptionData(OptionType.STRING, "phrase", "The phrase")
+                                                                .setRequired(true)
+                                                ),
+                                        new SubcommandData("remove", "Removes a phrase from the blacklist")
+                                                .addOptions(
+                                                        new OptionData(OptionType.STRING, "phrase", "The phrase")
+                                                                .setRequired(true)
+                                                                .setAutoComplete(true)
+                                                )
+                                ),
+                        new SubcommandGroupData("modmail", "Manage the modmail settings"),// TODO add subcommands
+                        new SubcommandGroupData("feedback", "Manage the feedback settings") // TODO add subcommands
+                );
     }
 }

@@ -14,6 +14,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -43,10 +45,13 @@ public class YouTubePubSubMapping {
 
         String videoId = entry.getString("yt:videoId");
 
-        if (db.isIdInReceivedVideosTable(videoId)){
+        LocalDateTime published = LocalDateTime.parse(entry.getString("published"), DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime updated = LocalDateTime.parse(feed.getString("updated"), DateTimeFormatter.ISO_DATE_TIME);
+        if (published.plusMinutes(5).isAfter(updated)) return;
+
+        if (db.isIdInReceivedVideosTable(videoId)) {
             return;
-        }
-        else {
+        } else {
             db.putIdInReceivedVideosTable(videoId);
         }
 

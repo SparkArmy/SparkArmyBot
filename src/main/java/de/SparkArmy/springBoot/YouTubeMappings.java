@@ -51,6 +51,10 @@ public class YouTubeMappings {
         String userId = entry.getString("yt:channelId");
         String videoId = entry.getString("yt:videoId");
 
+        LocalDateTime published = LocalDateTime.parse(entry.getString("published"), DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime updated = LocalDateTime.parse(feed.getString("updated"),DateTimeFormatter.ISO_DATE_TIME);
+        if (published.plusMinutes(5).isAfter(updated)) return;
+        
         if (sentVideos.containsKey(userId)) {
             if (sentVideos.get(userId).equals(videoId)) return;
         }

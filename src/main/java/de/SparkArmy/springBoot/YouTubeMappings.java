@@ -1,9 +1,9 @@
 package de.SparkArmy.springBoot;
 
 
+import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.MainUtil;
 import de.SparkArmy.utils.jda.ChannelUtil;
-import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;
@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,9 +54,13 @@ public class YouTubeMappings {
         String videoId = entry.getString("yt:videoId");
 
         LocalDateTime published = LocalDateTime.parse(entry.getString("published"), DateTimeFormatter.ISO_DATE_TIME);
-        LocalDateTime updated = LocalDateTime.parse(feed.getString("updated"),DateTimeFormatter.ISO_DATE_TIME);
-        if (published.plusMinutes(5).isAfter(updated)) return;
-        
+        LocalDateTime updated = LocalDateTime.parse(feed.getString("updated"), DateTimeFormatter.ISO_DATE_TIME);
+        MainUtil.logger.info(s);
+        MainUtil.logger.info(String.valueOf(published));
+        MainUtil.logger.info(String.valueOf(updated));
+
+        if (updated.isAfter(published.plusMinutes(5))) return;
+
         if (sentVideos.containsKey(userId)) {
             if (sentVideos.get(userId).equals(videoId)) return;
         }

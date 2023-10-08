@@ -43,6 +43,7 @@ public class JdaApi {
                 GatewayIntent.MESSAGE_CONTENT,
                 GatewayIntent.SCHEDULED_EVENTS);
         builder.setMemberCachePolicy(MemberCachePolicy.NONE);
+        builder.setBulkDeleteSplittingEnabled(false);
         builder.setEventManagerProvider(value -> new AnnotatedEventManager());
         logger.info("Shard-Builder was successful initialized");
 

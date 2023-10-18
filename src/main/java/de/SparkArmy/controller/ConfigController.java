@@ -142,4 +142,27 @@ public class ConfigController {
         return new JSONObject();
     }
 
+
+    private enum GuildConfigType {
+        MAIN("config.json", "The main guild config"),
+        KEYWORDS("highlighted-keywords.json", "Keywords from guild"),
+        RULES("rules.json", "Rules from guild");
+
+
+        private final String name;
+        private final String description;
+
+        GuildConfigType(String name, String description) {
+            this.name = name;
+            this.description = description;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
 }

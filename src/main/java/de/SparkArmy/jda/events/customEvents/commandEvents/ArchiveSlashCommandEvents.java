@@ -1,7 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.controller.GuildConfigType;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
@@ -44,13 +43,13 @@ public class ArchiveSlashCommandEvents {
         if (guildConfig.isNull("archive-category")) {
             guild.createCategory("archive").addRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue(category -> {
                 guildConfig.put("archive-category", category.getId());
-                controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, guildConfig);
+                controller.writeInGuildMainConfig(guild, guildConfig);
                 moveChannel(event, guild, category, targetChannel);
             });
         } else if (guildConfig.getString("archive-category").isEmpty() || guildConfig.getString("archive-category").isBlank()) {
             guild.createCategory("archive").addRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue(category -> {
                 guildConfig.put("archive-category", category.getId());
-                controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, guildConfig);
+                controller.writeInGuildMainConfig(guild, guildConfig);
                 moveChannel(event, guild, category, targetChannel);
             });
         } else {
@@ -58,7 +57,7 @@ public class ArchiveSlashCommandEvents {
             if (archiveCategory == null) {
                 guild.createCategory("archive").addRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue(category -> {
                     guildConfig.put("archive-category", category.getId());
-                    controller.writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, guildConfig);
+                    controller.writeInGuildMainConfig(guild, guildConfig);
                     moveChannel(event, guild, category, targetChannel);
                 });
             } else {

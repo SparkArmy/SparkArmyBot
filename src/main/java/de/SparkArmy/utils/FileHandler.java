@@ -11,14 +11,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 
 
 public class FileHandler {
 
-    public static final File userDirectory = new File(System.getProperty("user.dir"));
+    private static final File userDirectory = new File(System.getProperty("user.dir"));
     private static final Logger logger = Util.logger;
 
     public static boolean createDirectory(String path, String directoryName) {
@@ -31,19 +28,11 @@ public class FileHandler {
         return createDirectory(userDirectory.getAbsolutePath(),directoryName);
     }
 
-    public static boolean createFile(@NotNull File path, String fileName) {
+    public static void createFile(@NotNull File path, String fileName) {
         try {
-            return new File(path.getAbsolutePath() + "/" + fileName).createNewFile();
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    public static boolean createFile(String path, String fileName){
-        try {
-            return new File(path + "/" + fileName).createNewFile();
-        } catch (IOException e) {
-            return false;
+            //noinspection ResultOfMethodCallIgnored
+            new File(path.getAbsolutePath() + "/" + fileName).createNewFile();
+        } catch (IOException ignored) {
         }
     }
 
@@ -71,19 +60,6 @@ public class FileHandler {
         }
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    public static boolean writeValuesInFile(File file, Object value){
-        try {
-        FileWriter fileWriter = fileWriter(file);
-        if (null == fileWriter) return false;
-        fileWriter.write(String.valueOf(value));
-        fileWriter.close();
-        return true;
-    } catch (IOException e) {
-        return false;
-    }
-    }
-
     public static void writeValuesInFile(String path, Object value) {
         try {
             FileWriter fileWriter = fileWriter(getFile(path));
@@ -91,15 +67,6 @@ public class FileHandler {
             fileWriter.write(String.valueOf(value));
             fileWriter.close();
         } catch (IOException ignored) {
-        }
-    }
-
-    public static @Nullable String getFileContent(@NotNull File file) {
-        try {
-            return Files.readString(Path.of(file.getAbsolutePath()));
-        } catch (IOException e) {
-            logger.error("Can't read the File content from " + file.getAbsolutePath());
-            return null;
         }
     }
 
@@ -123,23 +90,6 @@ public class FileHandler {
         }
     }
 
-    public static @Nullable List<File> getFilesInDirectory(File path){
-        if (null == path){
-            logger.info("FILEHANDLER: The path is null");
-            return null;
-        }
-
-        if (path.isFile()){
-            logger.info("FILEHANDLER: The path is a file");
-            return null;
-        }
-        if (null == path.listFiles()){
-            logger.info("FILEHANDLER: Error to listFiles");
-            return null;
-        }
-        return Arrays.stream(Objects.requireNonNull(path.listFiles())).toList();
-    }
-
     @Contract("_ -> new")
     private static @NotNull File getFile(String path) {
         return new File(path);
@@ -153,6 +103,10 @@ public class FileHandler {
             return null;
         }
     }
+
+
+
+
 
     /*
      * Exit-Codes

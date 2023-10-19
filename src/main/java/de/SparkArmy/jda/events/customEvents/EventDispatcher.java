@@ -2,6 +2,7 @@ package de.SparkArmy.jda.events.customEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.JdaApi;
+import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
 import de.SparkArmy.jda.events.annotations.events.*;
 import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;

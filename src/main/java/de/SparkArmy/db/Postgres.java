@@ -1,10 +1,12 @@
 package de.SparkArmy.db;
 
 import de.SparkArmy.Main;
+import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.NotificationService;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
@@ -12,13 +14,20 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import static de.SparkArmy.db.DatabaseSource.connection;
 
+@SuppressWarnings("resource")
 public class Postgres {
 
     private final boolean isPostgresDisabled;
@@ -28,9 +37,8 @@ public class Postgres {
         boolean disabled = true;
         // try connection
         try {
-            Connection conn = connection();
+            connection();
             logger.info("postgres-connected");
-            conn.close();
             // set config global and set postgresEnabled
             disabled = false;
         } catch (SQLException e) {
@@ -336,6 +344,7 @@ public class Postgres {
         }
         return rs.getLong(1);
     }
+
     private boolean isContentCreatorInContentCreatorTable(@NotNull Connection conn, String channelId, long databaseServiceId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 SELECT COUNT(*) FROM notification."tblContentCreator" WHERE "ctcServiceId" = ? AND "fk_ctcService" = ?;
@@ -496,6 +505,7 @@ public class Postgres {
                     prepStmt.execute();
                 }
                 conn.commit();
+                conn.setAutoCommit(true);
             }
             return true;
         } catch (SQLException e) {
@@ -560,7 +570,7 @@ public class Postgres {
         }
     }
 
-    private boolean checkResultSetForARow(@NotNull PreparedStatement prepStmt) throws SQLException {
+    private synchronized boolean checkResultSetForARow(@NotNull PreparedStatement prepStmt) throws SQLException {
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) {
             throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
@@ -583,7 +593,184 @@ public class Postgres {
         content.put("messageText", messageText);
 
         results.put(content);
+
     }
+
+    public List<Long> getMessageDataBeforeTimestamp(LocalDateTime timestamp) {
+        if (isPostgresDisabled) return new ArrayList<>();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT "msgId" FROM guilddata."tblMessage" WHERE "msgTimestamp" < ?;
+                    """);
+
+            prepStmt.setTimestamp(1, Timestamp.valueOf(timestamp));
+
+            ResultSet rs = prepStmt.executeQuery();
+            List<Long> results = new ArrayList<>();
+            while (rs.next()) {
+                results.add(rs.getLong(1));
+            }
+            return results;
+
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new ArrayList<>();
+        }
+    }
+
+    public JSONArray getMessageAttachmentsByMessageIDs(List<Long> messageIds) {
+        if (isPostgresDisabled) return new JSONArray();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guilddata."tblMessageAttachment" WHERE "fk_msaMessageId" = ?;
+                    """);
+
+            JSONArray results = new JSONArray();
+
+            for (Long msgId : messageIds) {
+                prepStmt.setLong(1, msgId);
+                ResultSet rs = prepStmt.executeQuery();
+                JSONObject entry = new JSONObject();
+                entry.put("msaId", rs.getLong(1));
+                entry.put("fk_msaMessageId", rs.getLong(2));
+                entry.put("msaAttachment", rs.getByte(3));
+                results.put(entry);
+            }
+            return results;
+
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new JSONArray();
+        }
+    }
+
+    public void putMessageDataAndAttachmentsInTables(Message msg) {
+        if (isPostgresDisabled) return;
+        if (!msg.isFromGuild()) return;
+        try {
+            Connection conn = connection();
+
+            long guildId = msg.getGuild().getIdLong();
+            long userId = msg.getAuthor().getIdLong();
+            long mbrId = getMemberIdFromMemberTable(conn, userId, guildId);
+
+            PreparedStatement msgTablePrepStmt = conn.prepareStatement("""
+                    INSERT INTO guilddata."tblMessage" ("msgId", "fk_msgMemberId", "msgContent", "msgTimestamp") VALUES
+                    (?,?,?,?);
+                    """);
+            PreparedStatement msgAttachmentTablePrepStmt = conn.prepareStatement("""
+                    INSERT INTO guilddata."tblMessageAttachment" ("fk_msaMessageId", "msaData") VALUES
+                    (?,?);
+                    """);
+
+            msgTablePrepStmt.setLong(1, msg.getIdLong());
+            msgTablePrepStmt.setLong(2, mbrId);
+            msgTablePrepStmt.setString(3, msg.getContentRaw());
+            msgTablePrepStmt.setTimestamp(4, Timestamp.valueOf(LocalDateTime.from(msg.getTimeCreated())));
+            msgTablePrepStmt.execute();
+
+            msgAttachmentTablePrepStmt.setLong(1, msg.getIdLong());
+
+            for (Message.Attachment msgAttachment : msg.getAttachments()) {
+                File directory = FileHandler.getDirectoryInUserDirectory("attachments");
+                FileHandler.createFile(directory, msgAttachment.getFileName());
+                File attachmentFile = FileHandler.getFileInDirectory(directory, msgAttachment.getFileName());
+                msgAttachment.getProxy().downloadToFile(attachmentFile).handleAsync((file, throwable) -> {
+                    try {
+                        msgAttachmentTablePrepStmt.setBytes(2, Files.readAllBytes(Path.of(file.getAbsolutePath())));
+                        msgAttachmentTablePrepStmt.execute();
+                    } catch (SQLException | IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (file.delete()) {
+                        return null;
+                    }
+                    throw new RuntimeException("Attachment File was not deleted!");
+                });
+            }
+
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+        }
+    }
+
+    public void updateMessageDataInMessageTable(Message msg) {
+        if (isPostgresDisabled) return;
+        if (!msg.isFromGuild()) return;
+        try {
+            Connection conn = connection();
+
+            if (!isMessageInMessageTable(conn, msg.getIdLong())) {
+                putMessageDataAndAttachmentsInTables(msg);
+                return;
+            }
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE guilddata."tblMessage" SET "msgContent" = ?
+                    WHERE "msgId" = ?;
+                    """);
+            prepStmt.setString(1, msg.getContentRaw());
+            prepStmt.setLong(2, msg.getIdLong());
+            prepStmt.execute();
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+        }
+    }
+
+    private boolean isMessageInMessageTable(@NotNull Connection conn, long msgId) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guilddata."tblMessage" WHERE "msgId" = ?;
+                """);
+        prepStmt.setLong(1, msgId);
+        return checkResultSetForARow(prepStmt);
+    }
+
+    public void deleteMessagesFromMessageTable(List<Long> msgIds) {
+        if (isPostgresDisabled) return;
+        try {
+            Connection conn = connection();
+            conn.setAutoCommit(false);
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guilddata."tblMessage" WHERE "msgId" = ?;
+                    """);
+
+
+            for (Long msgId : msgIds) {
+                if (isMessageInMessageTable(conn, msgId)) {
+                    prepStmt.setLong(1, msgId);
+                    prepStmt.execute();
+                }
+            }
+
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+        }
+    }
+
+    public void deleteMessageAttachments(List<Long> msaIds) {
+        if (isPostgresDisabled) return;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guilddata."tblMessageAttachment" WHERE "msaId" = ?;
+                    """);
+            conn.setAutoCommit(false);
+
+            for (Long msaId : msaIds) {
+                prepStmt.setLong(1, msaId);
+                prepStmt.execute();
+            }
+            conn.commit();
+            conn.setAutoCommit(true);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+        }
+    }
+
 
     public boolean getIsPostgresEnabled() {
         return !isPostgresDisabled;

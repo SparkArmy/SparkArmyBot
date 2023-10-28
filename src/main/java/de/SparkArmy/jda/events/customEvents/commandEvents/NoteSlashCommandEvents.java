@@ -26,27 +26,21 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
-import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.sharding.ShardManager;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.ResourceBundle;
 
 import static de.SparkArmy.utils.Util.logger;
 
 public class NoteSlashCommandEvents {
     private final Postgres db;
-    private final ShardManager shardManager;
 
     public NoteSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
         ConfigController controller = dispatcher.getController();
         this.db = controller.getMain().getPostgres();
-        this.shardManager = dispatcher.getApi().getShardManager();
     }
 
     final @NotNull Button nextButton(@NotNull ResourceBundle bundle, String @NotNull [] ids, int count, @NotNull NoteEmbedActionType actionType) {
@@ -157,23 +151,20 @@ public class NoteSlashCommandEvents {
         StringSelectMenu.Builder menuBuilder = StringSelectMenu.create(
                 String.format("noteCommand_showNoteEmbed_%sMenu;%s,%s", actionType.getName(), commandUserId, targetUserId));
 
-        RestAction.allOf(setEmbedFieldsAndGetModerators(showNoteEmbed, menuBuilder, 0, notes)).mapToResult()
-                .queue(x -> {
-                    ActionRow actionRow;
-                    if (notes.length() > 25) {
-                        actionRow = ActionRow.of(
-                                nextButton(bundle, ids, 25, actionType),
-                                closeButton(bundle, ids, actionType));
-                    } else {
-                        actionRow = ActionRow.of(closeButton(bundle, ids, actionType));
-                    }
-                    switch (actionType) {
-                        case SHOW ->
-                                event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow).queue();
-                        case EDIT, REMOVE ->
-                                event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow, ActionRow.of(menuBuilder.build())).queue();
-                    }
-                });
+       setEmbedFieldsAndGetModerators(showNoteEmbed,menuBuilder,0,notes);
+        ActionRow actionRow;
+        if (notes.length() > 25) {
+            actionRow = ActionRow.of(
+                    nextButton(bundle, ids, 25, actionType),
+                    closeButton(bundle, ids, actionType));
+        } else {
+            actionRow = ActionRow.of(closeButton(bundle, ids, actionType));
+        }
+        switch (actionType) {
+            case SHOW -> event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow).queue();
+            case EDIT, REMOVE ->
+                    event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow, ActionRow.of(menuBuilder.build())).queue();
+        }
     }
 
     private void sendShowEmbed(@NotNull ButtonInteractionEvent event, ClickType clicktype, NoteEmbedActionType actionType) {
@@ -195,43 +186,41 @@ public class NoteSlashCommandEvents {
 
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(targetUserId), event.getGuild().getIdLong());
 
-        RestAction.allOf(setEmbedFieldsAndGetModerators(showNoteEmbed, menuBuilder, count, notes)).mapToResult()
-                .queue(x -> {
-                    ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-                    ActionRow actionRow;
-                    int notesSize = notes.keySet().size();
-                    if (clicktype.equals(ClickType.BEFORE)) {
-                        if (count - 25 > 0) {
-                            actionRow = ActionRow.of(
-                                    beforeButton(bundle, ids, count - 25, actionType),
-                                    nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
-                                    closeButton(bundle, ids, actionType));
-                        } else {
-                            actionRow = ActionRow.of(
-                                    nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
-                                    closeButton(bundle, ids, actionType));
-                        }
-                    } else {
-                        if (notesSize - count > 1) {
-                            actionRow = ActionRow.of(
-                                    beforeButton(bundle, ids, count - 25, actionType),
-                                    nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
-                                    closeButton(bundle, ids, actionType));
-                        } else {
-                            actionRow = ActionRow.of(
-                                    beforeButton(bundle, ids, count - 25, actionType),
-                                    closeButton(bundle, ids, actionType));
-                        }
-                    }
-                    switch (actionType) {
-                        case SHOW ->
-                                event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow).queue();
-                        case EDIT, REMOVE ->
-                                event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow, ActionRow.of(menuBuilder.build())).queue();
-                    }
+        setEmbedFieldsAndGetModerators(showNoteEmbed,menuBuilder,count,notes);
 
+        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
+        ActionRow actionRow;
+        int notesSize = notes.keySet().size();
+        if (clicktype.equals(ClickType.BEFORE)) {
+            if (count - 25 > 0) {
+                actionRow = ActionRow.of(
+                        beforeButton(bundle, ids, count - 25, actionType),
+                        nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
+                        closeButton(bundle, ids, actionType));
+            } else {
+                actionRow = ActionRow.of(
+                        nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
+                        closeButton(bundle, ids, actionType));
+            }
+        } else {
+            if (notesSize - count > 1) {
+                actionRow = ActionRow.of(
+                        beforeButton(bundle, ids, count - 25, actionType),
+                        nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
+                        closeButton(bundle, ids, actionType));
+            } else {
+                actionRow = ActionRow.of(
+                        beforeButton(bundle, ids, count - 25, actionType),
+                        closeButton(bundle, ids, actionType));
+            }
+        }
 
-                });
+        switch (actionType) {
+            case SHOW -> event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow).queue();
+            case EDIT, REMOVE ->
+                    event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow, ActionRow.of(menuBuilder.build())).queue();
+        }
+
     }
 
     @JDAStringMenu(startWith = "noteCommand_showNoteEmbed_editMenu")
@@ -422,24 +411,40 @@ public class NoteSlashCommandEvents {
         }
     }
 
-    private @NotNull Collection<RestAction<User>> setEmbedFieldsAndGetModerators(
-            EmbedBuilder showNoteEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject notes) {
-        Collection<RestAction<User>> restActions = new ArrayList<>();
-        int i = 0;
+//    private @NotNull Collection<RestAction<User>> setEmbedFieldsAndGetModerators(
+//            EmbedBuilder showNoteEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject notes) {
+//        Collection<RestAction<User>> restActions = new ArrayList<>();
+//        int i = 0;
+//
+//        for (String keyString : notes.keySet().stream().sorted().toList()) {
+//            countFrom--;
+//            if (countFrom < 0) {
+//                i++;
+//                JSONObject entry = notes.getJSONObject(keyString);
+//                String timeString = keyString.replace("T", " ").replaceAll(".\\d{5,}", " ");
+//                restActions.add(shardManager.retrieveUserById(entry.getLong("moderatorId"))
+//                        .onSuccess(user -> showNoteEmbed.addField(timeString + " from " + user.getEffectiveName(), entry.getString("noteContent"), false)));
+//                if (menuBuilder != null) menuBuilder.addOption(timeString, keyString);
+//                if (i == 25) break;
+//            }
+//        }
+//        return restActions;
+//    }
 
+    private void setEmbedFieldsAndGetModerators(
+            EmbedBuilder showNoteEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject notes) {
+        int i = 0;
         for (String keyString : notes.keySet().stream().sorted().toList()) {
             countFrom--;
             if (countFrom < 0) {
                 i++;
                 JSONObject entry = notes.getJSONObject(keyString);
                 String timeString = keyString.replace("T", " ").replaceAll(".\\d{5,}", " ");
-                restActions.add(shardManager.retrieveUserById(entry.getLong("moderatorId"))
-                        .onSuccess(user -> showNoteEmbed.addField(timeString + " from " + user.getEffectiveName(), entry.getString("noteContent"), false)));
-                if (menuBuilder != null) menuBuilder.addOption(timeString, keyString);
+                showNoteEmbed.addField(timeString + " from <!@" + entry.getString("moderatorId") + ">",entry.getString("noteContent"),false);
+                if (menuBuilder != null) menuBuilder.addOption(timeString,keyString);
                 if (i == 25) break;
             }
         }
-        return restActions;
     }
 
     private enum ClickType {

@@ -43,11 +43,7 @@ public class Postgres {
     private boolean isGuildIdInDatabase(@NotNull Connection conn, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("SELECT COUNT(*) FROM guilddata.\"tblGuild\" WHERE \"gldId\" = ?;");
         prepStmt.setLong(1, guildId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
+        return checkResultSetForARow(prepStmt);
     }
 
     private void putGuildIdInGuildTable(@NotNull Connection conn, long guildId) throws SQLException {
@@ -61,11 +57,7 @@ public class Postgres {
     private boolean isUserIdInDatabase(@NotNull Connection conn, long userId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("SELECT COUNT(*) FROM guilddata.\"tblUser\" WHERE \"usrId\" = ?;");
         prepStmt.setLong(1, userId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
+        return checkResultSetForARow(prepStmt);
     }
 
     private void putUserIdInUserTable(@NotNull Connection conn, long userId) throws SQLException {
@@ -81,11 +73,7 @@ public class Postgres {
                 "SELECT COUNT(*) FROM guilddata.\"tblMember\" WHERE \"fk_mbrUserId\" = ? AND \"fk_mbrGuildId\" = ?;");
         prepStmt.setLong(1, userId);
         prepStmt.setLong(2, guildId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
+        return checkResultSetForARow(prepStmt);
     }
 
     private void putMemberInMemberTable(Connection conn, long userId, long guildId) throws SQLException {
@@ -119,11 +107,7 @@ public class Postgres {
         PreparedStatement prepStmt = conn.prepareStatement(
                 "SELECT COUNT(*) FROM guilddata.\"tblModerator\" WHERE \"fk_modMemberId\" = ?;");
         prepStmt.setLong(1, databaseMemberId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
+        return checkResultSetForARow(prepStmt);
     }
 
     private long getModeratorIdFromModeratorTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
@@ -158,9 +142,7 @@ public class Postgres {
                 "SELECT COUNT(*) FROM guilddata.\"tblPunishment\" WHERE \"fk_psmGuildId\" = ?;");
         prepStmt.setLong(1, guildId);
         ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
+        checkResultSetForARow(rs);
         return rs.getLong(1);
     }
 
@@ -169,17 +151,16 @@ public class Postgres {
         try {
             long guildId = guild.getIdLong();
 
-            PreparedStatement prepStmt;
-            try (Connection conn = connection()) {
-                prepStmt = conn.prepareStatement(
-                        "SELECT COUNT(*) FROM guilddata.\"tblPunishment\" WHERE \"fk_psmGuildId\" = ?;");
-            }
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT COUNT(*) FROM guilddata."tblPunishment" WHERE "fk_psmGuildId" = ?;
+                    """);
             prepStmt.setLong(1, guildId);
             ResultSet rs = prepStmt.executeQuery();
-            if (!rs.next()) {
-                throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-            }
-            return rs.getLong(1);
+            checkResultSetForARow(rs);
+            long results = rs.getLong(1);
+            conn.close();
+            return results;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -1;
@@ -221,6 +202,7 @@ public class Postgres {
             prepStmt.setLong(6, guildId);
 
             prepStmt.execute();
+            conn.close();
             return false;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -243,6 +225,7 @@ public class Postgres {
             prepStmt.setString(2, note);
 
             prepStmt.execute();
+            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -265,6 +248,7 @@ public class Postgres {
             prepStmt.setLong(3, databaseModeratorId);
             prepStmt.setTimestamp(4, timestamp);
             prepStmt.execute();
+            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -286,6 +270,7 @@ public class Postgres {
             prepStmt.setLong(2, databaseModeratorId);
             prepStmt.setLong(3, databaseMemberId);
             prepStmt.execute();
+            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -318,6 +303,7 @@ public class Postgres {
                 entry.put("noteContent", content);
                 results.put(timestamp.toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), entry);
             }
+            conn.close();
             return results;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -331,9 +317,7 @@ public class Postgres {
                    """);
         prepStmt.setString(1, service.getServiceName());
         ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("The service " + service.getServiceName() + " not exist");
-        }
+        checkResultSetForARow(rs);
         return rs.getLong(1);
     }
     private boolean isContentCreatorInContentCreatorTable(@NotNull Connection conn, String channelId, long databaseServiceId) throws SQLException {
@@ -342,11 +326,7 @@ public class Postgres {
                 """);
         prepStmt.setString(1, channelId);
         prepStmt.setLong(2, databaseServiceId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
+        return checkResultSetForARow(prepStmt);
     }
 
     public boolean putDataInContentCreatorTable(NotificationService service, String channelName, String channelId) {
@@ -364,6 +344,7 @@ public class Postgres {
             prepStmt.setLong(2, databaseServiceId);
             prepStmt.setString(3, channelId);
             prepStmt.execute();
+            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -377,25 +358,22 @@ public class Postgres {
                 """);
         prepStmt.setLong(1, guildChannelId);
         prepStmt.setString(2, contentCreatorId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
+        return checkResultSetForARow(prepStmt);
     }
 
     public boolean existRowInSubscribedChannelTable(long guildChannelId, String contentCreatorId) {
         if (isPostgresDisabled) return true;
         try {
-            PreparedStatement prepStmt;
-            try (Connection conn = connection()) {
-                prepStmt = conn.prepareStatement("""
-                        SELECT COUNT(*) FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
-                        """);
-            }
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT COUNT(*) FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
+                    """);
+
             prepStmt.setLong(1, guildChannelId);
             prepStmt.setString(2, contentCreatorId);
-            return checkResultSetForARow(prepStmt);
+            boolean checkResult = checkResultSetForARow(prepStmt);
+            conn.close();
+            return checkResult;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return true;
@@ -422,6 +400,7 @@ public class Postgres {
                     prepStmt.execute();
                 }
             }
+            conn.close();
             return true;
 
         } catch (SQLException e) {
@@ -443,8 +422,9 @@ public class Postgres {
             ResultSet rs = prepStmt.executeQuery();
             JSONArray results = new JSONArray();
             while (rs.next()) {
-                extractContentData(rs, results);
+                extractContentDataInContentCreatorTable(rs, results);
             }
+            conn.close();
             return results;
 
         } catch (SQLException e) {
@@ -456,23 +436,22 @@ public class Postgres {
     public JSONArray getDataFromSubscribedChannelTableByContentCreatorId(String contentCreatorId) {
         if (isPostgresDisabled) return new JSONArray();
         try {
-            PreparedStatement prepStmt;
-            try (Connection conn = connection()) {
-                prepStmt = conn.prepareStatement("""
-                        SELECT  "ctcServiceId","ctcName","sbcChannelld","fk_sbcGuildId","sctMessageText" FROM notification."tblSubscribedChannel"
-                        INNER JOIN notification."tblContentCreator" tCC on tCC."ctcServiceId" = "tblSubscribedChannel"."fk_sbcContentCreatorId"
-                        WHERE tCC."ctcServiceId" = ?
-                        ORDER BY "ctcName";
-                        """);
-            }
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT  "ctcServiceId","ctcName","sbcChannelld","fk_sbcGuildId","sctMessageText" FROM notification."tblSubscribedChannel"
+                    INNER JOIN notification."tblContentCreator" tCC on tCC."ctcServiceId" = "tblSubscribedChannel"."fk_sbcContentCreatorId"
+                    WHERE tCC."ctcServiceId" = ?
+                    ORDER BY "ctcName";
+                    """);
 
             prepStmt.setString(1, contentCreatorId);
 
             ResultSet rs = prepStmt.executeQuery();
             JSONArray results = new JSONArray();
             while (rs.next()) {
-                extractContentData(rs, results);
+                extractContentDataInContentCreatorTable(rs, results);
             }
+            conn.close();
             return results;
 
         } catch (SQLException e) {
@@ -484,19 +463,19 @@ public class Postgres {
     public boolean removeDataFromSubscribedChannelTable(List<String> channelIds, String contentCreatorId) {
         if (isPostgresDisabled) return false;
         try {
-            try (Connection conn = connection()) {
-                conn.setAutoCommit(false);
-                PreparedStatement prepStmt = conn.prepareStatement("""
-                        DELETE FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
-                        """);
-                prepStmt.setString(2, contentCreatorId);
+            Connection conn = connection();
+            conn.setAutoCommit(false);
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM notification."tblSubscribedChannel" WHERE "sbcChannelld" = ? AND "fk_sbcContentCreatorId" = ?;
+                    """);
+            prepStmt.setString(2, contentCreatorId);
 
-                for (String s : channelIds) {
-                    prepStmt.setLong(1, Long.parseLong(s));
-                    prepStmt.execute();
-                }
-                conn.commit();
+            for (String s : channelIds) {
+                prepStmt.setLong(1, Long.parseLong(s));
+                prepStmt.execute();
             }
+            conn.commit();
+            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -507,17 +486,16 @@ public class Postgres {
     public boolean updateDataInSubscribedChannelTable(String message, String channelId, String contentCreatorId) {
         if (isPostgresDisabled) return false;
         try {
-            PreparedStatement prepStmt;
-            try (Connection conn = connection()) {
-                prepStmt = conn.prepareStatement("""
-                        UPDATE notification."tblSubscribedChannel" SET "sctMessageText" = ?
-                        WHERE "fk_sbcContentCreatorId" = ? AND "sbcChannelld" = ?;
-                        """);
-            }
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE notification."tblSubscribedChannel" SET "sctMessageText" = ?
+                    WHERE "fk_sbcContentCreatorId" = ? AND "sbcChannelld" = ?;
+                    """);
             prepStmt.setString(1, message);
             prepStmt.setString(2, contentCreatorId);
             prepStmt.setLong(3, Long.parseLong(channelId));
             prepStmt.execute();
+            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -529,15 +507,14 @@ public class Postgres {
     public boolean isIdInReceivedVideosTable(String videoId) {
         if (isPostgresDisabled) return true;
         try {
-            PreparedStatement prepStmt;
-            try (Connection conn = connection()) {
-                prepStmt = conn.prepareStatement(
-                        """
-                                            SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
-                                """);
-            }
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                                SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
+                    """);
             prepStmt.setString(1, videoId);
-            return checkResultSetForARow(prepStmt);
+            boolean checkResult = checkResultSetForARow(prepStmt);
+            conn.close();
+            return checkResult;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return true;
@@ -547,14 +524,14 @@ public class Postgres {
     public void putIdInReceivedVideosTable(String videoId) {
         if (isPostgresDisabled) return;
         try {
-            PreparedStatement prepStmt;
-            try (Connection conn = connection()) {
-                prepStmt = conn.prepareStatement("""
-                        INSERT INTO notification."tblReceivedVideos" VALUES (?);
-                        """);
-            }
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO notification."tblReceivedVideos" VALUES (?);
+                    """);
+
             prepStmt.setString(1, videoId);
             prepStmt.execute();
+            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
@@ -568,7 +545,13 @@ public class Postgres {
         return rs.getLong(1) > 0;
     }
 
-    private void extractContentData(@NotNull ResultSet rs, @NotNull JSONArray results) throws SQLException {
+    private void checkResultSetForARow(@NotNull ResultSet rs) throws SQLException {
+        if (!rs.next()) {
+            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
+        }
+    }
+
+    private void extractContentDataInContentCreatorTable(@NotNull ResultSet rs, @NotNull JSONArray results) throws SQLException {
         String contentCreatorId = rs.getString(1);
         String contentCreatorName = rs.getString(2);
         long channelId = rs.getLong(3);

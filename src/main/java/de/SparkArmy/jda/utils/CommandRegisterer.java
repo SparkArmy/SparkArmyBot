@@ -232,17 +232,22 @@ public class CommandRegisterer {
                 .addSubcommands(
                         new SubcommandData("all", "Deletes all messages")
                                 .addOptions(
-                                        new OptionData(OptionType.INTEGER, "count", "The amount of messages"),
+                                        new OptionData(OptionType.INTEGER, "count", "The amount of messages")
+                                                .setRequiredRange(1, 100),
                                         new OptionData(OptionType.USER, "user", "The user")),
                         new SubcommandData("last", "Deletes all messages to a specific time")
                                 .addOptions(
-                                        new OptionData(OptionType.INTEGER, "days", "The days")),
-                        new SubcommandData("periodic", "Deletes all messages in a periodic time from the channel")
-                                .addOptions(
-                                        new OptionData(OptionType.CHANNEL, "channel", "The channel"),
-                                        new OptionData(OptionType.INTEGER, "period", "The period in days")
-                                )
-                )
+                                        new OptionData(OptionType.INTEGER, "days", "The days")
+                                                .setRequiredRange(1, 5)))
+                .addSubcommandGroups(
+                        new SubcommandGroupData("periodic", "Deletes all messages in a periodic time from the channel")
+                                .addSubcommands(
+                                        new SubcommandData("add", "Adds a new periodic clean action")
+                                                .addOptions(
+                                                        new OptionData(OptionType.CHANNEL, "channel", "The channel"),
+                                                        new OptionData(OptionType.INTEGER, "period", "The period in days")),
+                                        new SubcommandData("show", "Show all periodic clean actions for the guild")
+                                ))
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
     }

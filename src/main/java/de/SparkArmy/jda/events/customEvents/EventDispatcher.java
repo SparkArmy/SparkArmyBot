@@ -2,7 +2,7 @@ package de.SparkArmy.jda.events.customEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.JdaApi;
-import de.SparkArmy.jda.events.annotations.events.*;
+import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
 import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
 import de.SparkArmy.jda.events.customEvents.otherEvents.MessageEvents;
@@ -43,8 +43,8 @@ public class EventDispatcher {
 
     private final Set<Object> events = ConcurrentHashMap.newKeySet();
 
-    private @NotNull Constructor<?> constructor() throws NoSuchMethodException {
-        return this.getClass().getConstructor(this.getClass());
+    private @NotNull Constructor<?> constructor(@NotNull Object o) throws NoSuchMethodException {
+        return o.getClass().getConstructor(this.getClass());
     }
 
 
@@ -90,21 +90,22 @@ public class EventDispatcher {
         for (Object o : events) {
             for (Method m : o.getClass().getMethods()) {
                 try {
+                    Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
                     if (event instanceof ButtonInteractionEvent) {
                         JDAButton annotation = m.getAnnotation(JDAButton.class);
                         if (annotation != null && m.getParameterCount() == 1) {
                             String componentId = ((ButtonInteractionEvent) event).getComponentId();
                             if (componentId.startsWith(annotation.startWith())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             } else if (componentId.equals(annotation.name())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     } else if (event instanceof CommandAutoCompleteInteractionEvent) {
                         JDAAutoComplete annotation = m.getAnnotation(JDAAutoComplete.class);
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (((CommandAutoCompleteInteractionEvent) event).getName().equals(annotation.commandName())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     } else if (event instanceof EntitySelectInteractionEvent) {
@@ -112,16 +113,16 @@ public class EventDispatcher {
                         String componentId = ((EntitySelectInteractionEvent) event).getComponentId();
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (componentId.startsWith(annotation.startWith())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             } else if (componentId.equals(annotation.name())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     } else if (event instanceof MessageContextInteractionEvent) {
                         JDAMessageCommand annotation = m.getAnnotation(JDAMessageCommand.class);
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (((MessageContextInteractionEvent) event).getName().equals(annotation.name())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     } else if (event instanceof ModalInteractionEvent) {
@@ -129,16 +130,16 @@ public class EventDispatcher {
                         String componentId = ((ModalInteractionEvent) event).getModalId();
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (componentId.startsWith(annotation.startWith())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             } else if (componentId.equals(annotation.name())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     } else if (event instanceof SlashCommandInteractionEvent) {
                         JDASlashCommand annotation = m.getAnnotation(JDASlashCommand.class);
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (((SlashCommandInteractionEvent) event).getName().equals(annotation.name())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     } else if (event instanceof StringSelectInteractionEvent) {
@@ -146,16 +147,16 @@ public class EventDispatcher {
                         String componentId = ((StringSelectInteractionEvent) event).getComponentId();
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (componentId.startsWith(annotation.startWith())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             } else if (componentId.equals(annotation.name())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     } else if (event instanceof UserContextInteractionEvent) {
                         JDAUserCommand annotation = m.getAnnotation(JDAUserCommand.class);
                         if (annotation != null && m.getParameterCount() == 1) {
                             if (((UserContextInteractionEvent) event).getName().equals(annotation.name())) {
-                                m.invoke(constructor().newInstance(this), event);
+                                m.invoke(constructor(o).newInstance(this), event);
                             }
                         }
                     }
@@ -174,42 +175,42 @@ public class EventDispatcher {
                     if (event instanceof MessageDeleteEvent) {
                         JDAMessageDeleteEvent annotation = m.getAnnotation(JDAMessageDeleteEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     } else if (event instanceof MessageEmbedEvent) {
                         JDAMessageEmbedEvent annotation = m.getAnnotation(JDAMessageEmbedEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     } else if (event instanceof MessageReactionAddEvent) {
                         JDAMessageReactionAddEvent annotation = m.getAnnotation(JDAMessageReactionAddEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     } else if (event instanceof MessageReactionRemoveAllEvent) {
                         JDAMessageReactionRemoveAllEvent annotation = m.getAnnotation(JDAMessageReactionRemoveAllEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     } else if (event instanceof MessageReactionRemoveEmojiEvent) {
                         JDAMessageReactionRemoveEmojiEvent annotation = m.getAnnotation(JDAMessageReactionRemoveEmojiEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     } else if (event instanceof MessageReactionRemoveEvent) {
                         JDAMessageReactionRemoveEvent annotation = m.getAnnotation(JDAMessageReactionRemoveEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     } else if (event instanceof MessageReceivedEvent) {
                         JDAMessageReceivedEvent annotation = m.getAnnotation(JDAMessageReceivedEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     } else if (event instanceof MessageUpdateEvent) {
                         JDAMessageUpdateEvent annotation = m.getAnnotation(JDAMessageUpdateEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     }
                 } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
@@ -227,7 +228,7 @@ public class EventDispatcher {
                     if (event instanceof MessageBulkDeleteEvent) {
                         JDAMessageBulkDeleteEvent annotation = m.getAnnotation(JDAMessageBulkDeleteEvent.class);
                         if (annotation != null && m.getParameterCount() == 1) {
-                            m.invoke(constructor().newInstance(this), event);
+                            m.invoke(constructor(o).newInstance(this), event);
                         }
                     }
                 } catch (InvocationTargetException | IllegalAccessException | InstantiationException |
@@ -248,6 +249,7 @@ public class EventDispatcher {
         registerEvent(new PunishmentCommandEvents(this));
         registerEvent(new NotificationSlashCommandEvents(this));
         registerEvent(new CleanSlashCommandEvents(this));
+        registerEvent(new MessageEvents(this));
     }
 
     private void registerEvent(Object o) {

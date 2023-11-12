@@ -1,10 +1,12 @@
 package de.SparkArmy.db;
 
 import de.SparkArmy.Main;
+import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.NotificationService;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
@@ -12,8 +14,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -549,20 +557,6 @@ public class Postgres {
         }
     }
 
-    private synchronized boolean checkResultSetForARow(@NotNull PreparedStatement prepStmt) throws SQLException {
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-        return rs.getLong(1) > 0;
-    }
-
-    private void checkResultSetForARow(@NotNull ResultSet rs) throws SQLException {
-        if (!rs.next()) {
-            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
-        }
-    }
-
     private void extractContentDataInContentCreatorTable(@NotNull ResultSet rs, @NotNull JSONArray results) throws SQLException {
         String contentCreatorId = rs.getString(1);
         String contentCreatorName = rs.getString(2);
@@ -576,7 +570,6 @@ public class Postgres {
         content.put("messageChannelId", channelId);
         content.put("guildId", guildId);
         content.put("messageText", messageText);
-
         results.put(content);
 
     }
@@ -596,6 +589,7 @@ public class Postgres {
             while (rs.next()) {
                 results.add(rs.getLong(1));
             }
+            conn.close();
             return results;
 
         } catch (SQLException e) {
@@ -623,8 +617,8 @@ public class Postgres {
                 entry.put("msaAttachment", rs.getByte(3));
                 results.put(entry);
             }
+            conn.close();
             return results;
-
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return new JSONArray();
@@ -675,7 +669,7 @@ public class Postgres {
                     throw new RuntimeException("Attachment File was not deleted!");
                 });
             }
-
+            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
@@ -699,6 +693,7 @@ public class Postgres {
             prepStmt.setString(1, msg.getContentRaw());
             prepStmt.setLong(2, msg.getIdLong());
             prepStmt.execute();
+            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
@@ -731,6 +726,7 @@ public class Postgres {
 
             conn.commit();
             conn.setAutoCommit(true);
+            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
@@ -751,6 +747,7 @@ public class Postgres {
             }
             conn.commit();
             conn.setAutoCommit(true);
+            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
@@ -779,6 +776,7 @@ public class Postgres {
             prepStmt.setLong(5, mbrId);
             prepStmt.setLong(6, days);
             prepStmt.execute();
+            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
@@ -805,6 +803,7 @@ public class Postgres {
             prepStmt.setLong(3, days);
             prepStmt.setLong(4, channelId);
             prepStmt.execute();
+            conn.close();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
         }
@@ -830,6 +829,7 @@ public class Postgres {
                 entry.put("days", rs.getLong(8));
                 results.put(String.valueOf(rs.getLong(1)), entry);
             }
+            conn.close();
             return results;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -846,10 +846,25 @@ public class Postgres {
                     """);
             prepStmt.setLong(1, pcdId);
             prepStmt.execute();
+            conn.close();
             return true;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return false;
+        }
+    }
+
+    private synchronized boolean checkResultSetForARow(@NotNull PreparedStatement prepStmt) throws SQLException {
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) {
+            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
+        }
+        return rs.getLong(1) > 0;
+    }
+
+    private void checkResultSetForARow(@NotNull ResultSet rs) throws SQLException {
+        if (!rs.next()) {
+            throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
         }
     }
 

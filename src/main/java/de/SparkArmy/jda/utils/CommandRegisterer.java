@@ -277,19 +277,14 @@ public class CommandRegisterer {
                                                                         ChannelType.VOICE)
                                                                 .setRequired(true)
                                                 ),
-                                        new SubcommandData("archive-category", "The archive category")
-                                                .addOptions(
-                                                        new OptionData(OptionType.CHANNEL, "category", "The archive category")
-                                                                .setRequired(true)
-                                                                .setChannelTypes(ChannelType.CATEGORY)
-                                                )
+                                        new SubcommandData("archive-category", "Manage the archive category")
                                 ),
                         new SubcommandGroupData("roles", "Configure the roles")
                                 .addSubcommands(
                                         new SubcommandData("mod-roles", "Manage the mod roles")
                                                 .addOptions(
-                                                        new OptionData(OptionType.ROLE, "add", "Adds the selected role"),
-                                                        new OptionData(OptionType.ROLE, "remove", "Remove the selected role")
+                                                        new OptionData(OptionType.ROLE, "add", "Adds the role to the mod roles"),
+                                                        new OptionData(OptionType.ROLE, "remove", "Remove the role from the mod roles")
                                                 ),
                                         new SubcommandData("punishment-roles", "Manage the punishment roles")
                                                 .addOptions(
@@ -297,22 +292,30 @@ public class CommandRegisterer {
                                                         new OptionData(OptionType.ROLE, "mute-role", "Set the mute role")
                                                 )
                                 ),
-                        new SubcommandGroupData("blacklist", "Manage phrases of the blacklist")
+                        new SubcommandGroupData("regex", "Manage regex settings")
                                 .addSubcommands(
-                                        new SubcommandData("add", "Add a phrase to the blacklist")
-                                                .addOptions(
-                                                        new OptionData(OptionType.STRING, "phrase", "The phrase")
-                                                                .setRequired(true)
-                                                ),
-                                        new SubcommandData("remove", "Removes a phrase from the blacklist")
-                                                .addOptions(
-                                                        new OptionData(OptionType.STRING, "phrase", "The phrase")
-                                                                .setRequired(true)
-                                                                .setAutoComplete(true)
-                                                )
+                                        new SubcommandData("blacklist", "Manage the blacklist"),
+                                        new SubcommandData("manage", "Manage the regex settings")
                                 ),
-                        new SubcommandGroupData("modmail", "Manage the modmail settings"),// TODO add subcommands
-                        new SubcommandGroupData("feedback", "Manage the feedback settings") // TODO add subcommands
-                );
+                        new SubcommandGroupData("modmail", "Manage the modmail settings")
+                                .addSubcommands(
+                                        new SubcommandData("category", "Manage the category for modmail channels"),
+                                        new SubcommandData("roles", "Manage the roles with permissions for modmail"),
+                                        new SubcommandData("archive-settings", "Manage the archive settings for modmail"),
+                                        new SubcommandData("blacklist", "The blacklist for users")
+                                                .addOptions(
+                                                        new OptionData(OptionType.USER, "user", "The user for the blacklist")
+                                                ),
+                                        new SubcommandData("ping-roles", "Manage the roles were are pinged")
+
+                                ),
+                        new SubcommandGroupData("feedback", "Manage the feedback settings")
+                                .addSubcommands(
+                                        new SubcommandData("category", "Manage the category for feedback channels"),
+                                        new SubcommandData("roles", "Manage the roles with permissions for feedback")
+                                )
+                )
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 }

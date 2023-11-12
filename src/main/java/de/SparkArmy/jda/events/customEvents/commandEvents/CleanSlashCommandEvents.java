@@ -3,6 +3,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
 import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
+import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
 import de.SparkArmy.jda.events.annotations.interactions.JDAStringMenu;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
@@ -14,9 +15,11 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -24,15 +27,19 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.awt.*;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ResourceBundle;
 
+//TODO add functionality to handle more than 25 actions
 public class CleanSlashCommandEvents {
 
     private final Postgres postgres;
@@ -71,7 +78,13 @@ public class CleanSlashCommandEvents {
                     } else return x;
                 })
                 .map(x -> event.getChannel().purgeMessages(x))
-                .queue(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.executed")).queue());
+                .queue(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.executed")).queue(),
+                        new ErrorHandler()
+                                .handle(ErrorResponse.UNKNOWN_CHANNEL,
+                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.unknownChannel")).queue())
+                                .handle(ErrorResponse.MISSING_PERMISSIONS,
+                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.missingPermissions")).queue())
+                );
     }
 
     private void lastCleanSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle) {
@@ -79,13 +92,12 @@ public class CleanSlashCommandEvents {
         event.getChannel().getHistory().retrievePast(100)
                 .map(x -> x.stream().filter(y -> y.getTimeCreated().isAfter(OffsetDateTime.now().minusDays(days))).toList())
                 .map(x -> event.getChannel().purgeMessages(x))
-                .queue(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.executed")).queue()
-//                        //TODO implement ErrorHandler
-//                        new ErrorHandler()
-//                                .handle(ErrorResponse.UNKNOWN_CHANNEL,
-//                                        e->event.getHook().editOriginal(bundle.getString("")).queue())
-//                                .handle(ErrorResponse.MISSING_PERMISSIONS,
-//                                        e->event.getHook().editOriginal(bundle.getString("")).queue())
+                .queue(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.executed")).queue(),
+                        new ErrorHandler()
+                                .handle(ErrorResponse.UNKNOWN_CHANNEL,
+                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.unknownChannel")).queue())
+                                .handle(ErrorResponse.MISSING_PERMISSIONS,
+                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.missingPermissions")).queue())
                 );
     }
 
@@ -93,7 +105,7 @@ public class CleanSlashCommandEvents {
         GuildChannel channel = event.getOption("channel", event.getGuildChannel(), OptionMapping::getAsChannel);
         Integer days = event.getOption("period", 7, OptionMapping::getAsInt);
 
-        postgres.putDataInPeriodicCleanTable(channel, Timestamp.valueOf(LocalDateTime.now().plusDays(days)), event.getUser());
+        postgres.putDataInPeriodicCleanTable(channel, days, event.getUser());
         event.reply(bundle.getString("cleanCommandEvents.addPeriodicCleanSubcommand.executed")).queue();
     }
 
@@ -130,13 +142,13 @@ public class CleanSlashCommandEvents {
         ActionRow buttonActions;
         if (tableData.length() > 25) {
             buttonActions = ActionRow.of(
-                    editButton(member.getId(), bundle, 0).asDisabled(),
+                    editButton(member.getId(), bundle, 0),
                     deleteButton(member.getId(), bundle, 0),
                     nextButton(member.getId(), bundle, 25).asDisabled()
             );
         } else {
             buttonActions = ActionRow.of(
-                    editButton(member.getId(), bundle, 0).asDisabled(),
+                    editButton(member.getId(), bundle, 0),
                     deleteButton(member.getId(), bundle, 0)
             );
         }
@@ -248,31 +260,84 @@ public class CleanSlashCommandEvents {
         String[] splitComponentId = event.getComponentId().split(";");
         if (!splitComponentId[1].equals(event.getUser().getId())) return;
 
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
         if (splitComponentId[0].equals("cleanCommand_ButtonActionStringMenu_delete")) {
-            deletePeriodicCleanStringMenuAction(event);
+            deletePeriodicCleanStringMenuAction(event, bundle);
         } else if (splitComponentId[0].equals("cleanCommand_ButtonActionStringMenu_edit")) {
-            editPeriodCleanStringMenuAction(event);
+            editPeriodCleanStringMenuAction(event, bundle, splitComponentId, guild);
         }
     }
 
-    private void editPeriodCleanStringMenuAction(@NotNull StringSelectInteractionEvent event) {
-        event.deferEdit().queue();
+    private void editPeriodCleanStringMenuAction(@NotNull StringSelectInteractionEvent event, @NotNull ResourceBundle bundle, String @NotNull [] splitComponentId, @NotNull Guild guild) {
+        JSONObject value = postgres.getDataFromPeriodicCleanTable(guild.getIdLong()).getJSONObject(event.getValues().get(0));
+        Modal.Builder editActionModal = Modal.create(
+                String.format("cleanCommand_editPeriodicActionModal;%s;%d", splitComponentId[1], value.getLong("channelId")),
+                bundle.getString("cleanCommandEvents.editPeriodicCleanStringMenuAction.editActionModal.title"));
 
+        TextInput.Builder days = TextInput.create(
+                        String.format("days;%d", value.getLong("days")),
+                        bundle.getString("cleanCommandEvents.editPeriodicCleanStringMenuAction.editActionModal.days.label"),
+                        TextInputStyle.SHORT)
+                .setRequired(true)
+                .setRequiredRange(1, 3)
+                .setPlaceholder(bundle.getString("cleanCommandEvents.editPeriodicCleanStringMenuAction.editActionModal.days.placeholder"));
+
+        TextInput.Builder active = TextInput.create(
+                        String.format("active;%b", value.getBoolean("active")),
+                        bundle.getString("cleanCommandEvents.editPeriodicCleanStringMenuAction.editActionModal.active.label"),
+                        TextInputStyle.SHORT)
+                .setRequired(true)
+                .setRequiredRange(4, 5)
+                .setPlaceholder(bundle.getString("cleanCommandEvents.editPeriodicCleanStringMenuAction.editActionModal.active.placeholder"));
+
+
+        days.setValue(String.valueOf(value.getLong("days")));
+        active.setValue(String.valueOf(value.getBoolean("active")));
+
+        editActionModal.addActionRow(days.build());
+        editActionModal.addActionRow(active.build());
+
+        event.replyModal(editActionModal.build()).queue();
+    }
+
+    @JDAModal(startWith = "cleanCommand_editPeriodicActionModal")
+    public void editPeriodicActionModalEvent(@NotNull ModalInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+        String[] splitComponentId = event.getModalId().split(";");
+        if (!event.getUser().getId().equals(splitComponentId[1])) return;
+
+        event.deferEdit().queue();
+        long channelId = Long.parseLong(splitComponentId[2]);
+
+        ModalMapping daysMapping = event.getValues().stream().filter(x -> x.getId().startsWith("days")).toList().get(0);
+        long days = Long.parseLong(daysMapping.getAsString());
+
+        ModalMapping activeMapping = event.getValues().stream().filter(x -> x.getId().startsWith("active")).toList().get(0);
+        boolean active = Boolean.getBoolean(activeMapping.getAsString());
+
+        postgres.editDataInPeriodicCleanTable(channelId, active, days);
+
+        event.getHook()
+                .editOriginalEmbeds()
+                .setComponents()
+                .setContent("Edited")
+                .queue();
     }
 
 
-    private void deletePeriodicCleanStringMenuAction(@NotNull StringSelectInteractionEvent event) {
+    private void deletePeriodicCleanStringMenuAction(@NotNull StringSelectInteractionEvent event, ResourceBundle bundle) {
         event.deferEdit().queue();
-        // TODO implement ResourceBundle
         if (postgres.deleteDataFromPeriodicCleanTable(Long.parseLong(event.getValues().get(0)))) {
             event.getHook()
-                    .editOriginal("Deleted")
+                    .editOriginal(bundle.getString("cleanCommandEvents.deletePeriodicCleanStringMenuAction.deleted"))
                     .setComponents()
                     .setEmbeds()
                     .queue();
         } else {
             event.getHook()
-                    .editOriginal("Not Deleted")
+                    .editOriginal(bundle.getString("cleanCommandEvents.deletePeriodicCleanStringMenuAction.notDeleted"))
                     .setComponents()
                     .setEmbeds()
                     .queue();

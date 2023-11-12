@@ -782,7 +782,7 @@ public class Postgres {
         }
     }
 
-    public void putDataInPeriodicCleanTable(GuildChannel channel, Timestamp nextExecution, User user) {
+    public void putDataInPeriodicCleanTable(GuildChannel channel, long days, User user) {
         if (isPostgresDisabled) return;
         try {
             Connection conn = connection();
@@ -790,10 +790,11 @@ public class Postgres {
             if (isChannelInPeriodicCleanTable(conn, channel.getIdLong())) return;
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    INSERT INTO guilddata."tblPeriodicCleanData" ("fk_pcdGuildId", "pcdChannelId", "pcdNextExecution", "pcdActive","pcdCreator")
-                    VALUES (?,?,?,?,?);
+                    INSERT INTO guilddata."tblPeriodicCleanData" ("fk_pcdGuildId", "pcdChannelId", "pcdNextExecution", "pcdActive","fk_pcdMemberId","pcdDays")
+                    VALUES (?,?,?,?,?,?);
                     """);
 
+            Timestamp nextExecution = Timestamp.valueOf(LocalDateTime.now().plusDays(days));
             long guildId = channel.getGuild().getIdLong();
             long mbrId = getMemberIdFromMemberTable(conn, user.getIdLong(), guildId);
 
@@ -802,6 +803,7 @@ public class Postgres {
             prepStmt.setTimestamp(3, nextExecution);
             prepStmt.setBoolean(4, true);
             prepStmt.setLong(5, mbrId);
+            prepStmt.setLong(6, days);
             prepStmt.execute();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -817,15 +819,17 @@ public class Postgres {
         return checkResultSetForARow(prepStmt);
     }
 
-    public void setStatusInPeriodicCleanTable(GuildChannel channel, boolean status) {
+    public void editDataInPeriodicCleanTable(long channelId, boolean status, long days) {
         if (isPostgresDisabled) return;
         try {
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    UPDATE guilddata."tblPeriodicCleanData" SET "pcdActive" = ? WHERE "pcdChannelId" = ?;
+                    UPDATE guilddata."tblPeriodicCleanData" SET "pcdActive" = ?,"pcdNextExecution" = ?, "pcdDays" = ? WHERE "pcdChannelId" = ?;
                     """);
             prepStmt.setBoolean(1, status);
-            prepStmt.setLong(2, channel.getIdLong());
+            prepStmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now().plusDays(days)));
+            prepStmt.setLong(3, days);
+            prepStmt.setLong(4, channelId);
             prepStmt.execute();
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
@@ -849,7 +853,7 @@ public class Postgres {
                 entry.put("lastExecution", rs.getTimestamp(4) != null ? rs.getTimestamp(4) : "not Executed");
                 entry.put("active", rs.getBoolean(6));
                 entry.put("creator", getUserIdFromMemberTableByMemberId(conn, rs.getLong(7)));
-                Util.logger.info(String.valueOf(entry));
+                entry.put("days", rs.getLong(8));
                 results.put(String.valueOf(rs.getLong(1)), entry);
             }
             return results;

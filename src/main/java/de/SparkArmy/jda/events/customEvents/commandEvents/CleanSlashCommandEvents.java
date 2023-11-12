@@ -39,7 +39,6 @@ import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.ResourceBundle;
 
-//TODO add functionality to handle more than 25 actions
 public class CleanSlashCommandEvents {
 
     private final Postgres postgres;
@@ -206,19 +205,62 @@ public class CleanSlashCommandEvents {
         } else if (componentId.startsWith("cleanCommand_PeriodicCleanSubcommandActions_edit")) {
             editButtonAction(event, bundle, entries, eventRelatedData);
         } else if (componentId.startsWith("cleanCommand_PeriodicCleanSubcommandActions_next")) {
-            nextButtonAction(event, bundle, entries, guild, eventRelatedData);
+            nextButtonAction(event, bundle, entries, eventRelatedData);
         } else if (componentId.startsWith("cleanCommand_PeriodicCleanSubcommandActions_before")) {
-            beforeButtonAction(event, bundle, entries, guild, eventRelatedData);
+            beforeButtonAction(event, bundle, entries, eventRelatedData);
         }
 
     }
 
-    private void beforeButtonAction(ButtonInteractionEvent event, ResourceBundle bundle, JSONObject entries, Guild guild, String[] splitComponentId) {
+    private void beforeButtonAction(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, @NotNull JSONObject entries, String @NotNull [] splitComponentId) {
+        event.deferEdit().queue();
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        long count = Long.parseLong(splitComponentId[1]);
+        String memberId = splitComponentId[0];
+        int entrySize = entries.keySet().size();
+        setEmbedFields(embedBuilder, count, entries, bundle, event.getJDA(), false, null);
+        ActionRow actionRow;
+        if (count - 25 > 0) {
+            actionRow = ActionRow.of(
+                    beforeButton(memberId, bundle, count - 25),
+                    editButton(memberId, bundle, count),
+                    deleteButton(memberId, bundle, count),
+                    nextButton(memberId, bundle, Math.min(entrySize - count, 25)));
+        } else {
+            actionRow = ActionRow.of(
+                    editButton(memberId, bundle, count),
+                    deleteButton(memberId, bundle, count),
+                    nextButton(memberId, bundle, Math.min(entrySize - count, 25)));
+        }
+        event.getHook().editOriginalEmbeds(embedBuilder.build())
+                .setComponents(actionRow)
+                .queue();
 
     }
 
-    private void nextButtonAction(ButtonInteractionEvent event, ResourceBundle bundle, JSONObject entries, Guild guild, String[] splitComponentId) {
-
+    private void nextButtonAction(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, @NotNull JSONObject entries, String @NotNull [] splitComponentId) {
+        event.deferEdit().queue();
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        long count = Long.parseLong(splitComponentId[1]);
+        String memberId = splitComponentId[0];
+        int entrySize = entries.keySet().size();
+        setEmbedFields(embedBuilder, count, entries, bundle, event.getJDA(), false, null);
+        ActionRow actionRow;
+        if (entrySize - count > 1) {
+            actionRow = ActionRow.of(
+                    beforeButton(memberId, bundle, count - 25),
+                    editButton(memberId, bundle, count),
+                    deleteButton(memberId, bundle, count),
+                    nextButton(memberId, bundle, Math.min(entrySize - count, 25)));
+        } else {
+            actionRow = ActionRow.of(
+                    beforeButton(memberId, bundle, count - 25),
+                    editButton(memberId, bundle, count),
+                    deleteButton(memberId, bundle, count));
+        }
+        event.getHook().editOriginalEmbeds(embedBuilder.build())
+                .setComponents(actionRow)
+                .queue();
     }
 
     private void deleteButtonAction(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, JSONObject entries, String @NotNull [] splitComponentId) {

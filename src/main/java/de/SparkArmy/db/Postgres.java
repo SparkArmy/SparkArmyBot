@@ -122,6 +122,17 @@ public class Postgres {
         }
     }
 
+    private long getUserIdFromMemberTableByMemberId(@NotNull Connection conn, long mbrId) throws SQLException {
+        ResultSet rs;
+        try (PreparedStatement prepStmt = conn.prepareStatement(
+                "SELECT \"fk_mbrUserId\" FROM guilddata.\"tblMember\" WHERE \"mbrId\" = ?;")) {
+            prepStmt.setLong(1, mbrId);
+            rs = prepStmt.executeQuery();
+            if (!rs.next()) return -1;
+            return rs.getLong(1);
+        }
+    }
+
 
     private boolean isModeratorInModeratorTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement(
@@ -771,6 +782,98 @@ public class Postgres {
         }
     }
 
+    public void putDataInPeriodicCleanTable(GuildChannel channel, Timestamp nextExecution, User user) {
+        if (isPostgresDisabled) return;
+        try {
+            Connection conn = connection();
+
+            if (isChannelInPeriodicCleanTable(conn, channel.getIdLong())) return;
+
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO guilddata."tblPeriodicCleanData" ("fk_pcdGuildId", "pcdChannelId", "pcdNextExecution", "pcdActive","pcdCreator")
+                    VALUES (?,?,?,?,?);
+                    """);
+
+            long guildId = channel.getGuild().getIdLong();
+            long mbrId = getMemberIdFromMemberTable(conn, user.getIdLong(), guildId);
+
+            prepStmt.setLong(1, guildId);
+            prepStmt.setLong(2, channel.getIdLong());
+            prepStmt.setTimestamp(3, nextExecution);
+            prepStmt.setBoolean(4, true);
+            prepStmt.setLong(5, mbrId);
+            prepStmt.execute();
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+        }
+    }
+
+    private boolean isChannelInPeriodicCleanTable(@NotNull Connection conn, long channelId) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guilddata."tblPeriodicCleanData" WHERE "pcdChannelId" = ?;
+                """);
+        prepStmt.setLong(1, channelId);
+
+        return checkResultSetForARow(prepStmt);
+    }
+
+    public void setStatusInPeriodicCleanTable(GuildChannel channel, boolean status) {
+        if (isPostgresDisabled) return;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE guilddata."tblPeriodicCleanData" SET "pcdActive" = ? WHERE "pcdChannelId" = ?;
+                    """);
+            prepStmt.setBoolean(1, status);
+            prepStmt.setLong(2, channel.getIdLong());
+            prepStmt.execute();
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+        }
+    }
+
+    public JSONObject getDataFromPeriodicCleanTable(long guildId) {
+        if (isPostgresDisabled) return new JSONObject();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guilddata."tblPeriodicCleanData" WHERE "fk_pcdGuildId" = ? ORDER BY "pcdId";
+                    """);
+            prepStmt.setLong(1, guildId);
+            ResultSet rs = prepStmt.executeQuery();
+            JSONObject results = new JSONObject();
+            while (rs.next()) {
+                JSONObject entry = new JSONObject();
+                entry.put("channelId", rs.getLong(3));
+                entry.put("nextExecution", rs.getTimestamp(5));
+                entry.put("lastExecution", rs.getTimestamp(4) != null ? rs.getTimestamp(4) : "not Executed");
+                entry.put("active", rs.getBoolean(6));
+                entry.put("creator", getUserIdFromMemberTableByMemberId(conn, rs.getLong(7)));
+                Util.logger.info(String.valueOf(entry));
+                results.put(String.valueOf(rs.getLong(1)), entry);
+            }
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new JSONObject();
+        }
+    }
+
+    public boolean deleteDataFromPeriodicCleanTable(long pcdId) {
+        if (isPostgresDisabled) return false;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guilddata."tblPeriodicCleanData" WHERE "pcdId" = ?;
+                    """);
+            prepStmt.setLong(1, pcdId);
+            prepStmt.execute();
+            return true;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return false;
+        }
+    }
 
     public boolean getIsPostgresEnabled() {
         return !isPostgresDisabled;

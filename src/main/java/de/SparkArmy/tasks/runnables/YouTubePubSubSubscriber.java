@@ -1,4 +1,4 @@
-package de.SparkArmy.tasks;
+package de.SparkArmy.tasks.runnables;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
@@ -6,14 +6,13 @@ import de.SparkArmy.utils.NotificationService;
 import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class YouTubePubSubSubscriber implements Runnable {
-    ConfigController controller;
+    private final ConfigController controller;
 
     public YouTubePubSubSubscriber(ConfigController controller) {
         this.controller = controller;
@@ -21,7 +20,6 @@ public class YouTubePubSubSubscriber implements Runnable {
 
     @Override
     public void run() {
-        Logger logger = controller.getMain().getLogger();
         Postgres db = controller.getMain().getPostgres();
         JSONArray data = db.getDataFromSubscribedChannelTableByService(NotificationService.YOUTUBE);
 
@@ -34,11 +32,9 @@ public class YouTubePubSubSubscriber implements Runnable {
             urls.add(String.format(urlPattern, object.getString("contentCreatorId")));
         }
 
-        logger.info(urls.toString());
         OkHttpClient client = new OkHttpClient();
 
         String callbackUrl = controller.getMainConfigFile().getJSONObject("youtube").getString("spring-callback-url");
-        logger.info(callbackUrl);
         for (String s : urls) {
             try {
                 RequestBody formBody = new MultipartBody.Builder().setType(MultipartBody.FORM)

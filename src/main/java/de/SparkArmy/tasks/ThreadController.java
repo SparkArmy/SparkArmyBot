@@ -1,6 +1,8 @@
 package de.SparkArmy.tasks;
 
 import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.tasks.runnables.DeleteOldMessageAttachments;
+import de.SparkArmy.tasks.runnables.YouTubePubSubSubscriber;
 import de.SparkArmy.utils.Util;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -9,13 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 public class ThreadController {
 
-    private final ScheduledExecutorService service;
-    private final ConfigController controller = Util.controller;
 
-
-    public ThreadController(){
-        this.service = new ScheduledThreadPoolExecutor(1);
-        this.service.scheduleWithFixedDelay(new YouTubePubSubSubscriber(controller),0,4, TimeUnit.DAYS);
+    @SuppressWarnings("resource")
+    public ThreadController() {
+        ScheduledExecutorService service = new ScheduledThreadPoolExecutor(2);
+        ConfigController controller = Util.controller;
+        service.scheduleWithFixedDelay(new YouTubePubSubSubscriber(controller), 0, 4, TimeUnit.DAYS);
+        service.scheduleWithFixedDelay(new DeleteOldMessageAttachments(controller), 0, 1, TimeUnit.DAYS);
     }
 
 

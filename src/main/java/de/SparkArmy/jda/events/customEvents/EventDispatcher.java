@@ -5,6 +5,7 @@ import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
 import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
+import de.SparkArmy.jda.events.customEvents.otherEvents.MessageEvents;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -247,6 +248,7 @@ public class EventDispatcher {
         registerEvent(new PunishmentCommandEvents(this));
         registerEvent(new NotificationSlashCommandEvents(this));
         registerEvent(new CleanSlashCommandEvents(this));
+        registerEvent(new MessageEvents(this));
     }
 
     private void registerEvent(Object o) {

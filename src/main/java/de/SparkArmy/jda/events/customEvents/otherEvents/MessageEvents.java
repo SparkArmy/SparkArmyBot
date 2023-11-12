@@ -11,6 +11,8 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveAllEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEmojiEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.*;
+
 public class MessageEvents {
 
     private final ConfigController controller;
@@ -20,14 +22,17 @@ public class MessageEvents {
     }
 
     @JDAMessageBulkDeleteEvent
-    public void messageBulkDeleteEvent(MessageBulkDeleteEvent event) {
-
+    public void messageBulkDeleteEvent(@NotNull MessageBulkDeleteEvent event) {
+        List<Long> msgIdsLong = event.getMessageIds().stream().map(Long::parseLong).toList();
+        controller.getMain().getPostgres().deleteMessagesFromMessageTable(msgIdsLong);
     }
 
     @JDAMessageDeleteEvent
-    public void messageDeleteEvent(MessageDeleteEvent event) {
-
-    }
+    public void messageDeleteEvent(@NotNull MessageDeleteEvent event) {
+        List<Long> ids = new ArrayList<>();
+        ids.add(event.getMessageIdLong());
+        controller.getMain().getPostgres().deleteMessagesFromMessageTable(ids);
+      }
 
     @JDAMessageReactionRemoveAllEvent
     public void messageReactionReactionRemoveAllEvent(MessageReactionRemoveAllEvent event) {
@@ -38,10 +43,13 @@ public class MessageEvents {
     }
 
     @JDAMessageReceivedEvent
-    public void messageReactionReceivedEvent(MessageReceivedEvent event) {
+    public void messageReceivedEvent(@NotNull MessageReceivedEvent event) {
+        controller.getMain().getPostgres().putMessageDataAndAttachmentsInTables(event.getMessage());
     }
 
     @JDAMessageUpdateEvent
-    public void messageUpdateEvent(MessageUpdateEvent event) {
+    public void messageUpdateEvent(@NotNull MessageUpdateEvent event) {
+        controller.getMain().getPostgres().updateMessageDataInMessageTable(event.getMessage());
     }
-}
+
+

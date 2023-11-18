@@ -106,7 +106,8 @@ public class PunishmentCommandEvents {
                             logEmbed.setColor(new Color(255, 0, 0).getRGB());
                             logEmbed.setFooter(new WebhookEmbed.EmbedFooter(event.getGuild().getName(), event.getGuild().getIconUrl()));
 
-                            Util.sendingModLogEmbed(logEmbed.build(), event.getGuild());
+                            // TODO see Util
+//                            Util.sendingModLogEmbed(logEmbed.build(), event.getGuild());
                         },
                         new ErrorHandler()
                                 .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("command.putInDB.unban.error.missingPermissions")).queue())

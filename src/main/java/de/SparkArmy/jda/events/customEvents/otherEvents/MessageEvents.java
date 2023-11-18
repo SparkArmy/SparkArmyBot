@@ -32,7 +32,7 @@ public class MessageEvents {
         List<Long> ids = new ArrayList<>();
         ids.add(event.getMessageIdLong());
         controller.getMain().getPostgres().deleteMessagesFromMessageTable(ids);
-      }
+    }
 
     @JDAMessageReactionRemoveAllEvent
     public void messageReactionReactionRemoveAllEvent(MessageReactionRemoveAllEvent event) {
@@ -51,5 +51,7 @@ public class MessageEvents {
     public void messageUpdateEvent(@NotNull MessageUpdateEvent event) {
         controller.getMain().getPostgres().updateMessageDataInMessageTable(event.getMessage());
     }
+
+}
 
 

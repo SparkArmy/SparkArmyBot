@@ -854,6 +854,134 @@ public class Postgres {
         }
     }
 
+    public long writeInLogchannelTable(long guildId, int logchannelType, long channelId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+
+            long dbChannelId = getChannelIdFromLogchannelTable(logchannelType, guildId);
+
+
+            if (dbChannelId == 0) { // Check if dbChannelId a discord-channel-id - is 0 create new row
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblLogchannel" ("fk_lgcGuildId", "lgcType", "lgcChannelId") VALUES
+                        (?,?,?);
+                        """);
+                prepStmt.setLong(1, guildId);
+                prepStmt.setInt(2, logchannelType);
+                prepStmt.setLong(3, channelId);
+
+            } else if (dbChannelId > 0) { // Check if dbChannelId a discord-channel-id - is valid update
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblLogchannel" SET "lgcChannelId" = ? WHERE "lgcType" = ? AND "fk_lgcGuildId" = ?;
+                        """);
+                prepStmt.setLong(1, channelId);
+                prepStmt.setInt(2, logchannelType);
+                prepStmt.setLong(3, guildId);
+            } else return -5; // Exit with -5
+
+            int updatedRows = prepStmt.executeUpdate();
+            conn.close();
+            if (updatedRows != 0) return 0;
+            else return -4;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+
+
+    }
+
+    public long getChannelIdFromLogchannelTable(int logchannelType, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT "lgcChannelId" FROM guidconfigs."tblLogchannel" WHERE "fk_lgcGuildId" = ? AND "lgcType" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            prepStmt.setInt(2, logchannelType);
+            return getReturnValue(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long writeInArchiveCategoryTable(long categoryId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+
+            long dbCategoryId = getCategoryIdFromArchiveCategoryTable(guildId);
+
+            if (dbCategoryId == 0) {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblArchiveCategorie" ("avcChannelId", "fk_avcGuildId") VALUES (?,?);
+                        """);
+            } else if (dbCategoryId > 1) {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblArchiveCategorie" SET "avcChannelId" = ? WHERE "fk_avcGuildId" = ?;
+                        """);
+            } else return -5;
+
+            prepStmt.setLong(1, categoryId);
+            prepStmt.setLong(2, guildId);
+
+            int updatedRows = prepStmt.executeUpdate();
+            conn.close();
+            if (updatedRows > 0) return 0;
+            else return -4;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long getCategoryIdFromArchiveCategoryTable(long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT "avcChannelId" FROM guidconfigs."tblArchiveCategorie" WHERE "fk_avcGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            return getReturnValue(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long clearGuildArchiveFromArchiveCategoryTable(long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblArchiveCategorie" WHERE "fk_avcGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            int updatedRows = prepStmt.executeUpdate();
+            conn.close();
+            if (updatedRows > 0) return 0;
+            else return -4;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    private synchronized long getReturnValue(@NotNull PreparedStatement preparedStatement, Connection conn) throws SQLException {
+        long returnValue = 0;
+        ResultSet rs = preparedStatement.executeQuery();
+        if (rs.next()) returnValue = rs.getLong(1);
+        conn.close();
+        return returnValue;
+    }
+
+
     private synchronized boolean checkResultSetForARow(@NotNull PreparedStatement prepStmt) throws SQLException {
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) {
@@ -862,7 +990,7 @@ public class Postgres {
         return rs.getLong(1) > 0;
     }
 
-    private void checkResultSetForARow(@NotNull ResultSet rs) throws SQLException {
+    private synchronized void checkResultSetForARow(@NotNull ResultSet rs) throws SQLException {
         if (!rs.next()) {
             throw new IllegalArgumentException("ResultSet from \"SELECT COUNT(*)\" always have a first row");
         }

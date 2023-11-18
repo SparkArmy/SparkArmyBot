@@ -4,7 +4,6 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
@@ -13,10 +12,7 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.ResourceBundle;
 
 public class ArchiveSlashCommandEvents {
@@ -30,62 +26,52 @@ public class ArchiveSlashCommandEvents {
 
     @JDASlashCommand(name = "archive")
     public void initialSlashEvent(@NotNull SlashCommandInteractionEvent event) {
-        GuildChannel targetChannel = event.getOption("channel", OptionMapping::getAsChannel);
+        GuildChannel targetChannel = event.getOption("channel", event.getGuildChannel(), OptionMapping::getAsChannel);
 
         Guild guild = event.getGuild();
         if (guild == null || targetChannel == null) return;
 
-        JSONObject guildConfig = controller.getGuildMainConfig(guild);
+        long categoryId = controller.getGuildArchiveCategory(guild);
 
-        Collection<Permission> deniedPermissions = new ArrayList<>();
-        deniedPermissions.add(Permission.VIEW_CHANNEL);
+        ResourceBundle bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
 
-        if (guildConfig.isNull("archive-category")) {
-            guild.createCategory("archive").addRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue(category -> {
-                guildConfig.put("archive-category", category.getId());
-                controller.writeInGuildMainConfig(guild, guildConfig);
-                moveChannel(event, guild, category, targetChannel);
-            });
-        } else if (guildConfig.getString("archive-category").isEmpty() || guildConfig.getString("archive-category").isBlank()) {
-            guild.createCategory("archive").addRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue(category -> {
-                guildConfig.put("archive-category", category.getId());
-                controller.writeInGuildMainConfig(guild, guildConfig);
-                moveChannel(event, guild, category, targetChannel);
-            });
+        if (categoryId == 0) {
+            event.reply(bundle.getString("archiveEvents.initialSlashCommand.categoryIdReturn0")).queue();
+        } else if (categoryId < 0) {
+            event.reply(
+                    String.format(bundle.getString("archiveEvents.initialSlashCommand.categoryIdReturnLower0"),
+                            categoryId)).queue();
         } else {
-            Category archiveCategory = guild.getCategoryById(guildConfig.getString("archive-category"));
-            if (archiveCategory == null) {
-                guild.createCategory("archive").addRolePermissionOverride(guild.getPublicRole().getIdLong(), null, deniedPermissions).queue(category -> {
-                    guildConfig.put("archive-category", category.getId());
-                    controller.writeInGuildMainConfig(guild, guildConfig);
-                    moveChannel(event, guild, category, targetChannel);
-                });
-            } else {
-                moveChannel(event, guild, archiveCategory, targetChannel);
+            Category category = guild.getCategoryById(categoryId);
+            if (category == null) {
+                event.reply(bundle.getString("archiveEvents.initialSlashCommand.categoryIsNull")).queue();
+                return;
             }
+            moveChannel(event, guild, category, targetChannel);
         }
+
     }
 
 
     private void moveChannel(@NotNull SlashCommandInteractionEvent event, Guild guild, @NotNull Category archiveCategory, @NotNull GuildChannel targetChannel) {
         ResourceBundle bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
         if (archiveCategory.getChannels().contains(targetChannel)) {
-            event.reply(bundle.getString("command.error.channelIsInCategory")).setEphemeral(true).queue();
+            event.reply(bundle.getString("archiveEvents.error.channelIsInCategory")).setEphemeral(true).queue();
             return;
         }
         switch (targetChannel.getType()) {
             case TEXT -> guild.modifyTextChannelPositions()
                     .selectPosition(targetChannel)
                     .setCategory(archiveCategory, true)
-                    .queue(x -> event.reply(bundle.getString("command.successful.move")).setEphemeral(true).queue(), new ErrorHandler()
-                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("command.error.noAccess")).setEphemeral(true).queue())
-                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("command.error.unknownChannel")).setEphemeral(true).queue()));
+                    .queue(x -> event.reply(bundle.getString("archiveEvents.successful.move")).setEphemeral(true).queue(), new ErrorHandler()
+                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("archiveEvents.error.noAccess")).setEphemeral(true).queue())
+                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("archiveEvents.error.unknownChannel")).setEphemeral(true).queue()));
             case VOICE -> guild.modifyVoiceChannelPositions()
                     .selectPosition(targetChannel)
                     .setCategory(archiveCategory, true)
-                    .queue(x -> event.reply(bundle.getString("command.successful.move")).setEphemeral(true).queue(), new ErrorHandler()
-                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("command.error.noAccess")).setEphemeral(true).queue())
-                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("command.error.unknownChannel")).setEphemeral(true).queue()));
+                    .queue(x -> event.reply(bundle.getString("archiveEvents.successful.move")).setEphemeral(true).queue(), new ErrorHandler()
+                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("archiveEvents.error.noAccess")).setEphemeral(true).queue())
+                            .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("archiveEvents.error.unknownChannel")).setEphemeral(true).queue()));
         }
     }
 }

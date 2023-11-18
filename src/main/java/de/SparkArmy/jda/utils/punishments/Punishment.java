@@ -46,8 +46,9 @@ public class Punishment {
         checkPreconditions(target, moderator, type, reason, days, hook);
     }
 
+    // TODO Rework with databased based methods
     private void executePunishment(@NotNull PunishmentType type, User target, String reason, InteractionHook hook, Integer days) {
-        JSONObject guildConfig = controller.getGuildMainConfig(guild);
+        JSONObject guildConfig = controller.getGuildMainConfig();
         if (guildConfig.isNull("punishmentRoles") || guildConfig.getJSONObject("punishmentRoles").isEmpty()) {
             hook.editOriginal(bundle.getString("executePunishment.config.punishmentRolesNotFound")).queue();
             return;
@@ -87,17 +88,15 @@ public class Punishment {
                                 .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.mute.addRoleToMember.unknownMember")).queue())
                                 .handle(ErrorResponse.UNKNOWN_ROLE, x -> hook.editOriginal(bundle.getString("executePunishment.mute.roleIsNull")).queue()));
             }
-            case KICK ->
-                    guild.kick(target).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.successfully")).queue(),
-                            new ErrorHandler()
-                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.missingPermissions")).queue())
-                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.unknownMember")).queue()));
+            case KICK -> guild.kick(target).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.successfully")).queue(),
+                    new ErrorHandler()
+                            .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.missingPermissions")).queue())
+                            .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.kick.unknownMember")).queue()));
 
-            case BAN ->
-                    guild.ban(target, days, TimeUnit.DAYS).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.successfully")).queue(),
-                            new ErrorHandler()
-                                    .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.missingPermissions")).queue())
-                                    .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.unknownMember")).queue()));
+            case BAN -> guild.ban(target, days, TimeUnit.DAYS).reason(reason).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.successfully")).queue(),
+                    new ErrorHandler()
+                            .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.missingPermissions")).queue())
+                            .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.unknownMember")).queue()));
 
             case SOFTBAN -> guild.ban(target, 1, TimeUnit.DAYS).reason(reason)
                     .delay(3, TimeUnit.SECONDS)
@@ -142,7 +141,8 @@ public class Punishment {
         logEmbed.setColor(new Color(255, 0, 0).getRGB());
         logEmbed.setFooter(new WebhookEmbed.EmbedFooter(guild.getName(), guild.getIconUrl()));
 
-        Util.sendingModLogEmbed(logEmbed.build(), guild);
+        // TODO See Util
+//        Util.sendingModLogEmbed(logEmbed.build(), guild);
 
 //        User Embed
         EmbedBuilder userEmbed = new EmbedBuilder();

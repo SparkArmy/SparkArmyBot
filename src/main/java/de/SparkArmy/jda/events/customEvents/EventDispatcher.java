@@ -5,6 +5,7 @@ import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
 import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
+import de.SparkArmy.jda.events.customEvents.otherEvents.MediaOnlyFunction;
 import de.SparkArmy.jda.events.customEvents.otherEvents.MessageEvents;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.Event;
@@ -90,7 +91,6 @@ public class EventDispatcher {
         for (Object o : events) {
             for (Method m : o.getClass().getMethods()) {
                 try {
-                    Constructor<?> constructor = o.getClass().getConstructor(this.getClass());
                     if (event instanceof ButtonInteractionEvent) {
                         JDAButton annotation = m.getAnnotation(JDAButton.class);
                         if (annotation != null && m.getParameterCount() == 1) {
@@ -251,6 +251,7 @@ public class EventDispatcher {
         registerEvent(new CleanSlashCommandEvents(this));
         registerEvent(new MessageEvents(this));
         registerEvent(new ConfigureSlashCommandEvents(this));
+        registerEvent(new MediaOnlyFunction(this));
     }
 
     private void registerEvent(Object o) {

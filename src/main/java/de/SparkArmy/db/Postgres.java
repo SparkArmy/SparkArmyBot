@@ -860,7 +860,7 @@ public class Postgres {
             Connection conn = connection();
             PreparedStatement prepStmt;
 
-            long dbChannelId = getChannelIdFromLogchannelTable(logchannelType, guildId);
+            long dbChannelId = getChannelIdFromLogchannelTable(logchannelType, guildId, conn);
 
 
             if (dbChannelId == 0) { // Check if dbChannelId a discord-channel-id - is 0 create new row
@@ -881,16 +881,22 @@ public class Postgres {
                 prepStmt.setLong(3, guildId);
             } else return -5; // Exit with -5
 
-            int updatedRows = prepStmt.executeUpdate();
-            conn.close();
-            if (updatedRows != 0) return 0;
-            else return -4;
+            return getUpdatedRows(prepStmt, conn);
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -3;
         }
 
 
+    }
+
+    private long getChannelIdFromLogchannelTable(int logchannelType, long guildId, @NotNull Connection conn) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT "lgcChannelId" FROM guidconfigs."tblLogchannel" WHERE "fk_lgcGuildId" = ? AND "lgcType" = ?;
+                """);
+        prepStmt.setLong(1, guildId);
+        prepStmt.setInt(2, logchannelType);
+        return getPrivateReturnValue(prepStmt);
     }
 
     public long getChannelIdFromLogchannelTable(int logchannelType, long guildId) {
@@ -915,7 +921,7 @@ public class Postgres {
             Connection conn = connection();
             PreparedStatement prepStmt;
 
-            long dbCategoryId = getCategoryIdFromArchiveCategoryTable(guildId);
+            long dbCategoryId = getCategoryIdFromArchiveCategoryTable(guildId, conn);
 
             if (dbCategoryId == 0) {
                 prepStmt = conn.prepareStatement("""
@@ -930,14 +936,19 @@ public class Postgres {
             prepStmt.setLong(1, categoryId);
             prepStmt.setLong(2, guildId);
 
-            int updatedRows = prepStmt.executeUpdate();
-            conn.close();
-            if (updatedRows > 0) return 0;
-            else return -4;
+            return getUpdatedRows(prepStmt, conn);
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -3;
         }
+    }
+
+    private long getCategoryIdFromArchiveCategoryTable(long guildId, @NotNull Connection conn) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT "avcChannelId" FROM guidconfigs."tblArchiveCategorie" WHERE "fk_avcGuildId" = ?;
+                """);
+        prepStmt.setLong(1, guildId);
+        return getPrivateReturnValue(prepStmt);
     }
 
     public long getCategoryIdFromArchiveCategoryTable(long guildId) {
@@ -963,14 +974,133 @@ public class Postgres {
                     DELETE FROM guidconfigs."tblArchiveCategorie" WHERE "fk_avcGuildId" = ?;
                     """);
             prepStmt.setLong(1, guildId);
-            int updatedRows = prepStmt.executeUpdate();
-            conn.close();
-            if (updatedRows > 0) return 0;
-            else return -4;
+            return getUpdatedRows(prepStmt, conn);
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -3;
         }
+    }
+
+    public long writeInMediaOnlyChannelTable(long channelId, long guildId, boolean textPerms, boolean attachmentPerms, boolean filePerms, boolean linkPerms) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+
+            if (isChannelIdInMediaOnlyChannelTable(channelId, conn)) {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblMediaOnlyChannel" SET
+                        "mocPermissionForAttachments" = ?,
+                        "mocPermissionForFiles" = ?,
+                        "mocPermissionForLinks" = ?,
+                        "mocPermissionForText" = ?
+                        WHERE "mocChannelId" = ?;
+                        """);
+                prepStmt.setBoolean(1, attachmentPerms);
+                prepStmt.setBoolean(2, filePerms);
+                prepStmt.setBoolean(3, linkPerms);
+                prepStmt.setBoolean(4, textPerms);
+                prepStmt.setLong(5, channelId);
+            } else {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblMediaOnlyChannel"
+                        ("mocChannelId", "fk_mocGuildId", "mocPermissionForText", "mocPermissionForAttachments",
+                         "mocPermissionForFiles", "mocPermissionForLinks")
+                        VALUES (?,?,?,?,?,?);
+                        """);
+                prepStmt.setLong(1, channelId);
+                prepStmt.setLong(2, guildId);
+                prepStmt.setBoolean(3, textPerms);
+                prepStmt.setBoolean(4, attachmentPerms);
+                prepStmt.setBoolean(5, filePerms);
+                prepStmt.setBoolean(6, linkPerms);
+            }
+
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public JSONObject getChannelIdsFromMediaOnlyChannelTable(long guildId) {
+        if (isPostgresDisabled) new JSONObject();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblMediaOnlyChannel" WHERE "fk_mocGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+
+            ResultSet rs = prepStmt.executeQuery();
+            JSONObject results = new JSONObject();
+            while (rs.next()) {
+                JSONObject entry = new JSONObject();
+                entry.put("permText", rs.getBoolean(3));
+                entry.put("permAttachment", rs.getBoolean(4));
+                entry.put("permFiles", rs.getBoolean(5));
+                entry.put("permLinks", rs.getBoolean(6));
+                results.put(String.valueOf(rs.getLong(1)), entry);
+            }
+            conn.close();
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new JSONObject();
+        }
+    }
+
+    public JSONObject getChannelPermissionsByChannelIdFromMediaOnlyChannelTable(long channelId) {
+        if (isPostgresDisabled) return new JSONObject();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * from guidconfigs."tblMediaOnlyChannel" WHERE "mocChannelId" = ?;
+                    """);
+            prepStmt.setLong(1, channelId);
+            ResultSet rs = prepStmt.executeQuery();
+            if (!rs.next()) return new JSONObject();
+            JSONObject values = new JSONObject();
+            values.put("permText", rs.getBoolean(3));
+            values.put("permAttachment", rs.getBoolean(4));
+            values.put("permFiles", rs.getBoolean(5));
+            values.put("permLinks", rs.getBoolean(6));
+            conn.close();
+            return values;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new JSONObject();
+        }
+    }
+
+    private boolean isChannelIdInMediaOnlyChannelTable(long channelId, @NotNull Connection conn) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guidconfigs."tblMediaOnlyChannel" WHERE "mocChannelId" = ?;
+                """);
+        prepStmt.setLong(1, channelId);
+        return checkResultSetForARow(prepStmt);
+    }
+
+    public long removeChannelFromMediaOnlyChannelTable(long channelId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblMediaOnlyChannel" WHERE "mocChannelId" = ?;
+                    """);
+            prepStmt.setLong(1, channelId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    private synchronized int getUpdatedRows(@NotNull PreparedStatement prepStmt, @NotNull Connection conn) throws SQLException {
+        int updatedRows = prepStmt.executeUpdate();
+        conn.close();
+        if (updatedRows > 0) return 0;
+        else return -4;
     }
 
     private synchronized long getReturnValue(@NotNull PreparedStatement preparedStatement, Connection conn) throws SQLException {
@@ -978,6 +1108,13 @@ public class Postgres {
         ResultSet rs = preparedStatement.executeQuery();
         if (rs.next()) returnValue = rs.getLong(1);
         conn.close();
+        return returnValue;
+    }
+
+    private synchronized long getPrivateReturnValue(@NotNull PreparedStatement preparedStatement) throws SQLException {
+        long returnValue = 0;
+        ResultSet rs = preparedStatement.executeQuery();
+        if (rs.next()) returnValue = rs.getLong(1);
         return returnValue;
     }
 

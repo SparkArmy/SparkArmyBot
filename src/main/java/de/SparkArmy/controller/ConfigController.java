@@ -2,6 +2,7 @@ package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.jda.utils.LogChannelType;
+import de.SparkArmy.jda.utils.MediaOnlyPermissions;
 import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.Channel;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 
 import java.awt.*;
 import java.io.File;
+import java.util.List;
 
 
 public class ConfigController {
@@ -109,4 +111,26 @@ public class ConfigController {
     public long clearGuildArchiveCategory(@NotNull Guild guild) {
         return main.getPostgres().clearGuildArchiveFromArchiveCategoryTable(guild.getIdLong());
     }
+
+    public long addOrEditGuildMediaOnlyChannel(long channelId, @NotNull Guild guild, @NotNull List<MediaOnlyPermissions> permissions) {
+        long guildId = guild.getIdLong();
+        boolean textPerms = permissions.contains(MediaOnlyPermissions.TEXT);
+        boolean attachmentsPerms = permissions.contains(MediaOnlyPermissions.ATTACHMENT);
+        boolean filePerms = permissions.contains(MediaOnlyPermissions.FILES);
+        boolean linkPerms = permissions.contains(MediaOnlyPermissions.LINKS);
+        return main.getPostgres().writeInMediaOnlyChannelTable(channelId, guildId, textPerms, attachmentsPerms, filePerms, linkPerms);
+    }
+
+    public JSONObject getGuildMediaOnlyChannels(@NotNull Guild guild) {
+        return main.getPostgres().getChannelIdsFromMediaOnlyChannelTable(guild.getIdLong());
+    }
+
+    public JSONObject getGuildMediaOnlyChannelPermissions(long channelId) {
+        return main.getPostgres().getChannelPermissionsByChannelIdFromMediaOnlyChannelTable(channelId);
+    }
+
+    public long removeGuildMediaOnlyChannel(long channelId) {
+        return main.getPostgres().removeChannelFromMediaOnlyChannelTable(channelId);
+    }
+
 }

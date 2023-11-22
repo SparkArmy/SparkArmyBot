@@ -68,7 +68,7 @@ public class ConfigureSlashCommandEvents {
             case "roles" -> {
                 switch (subcommandName) {
                     case "mod-roles" -> rolesModRolesConfigureSubcommand(event, bundle, guild);
-                    case "punishment-roles" -> rolesPunishmentRolesConfigureSubcommand(event);
+                    case "punishment-roles" -> rolesPunishmentRolesConfigureSubcommand(event, bundle, guild);
                 }
             }
             case "regex" -> {
@@ -137,7 +137,42 @@ public class ConfigureSlashCommandEvents {
     private void regexBlacklistConfigureSubcommand(SlashCommandInteractionEvent event) {
     }
 
-    private void rolesPunishmentRolesConfigureSubcommand(SlashCommandInteractionEvent event) {
+    private void rolesPunishmentRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferReply(true).queue();
+        Role warnRole = event.getOption("warn-role", OptionMapping::getAsRole);
+        Role muteRole = event.getOption("mute-role", OptionMapping::getAsRole);
+
+        String replyString;
+
+        long warnRoleResponse = 0;
+        long muteRoleResponse = 0;
+        if (warnRole == null && muteRole == null) {
+            replyString = bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.bothRolesAreNull");
+        } else if (warnRole != null && muteRole != null) {
+            warnRoleResponse = controller.setGuildWarnRole(warnRole, guild);
+            muteRoleResponse = controller.setGuildMuteRole(muteRole, guild);
+            replyString = String.format(
+                    bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.bothRolesNonNull"),
+                    warnRole.getAsMention(), muteRole.getAsMention());
+        } else if (warnRole == null) {
+            muteRoleResponse = controller.setGuildMuteRole(muteRole, guild);
+            replyString = String.format(
+                    bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.warnRoleIsNull"),
+                    muteRole.getAsMention());
+        } else {
+            warnRoleResponse = controller.setGuildWarnRole(warnRole, guild);
+            replyString = String.format(
+                    bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.muteRoleIsNull"),
+                    warnRole.getAsMention());
+        }
+
+        if (warnRoleResponse + muteRoleResponse != 0) {
+            replyString = String.format(
+                    bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.errorResponse"),
+                    warnRoleResponse, muteRoleResponse);
+        }
+
+        event.getHook().editOriginal(replyString).queue();
     }
 
     private void rolesModRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {

@@ -1159,6 +1159,102 @@ public class Postgres {
         }
     }
 
+    public long addOrEditRoleIdInGuildMuteRoleTable(long roleId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+            if (isGuildIdInGuildMuteRoleTable(guildId, conn)) {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblGuildMuteRole" SET "gmrRoleId" = ? WHERE "fk_gmrGuildId" = ?;
+                        """);
+            } else {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblGuildMuteRole" ("gmrRoleId", "fk_gmrGuildId") VALUES (?,?);
+                        """);
+            }
+            prepStmt.setLong(1, roleId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long addOrEditRoleIdInGuildWarnRoleTable(long roleId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+            if (isGuildIdInGuildWarnRoleTable(guildId, conn)) {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblGuildWarnRole" SET "gwrRoleId" = ? WHERE "fk_gwrGuildId" = ?;
+                        """);
+            } else {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblGuildWarnRole" ("gwrRoleId", "fk_gwrGuildId") VALUES (?,?);
+                        """);
+            }
+            prepStmt.setLong(1, roleId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    private boolean isGuildIdInGuildMuteRoleTable(long guildId, @NotNull Connection conn) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guidconfigs."tblGuildMuteRole" WHERE "fk_gmrGuildId" = ?;
+                """);
+        prepStmt.setLong(1, guildId);
+        ResultSet rs = prepStmt.executeQuery();
+        checkResultSetForARow(rs);
+        return rs.getLong(1) > 0;
+    }
+
+    private boolean isGuildIdInGuildWarnRoleTable(long guildId, @NotNull Connection conn) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guidconfigs."tblGuildWarnRole" WHERE "fk_gwrGuildId" = ?;
+                """);
+        prepStmt.setLong(1, guildId);
+        ResultSet rs = prepStmt.executeQuery();
+        checkResultSetForARow(rs);
+        return rs.getLong(1) > 0;
+    }
+
+    public long getMuteRoleIdByGuildFromMuteRoleTable(long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblGuildMuteRole" WHERE "fk_gmrGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            return getReturnValue(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long getWarnRoleIdByGuildFromMuteRoleTable(long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblGuildWarnRole" WHERE "fk_gwrGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            return getReturnValue(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
     private synchronized int getUpdatedRows(@NotNull PreparedStatement prepStmt, @NotNull Connection conn) throws SQLException {
         int updatedRows = prepStmt.executeUpdate();
         conn.close();

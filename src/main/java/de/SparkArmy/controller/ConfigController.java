@@ -87,12 +87,6 @@ public class ConfigController {
         return new JSONObject(mainConfigAsString);
     }
 
-
-    public JSONObject getGuildMainConfig() {
-        return new JSONObject();
-    }
-
-
     public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild) {
         return main.getPostgres().writeInLogchannelTable(guild.getIdLong(), logChannelType.getId(), channel.getIdLong());
     }
@@ -144,6 +138,22 @@ public class ConfigController {
 
     public List<Long> getGuildModerationRoles(@NotNull Guild guild) {
         return main.getPostgres().getModRoleIdsByGuildFromModRolesTable(guild.getIdLong());
+    }
+
+    public long setGuildWarnRole(@NotNull Role warnRole, @NotNull Guild guild) {
+        return main.getPostgres().addOrEditRoleIdInGuildWarnRoleTable(warnRole.getIdLong(), guild.getIdLong());
+    }
+
+    public long getGuildWarnRole(@NotNull Guild guild) {
+        return main.getPostgres().getWarnRoleIdByGuildFromMuteRoleTable(guild.getIdLong());
+    }
+
+    public long setGuildMuteRole(@NotNull Role muteRole, @NotNull Guild guild) {
+        return main.getPostgres().addOrEditRoleIdInGuildMuteRoleTable(muteRole.getIdLong(), guild.getIdLong());
+    }
+
+    public long getGuildMuteRole(@NotNull Guild guild) {
+        return main.getPostgres().getMuteRoleIdByGuildFromMuteRoleTable(guild.getIdLong());
     }
 
 }

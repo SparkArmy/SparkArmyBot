@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
@@ -46,22 +45,20 @@ public class Punishment {
         checkPreconditions(target, moderator, type, reason, days, hook);
     }
 
-    // TODO Rework with databased based methods
     private void executePunishment(@NotNull PunishmentType type, User target, String reason, InteractionHook hook, Integer days) {
-        JSONObject guildConfig = controller.getGuildMainConfig();
-        if (guildConfig.isNull("punishmentRoles") || guildConfig.getJSONObject("punishmentRoles").isEmpty()) {
+
+        long warnRoleId = controller.getGuildWarnRole(guild);
+        long muteRoleId = controller.getGuildMuteRole(guild);
+
+        if (warnRoleId <= 0 && muteRoleId <= 0) {
             hook.editOriginal(bundle.getString("executePunishment.config.punishmentRolesNotFound")).queue();
             return;
         }
-        JSONObject punishmentRoles = guildConfig.getJSONObject("punishmentRoles");
 
         switch (type) {
             case WARN -> {
-                if (punishmentRoles.isNull("warn") || punishmentRoles.getString("warn").isBlank()) {
-                    hook.editOriginal(bundle.getString("executePunishment.switchType.warn.config.warnIsNull")).queue();
-                    return;
-                }
-                Role role = guild.getRoleById(punishmentRoles.getString("warn"));
+
+                Role role = guild.getRoleById(warnRoleId);
                 if (role == null) {
                     hook.editOriginal(bundle.getString("executePunishment.switchType.warn.role.roleIsNull")).queue();
                     return;
@@ -73,11 +70,8 @@ public class Punishment {
                                 .handle(ErrorResponse.UNKNOWN_ROLE, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.warn.role.roleIsNull")).queue()));
             }
             case MUTE -> {
-                if (punishmentRoles.isNull("mute") || punishmentRoles.getString("mute").isBlank()) {
-                    hook.editOriginal(bundle.getString("executePunishment.switchType.mute.config.muteIsNull")).queue();
-                    return;
-                }
-                Role role = guild.getRoleById(punishmentRoles.getString("mute"));
+
+                Role role = guild.getRoleById(muteRoleId);
                 if (role == null) {
                     hook.editOriginal(bundle.getString("executePunishment.switchType.mute.role.roleIsNull")).queue();
                     return;

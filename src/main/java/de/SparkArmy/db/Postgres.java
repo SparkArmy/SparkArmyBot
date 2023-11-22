@@ -1096,6 +1096,69 @@ public class Postgres {
         }
     }
 
+    public long addModRoleToModRolesTable(long roleId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            if (isModRoleIdInModRolesTable(roleId, conn)) return -6;
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO guidconfigs."tblModRoles" ("mrlRoleId", "fk_mrlGuildId") VALUES
+                    (?,?);
+                    """);
+            prepStmt.setLong(1, roleId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long deleteModRoleFromModRolesTable(long roleId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            if (!isModRoleIdInModRolesTable(roleId, conn)) return -6;
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblModRoles" WHERE "mrlRoleId" = ?;
+                     """);
+            prepStmt.setLong(1, roleId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    private boolean isModRoleIdInModRolesTable(long roleId, @NotNull Connection conn) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guidconfigs."tblModRoles" WHERE "mrlRoleId" = ?;
+                """);
+        prepStmt.setLong(1, roleId);
+        return checkResultSetForARow(prepStmt);
+    }
+
+    public List<Long> getModRoleIdsByGuildFromModRolesTable(long guildId) {
+        if (isPostgresDisabled) return new ArrayList<>();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblModRoles" WHERE "fk_mrlGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            ResultSet rs = prepStmt.executeQuery();
+            List<Long> results = new ArrayList<>();
+            while (rs.next()) {
+                results.add(rs.getLong(1));
+            }
+            conn.close();
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new ArrayList<>();
+        }
+    }
+
     private synchronized int getUpdatedRows(@NotNull PreparedStatement prepStmt, @NotNull Connection conn) throws SQLException {
         int updatedRows = prepStmt.executeUpdate();
         conn.close();

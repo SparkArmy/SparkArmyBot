@@ -266,17 +266,7 @@ public class CommandRegisterer {
                                                         new OptionData(OptionType.CHANNEL, "target-channel", "The channel where the logs will been sent")
                                                                 .setChannelTypes(ChannelType.TEXT, ChannelType.GUILD_PUBLIC_THREAD)
                                                 ),
-                                        new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel")
-                                                .addOptions(
-                                                        new OptionData(OptionType.CHANNEL, "target-channel", "The target channel")
-                                                                .setChannelTypes(
-                                                                        ChannelType.GUILD_PUBLIC_THREAD,
-                                                                        ChannelType.TEXT,
-                                                                        ChannelType.FORUM,
-                                                                        ChannelType.STAGE,
-                                                                        ChannelType.VOICE)
-                                                                .setRequired(true)
-                                                ),
+                                        new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel"),
                                         new SubcommandData("archive-category", "Manage the archive category")
                                 ),
                         new SubcommandGroupData("roles", "Configure the roles")

@@ -4,11 +4,14 @@ import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.events.annotations.events.messageEvents.JDAMessageReceivedEvent;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
+import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
@@ -25,7 +28,11 @@ public class MediaOnlyFunction {
         if (event.getAuthor().isBot() || event.getAuthor().isSystem()) return;
         if (event.isWebhookMessage()) return;
 
-        // TODO Check have Author Mod-Roles
+        List<Long> modRoleIds = controller.getGuildModerationRoles(event.getGuild());
+        Member member = event.getMember();
+        if (member == null) return;
+        if (modRoleIds.stream().anyMatch(x -> member.getRoles().stream().map(ISnowflake::getIdLong).toList().contains(x)))
+            return;
 
         JSONObject channelPermissions = controller.getGuildMediaOnlyChannelPermissions(event.getChannel().getIdLong());
 

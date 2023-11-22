@@ -8,6 +8,7 @@ import de.SparkArmy.jda.utils.MediaOnlyPermissions;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
@@ -66,7 +67,7 @@ public class ConfigureSlashCommandEvents {
             }
             case "roles" -> {
                 switch (subcommandName) {
-                    case "mod-roles" -> rolesModRolesConfigureSubcommand(event);
+                    case "mod-roles" -> rolesModRolesConfigureSubcommand(event, bundle, guild);
                     case "punishment-roles" -> rolesPunishmentRolesConfigureSubcommand(event);
                 }
             }
@@ -139,51 +140,200 @@ public class ConfigureSlashCommandEvents {
     private void rolesPunishmentRolesConfigureSubcommand(SlashCommandInteractionEvent event) {
     }
 
-    private void rolesModRolesConfigureSubcommand(SlashCommandInteractionEvent event) {
+    private void rolesModRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferReply(true).queue();
+        Role addRolle = event.getOption("add", OptionMapping::getAsRole);
+        Role removeRole = event.getOption("remove", OptionMapping::getAsRole);
+
+        if (addRolle == null && removeRole == null) {
+            EmbedBuilder overviewEmbed = new EmbedBuilder();
+            overviewEmbed.setTitle(bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.title"));
+            overviewEmbed.setDescription(bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.description"));
+
+            overviewEmbed.addField(
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.fields.addDescription.name"),
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.fields.addDescription.value"),
+                    true);
+            overviewEmbed.addField(
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.fields.removeDescription.name"),
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.fields.removeDescription.value"),
+                    true);
+            overviewEmbed.addField(
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.fields.showDescription.name"),
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.overviewEmbed.fields.showDescription.value"),
+                    true);
+
+            String userId = event.getUser().getId();
+
+            Button addModRoleButton = Button.of(
+                    ButtonStyle.SUCCESS,
+                    String.format("rolesModRolesConfigureButtonEvents_AddRole;%s", userId),
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.buttons.addModRoleButton"));
+
+            Button removeModRoleButton = Button.of(
+                    ButtonStyle.SUCCESS,
+                    String.format("rolesModRolesConfigureButtonEvents_RemoveRole;%s", userId),
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.buttons.removeModRoleButton"));
+
+            Button showModRoleButton = Button.of(
+                    ButtonStyle.SUCCESS,
+                    String.format("rolesModRolesConfigureButtonEvents_ShowRole;%s", userId),
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureSubcommand.buttons.showModRoleButton"));
+
+            event.getHook()
+                    .editOriginalEmbeds(overviewEmbed.build())
+                    .setActionRow(addModRoleButton, removeModRoleButton, showModRoleButton)
+                    .queue();
+            return;
+        }
+
+        sendModRoleConfigureResponse(event.getHook(), addRolle, removeRole, bundle, guild);
     }
 
-    private void channelMediaOnlyChannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle, Guild guild) {
-        event.deferReply(true).queue();
+    private void sendModRoleConfigureResponse(InteractionHook hook, Role addRole, Role removeRole, ResourceBundle bundle, Guild guild) {
+        String responseString;
+
+        long addResponse = 0;
+        long removeResponse = 0;
+
+        if (addRole != null && removeRole != null) {
+            responseString = String.format(
+                    bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.twoOptionMappings"),
+                    addRole.getAsMention(), removeRole.getAsMention());
+            addResponse = controller.addGuildModerationRole(addRole, guild);
+            removeResponse = controller.removeGuildModerationRole(removeRole);
+        } else if (addRole == null) {
+            responseString = String.format(
+                    bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.addRoleIsNull"),
+                    removeRole.getAsMention());
+            removeResponse = controller.removeGuildModerationRole(removeRole);
+        } else {
+            responseString = String.format(
+                    bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.removeRoleIsNull"),
+                    addRole.getAsMention());
+            addResponse = controller.addGuildModerationRole(addRole, guild);
+        }
+
+        if (addResponse + removeResponse != 0) {
+            responseString = String.format(
+                    bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.errorToAddOrRemove"),
+                    addResponse, removeResponse);
+        }
+
+        hook.editOriginal(responseString)
+                .setComponents()
+                .setEmbeds()
+                .queue();
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @JDAButton(startWith = "rolesModRolesConfigureButtonEvents_")
+    public void rolesModRolesConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
         String userId = event.getUser().getId();
-        EmbedBuilder actionEmbed = new EmbedBuilder();
-        actionEmbed.setTitle(bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.title"));
-        actionEmbed.setDescription(bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.description"));
-        actionEmbed.addField(
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.addDescription.name"),
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.addDescription.value"),
-                true);
-        actionEmbed.addField(
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.editDescription.name"),
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.editDescription.value"),
-                true);
-        actionEmbed.addField(
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.removeDescription.name"),
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.removeDescription.value"),
-                true);
+        if (!userId.equals(splitComponentId[1])) return;
 
-        Button addMediaOnlyChannelButton = Button.of(
-                ButtonStyle.SUCCESS,
-                String.format("channelMediaOnlyConfigureButtons_AddButton;%s,%d", userId, 0),
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.buttons.addMediaOnlyChannelButton"));
-        Button editMediaOnlyChannelButton = Button.of(
-                ButtonStyle.SECONDARY,
-                String.format("channelMediaOnlyConfigureButtons_editButton;%s,%d", userId, 0),
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.buttons.editMediaOnlyChannelButton"));
-        Button removeMediaOnlyChannelButton = Button.of(
-                ButtonStyle.SECONDARY,
-                String.format("channelMediaOnlyConfigureButtons_RemoveButton;%s,%d", userId, 0),
-                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.buttons.removeMediaOnlyChannelButton"));
+        ResourceBundle bundle = bundle(event.getUserLocale());
 
-        ActionRow actionEmbedActionRow = ActionRow.of(
-                addMediaOnlyChannelButton,
-                editMediaOnlyChannelButton,
-                removeMediaOnlyChannelButton
-        );
+        switch (splitComponentId[0]) {
+            case "rolesModRolesConfigureButtonEvents_AddRole" ->
+                    rolesModRolesConfigureAddRoleButtonEvent(event, bundle);
+            case "rolesModRolesConfigureButtonEvents_RemoveRole" ->
+                    rolesModRolesConfigureRemoveButtonEvent(event, bundle);
+            case "rolesModRolesConfigureButtonEvents_ShowRole" ->
+                    rolesModRolesConfigureShowButtonEvent(event, bundle, guild);
+        }
+    }
+
+    private void rolesModRolesConfigureShowButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+        List<Long> roleIds = controller.getGuildModerationRoles(guild);
+
+        EmbedBuilder showModRolesEmbed = new EmbedBuilder();
+        showModRolesEmbed.setTitle(bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureShowButtonEvent.showModRolesEmbed.title"));
+        String description;
+        if (!roleIds.isEmpty()) {
+            StringBuilder descriptionStringBuilder = new StringBuilder();
+
+            for (long id : roleIds) {
+                Role role = guild.getRoleById(id);
+                descriptionStringBuilder.append(role != null ? role.getName() : String.format("<@%d>", id));
+            }
+            descriptionStringBuilder.deleteCharAt(descriptionStringBuilder.length() - 1);
+            description = String.format(
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureShowButtonEvent.showModRolesEmbed.description"),
+                    descriptionStringBuilder);
+        } else {
+            description = String.format(
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureShowButtonEvent.showModRolesEmbed.description"),
+                    bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureShowButtonEvent.showModRolesEmbed.noRolesStored"));
+        }
+
+        showModRolesEmbed.setDescription(description);
 
         event.getHook()
-                .editOriginalEmbeds(actionEmbed.build())
-                .setComponents(actionEmbedActionRow)
+                .editOriginalEmbeds(showModRolesEmbed.build())
+                .setComponents()
                 .queue();
+
+    }
+
+    private void rolesModRolesConfigureRemoveButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferEdit().queue();
+        EmbedBuilder removeModRoleEmbed = new EmbedBuilder();
+        removeModRoleEmbed.setTitle(bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureAddRoleButtonEvent.addModRoleEmbed.title"));
+        removeModRoleEmbed.setDescription(bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureAddRoleButtonEvent.addModRoleEmbed.description"));
+
+        EntitySelectMenu.Builder removeModRoleMenu = EntitySelectMenu.create(
+                String.format("rolesModRolesConfigureEntityMenus_removeRoleMenu;%s", event.getUser().getId()),
+                EntitySelectMenu.SelectTarget.ROLE);
+
+        event.getHook()
+                .editOriginalEmbeds(removeModRoleEmbed.build())
+                .setActionRow(removeModRoleMenu.build())
+                .queue();
+    }
+
+    private void rolesModRolesConfigureAddRoleButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferEdit().queue();
+        EmbedBuilder addModRoleEmbed = new EmbedBuilder();
+        addModRoleEmbed.setTitle(bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureRemoveButtonEvent.removeModRoleEmbed.title"));
+        addModRoleEmbed.setDescription(bundle.getString("configureEvents.roles.modRoles.rolesModRolesConfigureRemoveButtonEvent.removeModRoleEmbed.description"));
+
+        EntitySelectMenu.Builder addModRoleMenu = EntitySelectMenu.create(
+                String.format("rolesModRolesConfigureEntityMenus_addRoleMenu;%s", event.getUser().getId()),
+                EntitySelectMenu.SelectTarget.ROLE);
+
+        event.getHook()
+                .editOriginalEmbeds(addModRoleEmbed.build())
+                .setActionRow(addModRoleMenu.build())
+                .queue();
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @JDAEntityMenu(startWith = "rolesModRolesConfigureEntityMenus_")
+    public void rolesModRolesConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
+        event.deferEdit().queue();
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "rolesModRolesConfigureEntityMenus_removeRoleMenu" ->
+                    sendModRoleConfigureResponse(event.getHook(), null, event.getMentions().getRoles().get(0), bundle, guild);
+            case "rolesModRolesConfigureEntityMenus_addRoleMenu" ->
+                    sendModRoleConfigureResponse(event.getHook(), event.getMentions().getRoles().get(0), null, bundle, guild);
+        }
     }
 
     private void channelArchiveCategoryConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
@@ -218,49 +368,6 @@ public class ConfigureSlashCommandEvents {
                 .setEphemeral(true)
                 .queue();
 
-    }
-
-    private void channelLogchannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
-        String typeMapping = event.getOption("type", OptionMapping::getAsString);
-        LogChannelType logChannelType = LogChannelType.getLogChannelTypeByName(typeMapping);
-        if (logChannelType.equals(LogChannelType.UNKNOW)) {
-            event.reply(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logChannelTypeUnkonwn")).queue();
-            return;
-        }
-
-        event.deferReply(true).queue();
-
-        Channel channel = event.getOption("target-channel", OptionMapping::getAsChannel);
-        if (channel == null) {
-            EmbedBuilder displaySpecificLogChannelEmbed = new EmbedBuilder();
-            displaySpecificLogChannelEmbed.setTitle(
-                    bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.displaySpecificLogChannelEmbed.title"));
-
-            long channelId = controller.getGuildLoggingChannel(logChannelType, guild);
-
-            if (channelId == 0) {
-                displaySpecificLogChannelEmbed.setDescription(
-                        String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.displaySpecificLogChannelEmbed.description.hasNoChannel"),
-                                logChannelType.getName()));
-            } else {
-                displaySpecificLogChannelEmbed.setDescription(
-                        String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.displaySpecificLogChannelEmbed.description.hasChannel"),
-                                logChannelType.getName(), channelId));
-            }
-
-            event.getHook().editOriginalEmbeds(displaySpecificLogChannelEmbed.build()).queue();
-            return;
-        }
-
-        long code = controller.setGuildLoggingChannel(logChannelType, channel, guild);
-
-        if (code == 0) {
-            event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logchannelSet"),
-                    channel.getId(), logChannelType.getName())).queue();
-        } else {
-            event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.errorToSetChannel"),
-                    code)).queue();
-        }
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -385,6 +492,93 @@ public class ConfigureSlashCommandEvents {
                 .editOriginalEmbeds()
                 .setContent(contentString)
                 .setComponents()
+                .queue();
+    }
+
+    private void channelLogchannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        String typeMapping = event.getOption("type", OptionMapping::getAsString);
+        LogChannelType logChannelType = LogChannelType.getLogChannelTypeByName(typeMapping);
+        if (logChannelType.equals(LogChannelType.UNKNOW)) {
+            event.reply(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logChannelTypeUnkonwn")).queue();
+            return;
+        }
+
+        event.deferReply(true).queue();
+
+        Channel channel = event.getOption("target-channel", OptionMapping::getAsChannel);
+        if (channel == null) {
+            EmbedBuilder displaySpecificLogChannelEmbed = new EmbedBuilder();
+            displaySpecificLogChannelEmbed.setTitle(
+                    bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.displaySpecificLogChannelEmbed.title"));
+
+            long channelId = controller.getGuildLoggingChannel(logChannelType, guild);
+
+            if (channelId == 0) {
+                displaySpecificLogChannelEmbed.setDescription(
+                        String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.displaySpecificLogChannelEmbed.description.hasNoChannel"),
+                                logChannelType.getName()));
+            } else {
+                displaySpecificLogChannelEmbed.setDescription(
+                        String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.displaySpecificLogChannelEmbed.description.hasChannel"),
+                                logChannelType.getName(), channelId));
+            }
+
+            event.getHook().editOriginalEmbeds(displaySpecificLogChannelEmbed.build()).queue();
+            return;
+        }
+
+        long code = controller.setGuildLoggingChannel(logChannelType, channel, guild);
+
+        if (code == 0) {
+            event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logchannelSet"),
+                    channel.getId(), logChannelType.getName())).queue();
+        } else {
+            event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.errorToSetChannel"),
+                    code)).queue();
+        }
+    }
+
+    private void channelMediaOnlyChannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle, Guild guild) {
+        event.deferReply(true).queue();
+        String userId = event.getUser().getId();
+        EmbedBuilder actionEmbed = new EmbedBuilder();
+        actionEmbed.setTitle(bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.title"));
+        actionEmbed.setDescription(bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.description"));
+        actionEmbed.addField(
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.addDescription.name"),
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.addDescription.value"),
+                true);
+        actionEmbed.addField(
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.editDescription.name"),
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.editDescription.value"),
+                true);
+        actionEmbed.addField(
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.removeDescription.name"),
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.actionEmbed.fields.removeDescription.value"),
+                true);
+
+        Button addMediaOnlyChannelButton = Button.of(
+                ButtonStyle.SUCCESS,
+                String.format("channelMediaOnlyConfigureButtons_AddButton;%s,%d", userId, 0),
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.buttons.addMediaOnlyChannelButton"));
+        Button editMediaOnlyChannelButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("channelMediaOnlyConfigureButtons_editButton;%s,%d", userId, 0),
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.buttons.editMediaOnlyChannelButton"));
+        Button removeMediaOnlyChannelButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("channelMediaOnlyConfigureButtons_RemoveButton;%s,%d", userId, 0),
+                bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelConfigureSubcommand.buttons.removeMediaOnlyChannelButton"));
+
+        ActionRow actionEmbedActionRow = ActionRow.of(
+                addMediaOnlyChannelButton,
+                editMediaOnlyChannelButton,
+                removeMediaOnlyChannelButton
+        );
+
+        event.getHook()
+                .editOriginalEmbeds(actionEmbed.build())
+                .setComponents(actionEmbedActionRow)
                 .queue();
     }
 

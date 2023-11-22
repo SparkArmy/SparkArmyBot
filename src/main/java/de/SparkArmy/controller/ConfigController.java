@@ -5,6 +5,7 @@ import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.jda.utils.MediaOnlyPermissions;
 import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
@@ -131,6 +132,18 @@ public class ConfigController {
 
     public long removeGuildMediaOnlyChannel(long channelId) {
         return main.getPostgres().removeChannelFromMediaOnlyChannelTable(channelId);
+    }
+
+    public long addGuildModerationRole(@NotNull Role role, @NotNull Guild guild) {
+        return main.getPostgres().addModRoleToModRolesTable(role.getIdLong(), guild.getIdLong());
+    }
+
+    public long removeGuildModerationRole(@NotNull Role role) {
+        return main.getPostgres().deleteModRoleFromModRolesTable(role.getIdLong());
+    }
+
+    public List<Long> getGuildModerationRoles(@NotNull Guild guild) {
+        return main.getPostgres().getModRoleIdsByGuildFromModRolesTable(guild.getIdLong());
     }
 
 }

@@ -264,7 +264,7 @@ public class CommandRegisterer {
                                                                 .setRequired(true)
                                                                 .setAutoComplete(true),
                                                         new OptionData(OptionType.CHANNEL, "target-channel", "The channel where the logs will been sent")
-                                                                .setChannelTypes(ChannelType.TEXT, ChannelType.GUILD_PUBLIC_THREAD)
+                                                                .setChannelTypes(ChannelType.TEXT)
                                                 ),
                                         new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel"),
                                         new SubcommandData("archive-category", "Manage the archive category")

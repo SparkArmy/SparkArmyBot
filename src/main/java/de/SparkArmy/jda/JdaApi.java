@@ -21,6 +21,8 @@ public class JdaApi {
     private final ConfigController controller;
     private final CommandRegisterer commandRegisterer;
 
+    private final WebhookApi webhookApi;
+
     public JdaApi(@NotNull Main main) {
         this.controller = main.getController();
         this.logger = main.getLogger();
@@ -52,6 +54,8 @@ public class JdaApi {
         shardManager.addEventListener(new EventDispatcher(this));
 
         this.commandRegisterer = new CommandRegisterer(this);
+
+        this.webhookApi = new WebhookApi(this);
     }
 
     public Logger getLogger() {
@@ -68,5 +72,9 @@ public class JdaApi {
 
     public ShardManager getShardManager() {
         return shardManager;
+    }
+
+    public WebhookApi getWebhookApi() {
+        return webhookApi;
     }
 }

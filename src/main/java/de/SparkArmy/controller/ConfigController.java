@@ -78,7 +78,7 @@ public class ConfigController {
 
             this.main.systemExit(0);
         }
-        String mainConfigAsString = FileHandler.getFileContent(this.configFolder,"main-config.json");
+        String mainConfigAsString = FileHandler.getFileContent(this.configFolder, "main-config.json");
         if (mainConfigAsString == null) {
             this.logger.error("The main-config.json is null");
             this.main.systemExit(12);
@@ -87,12 +87,20 @@ public class ConfigController {
         return new JSONObject(mainConfigAsString);
     }
 
-    public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild) {
-        return main.getPostgres().writeInLogchannelTable(guild.getIdLong(), logChannelType.getId(), channel.getIdLong());
+    public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild, String url) {
+        return main.getPostgres().writeInLogchannelTable(guild.getIdLong(), logChannelType.getId(), channel.getIdLong(), url);
     }
 
     public long getGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Guild guild) {
         return main.getPostgres().getChannelIdFromLogchannelTable(logChannelType.getId(), guild.getIdLong());
+    }
+
+    public String getGuildLoggingChannelUrl(@NotNull LogChannelType logChannelType, @NotNull Guild guild) {
+        return main.getPostgres().getUrlByLogchannelTypeAndGuildIdFromLogchannelTable(logChannelType.getId(), guild.getIdLong());
+    }
+
+    public List<String> getLoggingChannelWebhookUrls() {
+        return main.getPostgres().getUrlsFromLogchannelTable();
     }
 
     public long setGuildArchiveCategory(@NotNull GuildChannel category, @NotNull Guild guild) {
@@ -156,4 +164,23 @@ public class ConfigController {
         return main.getPostgres().getMuteRoleIdByGuildFromMuteRoleTable(guild.getIdLong());
     }
 
+    public long addPhraseToGuildTextBlacklist(String phrase, @NotNull Guild guild) {
+        return main.getPostgres().addPhraseToBlacklistTable(phrase, guild.getIdLong());
+    }
+
+    public JSONObject getGuildBlacklistPhrases(@NotNull Guild guild) {
+        return main.getPostgres().getPhrasesByGuildIdFromBlacklistTable(guild.getIdLong());
+    }
+
+    public String getSpecificBlacklistPhrase(long id) {
+        return main.getPostgres().getSpecificBlacklistPhraseByIdFromBlacklistTable(id);
+    }
+
+    public long updatePhraseFromGuildTextBlacklist(String phrase, long databaseId) {
+        return main.getPostgres().updatePhraseInBlacklistTable(phrase, databaseId);
+    }
+
+    public long deletePhraseFromGuildTextBlacklist(long id) {
+        return main.getPostgres().removePhraseFromBlacklistTable(id);
+    }
 }

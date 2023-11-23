@@ -854,7 +854,7 @@ public class Postgres {
         }
     }
 
-    public long writeInLogchannelTable(long guildId, int logchannelType, long channelId) {
+    public long writeInLogchannelTable(long guildId, int logchannelType, long channelId, String url) {
         if (isPostgresDisabled) return -1;
         try {
             Connection conn = connection();
@@ -865,20 +865,22 @@ public class Postgres {
 
             if (dbChannelId == 0) { // Check if dbChannelId a discord-channel-id - is 0 create new row
                 prepStmt = conn.prepareStatement("""
-                        INSERT INTO guidconfigs."tblLogchannel" ("fk_lgcGuildId", "lgcType", "lgcChannelId") VALUES
-                        (?,?,?);
+                        INSERT INTO guidconfigs."tblLogchannel" ("fk_lgcGuildId", "lgcType", "lgcChannelId","lgcUrl") VALUES
+                        (?,?,?,?);
                         """);
                 prepStmt.setLong(1, guildId);
                 prepStmt.setInt(2, logchannelType);
                 prepStmt.setLong(3, channelId);
+                prepStmt.setString(4, url);
 
             } else if (dbChannelId > 0) { // Check if dbChannelId a discord-channel-id - is valid update
                 prepStmt = conn.prepareStatement("""
-                        UPDATE guidconfigs."tblLogchannel" SET "lgcChannelId" = ? WHERE "lgcType" = ? AND "fk_lgcGuildId" = ?;
+                        UPDATE guidconfigs."tblLogchannel" SET "lgcChannelId" = ?, "lgcUrl" = ? WHERE "lgcType" = ? AND "fk_lgcGuildId" = ?;
                         """);
                 prepStmt.setLong(1, channelId);
-                prepStmt.setInt(2, logchannelType);
-                prepStmt.setLong(3, guildId);
+                prepStmt.setString(2, url);
+                prepStmt.setInt(3, logchannelType);
+                prepStmt.setLong(4, guildId);
             } else return -5; // Exit with -5
 
             return getUpdatedRows(prepStmt, conn);
@@ -912,6 +914,42 @@ public class Postgres {
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -3;
+        }
+    }
+
+    public List<String> getUrlsFromLogchannelTable() {
+        List<String> results = new ArrayList<>();
+        if (isPostgresDisabled) return results;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT "lgcUrl" FROM guidconfigs."tblLogchannel";
+                    """);
+            ResultSet rs = prepStmt.executeQuery();
+            while (rs.next()) results.add(rs.getString(1));
+            conn.close();
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return results;
+        }
+    }
+
+    public String getUrlByLogchannelTypeAndGuildIdFromLogchannelTable(int logchannelType, long guildId) {
+        if (isPostgresDisabled) return null;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT "lgcUrl" FROM guidconfigs."tblLogchannel" WHERE "fk_lgcGuildId" = ? AND "lgcType" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            prepStmt.setInt(2, logchannelType);
+            ResultSet rs = prepStmt.executeQuery();
+            if (!rs.next()) return null;
+            return rs.getString(1);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return null;
         }
     }
 
@@ -1252,6 +1290,100 @@ public class Postgres {
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return -3;
+        }
+    }
+
+    public long addPhraseToBlacklistTable(String phrase, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO guidconfigs."tblTextBlacklist" ("txbString", "fk_txbGuildId") VALUES (?,?);
+                    """);
+            prepStmt.setString(1, phrase);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long updatePhraseInBlacklistTable(String updatetPhrase, long databaseId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE guidconfigs."tblTextBlacklist" SET "txbString" = ? WHERE "txbId" = ?;
+                    """);
+            prepStmt.setString(1, updatetPhrase);
+            prepStmt.setLong(2, databaseId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long removePhraseFromBlacklistTable(long databaseId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblTextBlacklist" WHERE "txbId" = ?;
+                    """);
+            prepStmt.setLong(1, databaseId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public JSONObject getPhrasesByGuildIdFromBlacklistTable(long guildId) {
+        if (isPostgresDisabled) return new JSONObject();
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblTextBlacklist" WHERE "fk_txbGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+
+            JSONObject results = new JSONObject();
+            ResultSet rs = prepStmt.executeQuery();
+            while (rs.next()) {
+                JSONObject entry = new JSONObject();
+                entry.put("phrase", rs.getString(2));
+                results.put(String.valueOf(rs.getInt(1)), entry);
+            }
+            conn.close();
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return new JSONObject();
+        }
+    }
+
+    public String getSpecificBlacklistPhraseByIdFromBlacklistTable(long id) {
+        if (isPostgresDisabled) return null;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT "txbString" FROM guidconfigs."tblTextBlacklist" WHERE "txbId" = ?;
+                    """);
+            prepStmt.setLong(1, id);
+            ResultSet rs = prepStmt.executeQuery();
+            String string;
+            if (!rs.next()) {
+                string = null;
+            } else {
+                string = rs.getString(1);
+            }
+            conn.close();
+            return string;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return null;
         }
     }
 

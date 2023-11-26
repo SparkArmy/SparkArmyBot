@@ -611,11 +611,13 @@ public class Postgres {
             for (Long msgId : messageIds) {
                 prepStmt.setLong(1, msgId);
                 ResultSet rs = prepStmt.executeQuery();
-                JSONObject entry = new JSONObject();
-                entry.put("msaId", rs.getLong(1));
-                entry.put("fk_msaMessageId", rs.getLong(2));
-                entry.put("msaAttachment", rs.getByte(3));
-                results.put(entry);
+                while (rs.next()) {
+                    JSONObject entry = new JSONObject();
+                    entry.put("msaId", rs.getLong(1));
+                    entry.put("fk_msaMessageId", rs.getLong(2));
+                    entry.put("msaAttachment", rs.getByte(3));
+                    results.put(entry);
+                }
             }
             conn.close();
             return results;
@@ -946,7 +948,9 @@ public class Postgres {
             prepStmt.setInt(2, logchannelType);
             ResultSet rs = prepStmt.executeQuery();
             if (!rs.next()) return null;
-            return rs.getString(1);
+            String string = rs.getString(1);
+            conn.close();
+            return string;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return null;
@@ -1384,6 +1388,103 @@ public class Postgres {
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
             return null;
+        }
+    }
+
+    public long addOrEditRegexToRegexTable(long guildId, String regexString, String regexName, long id) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+            if (!isRegexInRegexTable(conn, id)) {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblRegex" ("fk_rgxGuildId", "rgxRegex","rgxName") VALUES (?,?,?);
+                        """);
+                prepStmt.setLong(1, guildId);
+                prepStmt.setString(2, regexString);
+                prepStmt.setString(3, regexName);
+            } else {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblRegex" SET "rgxRegex" = ?,"rgxName" = ? WHERE "rgxId" = ?;
+                        """);
+                prepStmt.setString(1, regexString);
+                prepStmt.setString(2, regexName);
+                prepStmt.setLong(3, id);
+            }
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    private boolean isRegexInRegexTable(@NotNull Connection conn, long id) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guidconfigs."tblRegex" WHERE "rgxId" = ?;
+                """);
+        prepStmt.setLong(1, id);
+        return checkResultSetForARow(prepStmt);
+    }
+
+    public JSONObject getRegexEntryByDatabaseIdFromRegexTable(long id) {
+        JSONObject result = new JSONObject();
+        if (isPostgresDisabled) return result;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblRegex" WHERE "rgxId" = ?;
+                    """);
+            prepStmt.setLong(1, id);
+            ResultSet rs = prepStmt.executeQuery();
+            if (!rs.next()) return result;
+            result.put("id", rs.getLong(1));
+            result.put("regex", rs.getString(3));
+            result.put("name", rs.getString(4));
+            conn.close();
+            return result;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return result;
+        }
+    }
+
+    public JSONObject getRegexEntriesByGuildIdFromRegexTable(long guildId) {
+        JSONObject results = new JSONObject();
+        if (isPostgresDisabled) return results;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblRegex" WHERE "fk_rgxGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            ResultSet rs = prepStmt.executeQuery();
+            while (rs.next()) {
+                JSONObject entry = new JSONObject();
+                entry.put("id", rs.getLong(1));
+                entry.put("regex", rs.getString(3));
+                entry.put("name", rs.getString(4));
+                results.put(rs.getString(4), entry);
+            }
+            conn.close();
+            return results;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return results;
+        }
+    }
+
+    public long removeRegexEntryByDatabaseIdFromRegexTable(long id) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblRegex" WHERE "rgxId" = ?;
+                    """);
+            prepStmt.setLong(1, id);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
         }
     }
 

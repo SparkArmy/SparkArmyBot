@@ -4,6 +4,7 @@ import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.jda.utils.CommandRegisterer;
+import de.SparkArmy.jda.utils.ConfigureUtils;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
@@ -22,6 +23,7 @@ public class JdaApi {
     private final CommandRegisterer commandRegisterer;
 
     private final WebhookApi webhookApi;
+    private final ConfigureUtils configureUtils;
 
     public JdaApi(@NotNull Main main) {
         this.controller = main.getController();
@@ -56,6 +58,8 @@ public class JdaApi {
         this.commandRegisterer = new CommandRegisterer(this);
 
         this.webhookApi = new WebhookApi(this);
+
+        this.configureUtils = new ConfigureUtils();
     }
 
     public Logger getLogger() {
@@ -76,5 +80,9 @@ public class JdaApi {
 
     public WebhookApi getWebhookApi() {
         return webhookApi;
+    }
+
+    public ConfigureUtils getConfigureUtils() {
+        return configureUtils;
     }
 }

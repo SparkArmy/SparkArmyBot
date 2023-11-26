@@ -3,6 +3,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.utils.ConfigureUtils;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.jda.utils.MediaOnlyPermissions;
 import de.SparkArmy.utils.Util;
@@ -35,16 +36,22 @@ import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.PatternSyntaxException;
 
 public class ConfigureSlashCommandEvents {
 
     private final ConfigController controller;
 
+    private final ConfigureUtils configureUtils;
+
     public ConfigureSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
         this.controller = dispatcher.getController();
+        this.configureUtils = dispatcher.getApi().getConfigureUtils();
     }
 
     private ResourceBundle bundle(DiscordLocale locale) {
@@ -80,7 +87,7 @@ public class ConfigureSlashCommandEvents {
             case "regex" -> {
                 switch (subcommandName) {
                     case "blacklist" -> regexBlacklistConfigureSubcommand(event, bundle);
-                    case "manage" -> regexManageConfigureSubcommand(event);
+                    case "manage" -> regexManageConfigureSubcommand(event, bundle);
                 }
             }
             case "modmail" -> {
@@ -137,8 +144,646 @@ public class ConfigureSlashCommandEvents {
     private void modmailCategoryConfigureSubcommand(SlashCommandInteractionEvent event) {
     }
 
-    private void regexManageConfigureSubcommand(SlashCommandInteractionEvent event) {
+    private void regexManageConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferReply(true).queue();
+        EmbedBuilder manageRegexActionEmbed = new EmbedBuilder();
+        manageRegexActionEmbed.setTitle(bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.title"));
+        manageRegexActionEmbed.setDescription(bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.description"));
+
+        manageRegexActionEmbed.addField(
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.fields.addField.name"),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.fields.addField.value"),
+                true);
+        manageRegexActionEmbed.addField(
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.fields.editField.name"),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.fields.editField.value"),
+                true);
+        manageRegexActionEmbed.addField(
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.fields.removeField.name"),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.manageRegexActionEmbed.fields.removeField.value"),
+                true);
+
+        String userId = event.getUser().getId();
+
+        Button addRegexButton = Button.of(
+                ButtonStyle.SUCCESS,
+                String.format("regexManageConfigureButtonEvents_AddAction;%s", userId),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.buttons.addRegexButton"));
+        Button editRegexButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexManageConfigureButtonEvents_EditAction;%s", userId),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.buttons.editRegexButton"));
+        Button removeRegexButton = Button.of(
+                ButtonStyle.DANGER,
+                String.format("regexManageConfigureButtonEvents_RemoveAction;%s", userId),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureSubcommand.buttons.removeRegexButton"));
+
+        event.getHook()
+                .editOriginalEmbeds(manageRegexActionEmbed.build())
+                .setActionRow(addRegexButton, editRegexButton, removeRegexButton)
+                .queue();
     }
+
+    @SuppressWarnings("DuplicatedCode")
+    @JDAButton(startWith = "regexManageConfigureButtonEvents_")
+    public void regexManageConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "regexManageConfigureButtonEvents_AddAction" -> regexManageConfigureAddButtonEvent(event, bundle);
+            case "regexManageConfigureButtonEvents_EditAction" ->
+                    regexManageConfigureEditButtonEvent(event, bundle, guild);
+            case "regexManageConfigureButtonEvents_RemoveAction" ->
+                    regexManageConfigureRemoveButtonEvent(event, bundle, guild);
+            case "regexManageConfigureButtonEvents_Save" ->
+                    regexManageConfigureSaveButtonEvent(event, bundle, guild, splitComponentId);
+            case "regexManageConfigureButtonEvents_Test" ->
+                    regexManageConfigureTestButtonEvent(event, bundle, splitComponentId);
+            case "regexManageConfigureButtonEvents_Edit" ->
+                    regexManageConfigureEditRegexButtonEvent(event, bundle, splitComponentId);
+            case "regexManageConfigureButtonEvents_Next" ->
+                    regexManageConfigureNextButtonEvent(event, bundle, guild, splitComponentId);
+            case "regexManageConfigureButtonEvents_Before" ->
+                    regexManageConfigureBeforeButtonEvent(event, bundle, guild, splitComponentId);
+        }
+    }
+
+    private void regexManageConfigureRemoveButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+        JSONObject regexEntries = controller.getGuildRegexEntries(guild);
+
+        if (regexEntries.isEmpty()) {
+            event.getHook()
+                    .editOriginal(bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveButtonEvent.entriesAreEmpty"))
+                    .setEmbeds()
+                    .setComponents()
+                    .queue();
+        } else {
+            EmbedBuilder removeOverviewEmbed = new EmbedBuilder();
+            removeOverviewEmbed.setTitle(bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveButtonEvent.removeOverviewEmbed.title"));
+            removeOverviewEmbed.setDescription(bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveButtonEvent.removeOverviewEmbed.description"));
+
+            StringSelectMenu.Builder removeRegexMenu = StringSelectMenu.create(
+                    String.format("regexManageConfigureStringMenuEvents_Remove;%s", event.getUser().getId()));
+
+            setEmbedAndMenuFieldsForRegexEntries(removeOverviewEmbed, removeRegexMenu, bundle, 0, regexEntries);
+
+            Button nextRegexManageButton = Button.of(
+                    ButtonStyle.SECONDARY,
+                    String.format("regexManageConfigureButtonEvents_Next;%s;%d", event.getUser().getId(), 25),
+                    bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveButtonEvent.buttons.nextButton"));
+
+            if (regexEntries.keySet().size() > 25) {
+                event.getHook()
+                        .editOriginalEmbeds(removeOverviewEmbed.build())
+                        .setActionRow(removeRegexMenu.build())
+                        .setActionRow(nextRegexManageButton)
+                        .queue();
+            } else {
+                event.getHook()
+                        .editOriginalEmbeds(removeOverviewEmbed.build())
+                        .setActionRow(removeRegexMenu.build())
+                        .queue();
+            }
+        }
+    }
+
+    private void regexManageConfigureBeforeButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, String[] splitComponentId) {
+        event.deferEdit().queue();
+        JSONObject regexEntries = controller.getGuildRegexEntries(guild);
+
+        if (regexEntries.isEmpty()) {
+            event.getHook()
+                    .editOriginal(bundle.getString("configureEvents.regex.manage.regexManageConfigureBeforeButtonEvent.entriesAreEmpty"))
+                    .setEmbeds()
+                    .setComponents()
+                    .queue();
+            return;
+        }
+
+        MessageEmbed originalEmbed = event.getMessage().getEmbeds().get(0);
+
+        EmbedBuilder beforeActionEmbed = new EmbedBuilder(originalEmbed);
+        beforeActionEmbed.clearFields();
+
+        String stringMenuId = event.getMessage().getActionRows().get(0).getActionComponents().get(0).getId();
+
+        if (stringMenuId == null) return;
+
+        StringSelectMenu.Builder stringMenu = StringSelectMenu.create(stringMenuId);
+
+        int count = Integer.parseInt(splitComponentId[2]);
+
+        setEmbedAndMenuFieldsForRegexEntries(beforeActionEmbed, stringMenu, bundle, count, regexEntries);
+
+        String userId = event.getUser().getId();
+
+        Button nextButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexBlacklistConfigureButtonEvents_NextButton;%s;%d", userId, Math.min(regexEntries.keySet().size() - count, 25)),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureBeforeButtonEvent.buttons.nextButton"));
+        Button beforeButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexBlacklistConfigureButtonEvents_BeforeButton;%s;%d", userId, count - 25),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureBeforeButtonEvent.buttons.beforeButton"));
+
+        if (count - 25 > 1) {
+            event.getHook()
+                    .editOriginalEmbeds(beforeActionEmbed.build())
+                    .setComponents(
+                            ActionRow.of(stringMenu.build()),
+                            ActionRow.of(beforeButton, nextButton))
+                    .queue();
+        } else {
+            event.getHook()
+                    .editOriginalEmbeds(beforeActionEmbed.build())
+                    .setComponents(
+                            ActionRow.of(stringMenu.build()),
+                            ActionRow.of(beforeButton))
+                    .queue();
+        }
+    }
+
+    private void regexManageConfigureNextButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, String[] splitComponentId) {
+        event.deferEdit().queue();
+        JSONObject regexEntries = controller.getGuildRegexEntries(guild);
+        if (regexEntries.isEmpty()) {
+            event.getHook()
+                    .editOriginal(bundle.getString("configureEvents.regex.manage.regexManageConfigureNextButtonEvent.entriesAreEmpty"))
+                    .setEmbeds()
+                    .setComponents()
+                    .queue();
+            return;
+        }
+
+        MessageEmbed originalEmbed = event.getMessage().getEmbeds().get(0);
+
+        EmbedBuilder nextActionEmbed = new EmbedBuilder(originalEmbed);
+        nextActionEmbed.clearFields();
+
+        String stringMenuId = event.getMessage().getActionRows().get(0).getActionComponents().get(0).getId();
+
+        if (stringMenuId == null) return;
+
+        StringSelectMenu.Builder stringMenu = StringSelectMenu.create(stringMenuId);
+
+        int count = Integer.parseInt(splitComponentId[2]);
+
+        setEmbedAndMenuFieldsForRegexEntries(nextActionEmbed, stringMenu, bundle, count, regexEntries);
+
+        String userId = event.getUser().getId();
+
+        Button nextButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexManageConfigureButtonEvents_Next;%s;%d", userId, Math.min(regexEntries.keySet().size() - count, 25)),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureNextButtonEvent.buttons.nextButton"));
+        Button beforeButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexManageConfigureButtonEvents_Before;%s;%d", userId, count - 25),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureNextButtonEvent.buttons.beforeButton"));
+
+
+        if (regexEntries.length() - count > 1) {
+            event.getHook()
+                    .editOriginalEmbeds(nextActionEmbed.build())
+                    .setComponents(
+                            ActionRow.of(stringMenu.build()),
+                            ActionRow.of(beforeButton, nextButton))
+                    .queue();
+        } else {
+            event.getHook()
+                    .editOriginalEmbeds(nextActionEmbed.build())
+                    .setComponents(
+                            ActionRow.of(stringMenu.build()),
+                            ActionRow.of(beforeButton))
+                    .queue();
+        }
+    }
+
+    private void regexManageConfigureEditRegexButtonEvent(ButtonInteractionEvent event, ResourceBundle bundle, String @NotNull [] splitComponentId) {
+        String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
+        if (configureUtils.isRegexNotInMap(paramString)) {
+            event.deferEdit()
+                    .setEmbeds()
+                    .setComponents()
+                    .setContent(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditRegexButtonEvent.seasonIsInvalid"))
+                    .queue();
+        } else {
+            JSONObject entry = configureUtils.getRegexByKey(paramString);
+            TextInput.Builder regexPhrase = TextInput.create(
+                    "regexPhrase",
+                    bundle.getString("configureEvents.regex.manage.regexManageConfigureEditRegexButtonEvent.editRegexModal.regexPhrase.lable"),
+                    TextInputStyle.PARAGRAPH);
+            regexPhrase.setPlaceholder(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditRegexButtonEvent.editRegexModal.regexPhrase.placeholder"));
+            regexPhrase.setRequired(true);
+            regexPhrase.setRequiredRange(1, 3000);
+            regexPhrase.setValue(entry.getString("regex"));
+
+            TextInput.Builder regexName = TextInput.create(
+                    "regexName",
+                    bundle.getString("configureEvents.regex.manage.regexManageConfigureEditRegexButtonEvent.editRegexModal.regexName.lable"),
+                    TextInputStyle.SHORT);
+            regexName.setPlaceholder(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditRegexButtonEvent.editRegexModal.regexName.placeholder"));
+            regexName.setRequired(true);
+            regexName.setRequiredRange(1, 100);
+            regexName.setValue(entry.getString("name"));
+
+            String modalId;
+            if (entry.isNull("id")) {
+                modalId = String.format("regexManageModalEvents_AddOrEditModal;%s", event.getUser().getId());
+            } else {
+                modalId = String.format("regexManageModalEvents_AddOrEditModal;%s;%d", event.getUser().getId(), entry.getLong("id"));
+            }
+
+            Modal.Builder editRegexModal = Modal.create(
+                    modalId,
+                    bundle.getString("configureEvents.regex.manage.regexManageConfigureEditRegexButtonEvent.editRegexModal.title"));
+            editRegexModal.addActionRow(regexPhrase.build());
+            editRegexModal.addActionRow(regexName.build());
+
+            event.replyModal(editRegexModal.build())
+                    .map(x -> {
+                        configureUtils.removeRegexByKey(paramString);
+                        return null;
+                    })
+                    .queue();
+        }
+
+    }
+
+    private void regexManageConfigureEditButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+        JSONObject entries = controller.getGuildRegexEntries(guild);
+
+        if (entries.isEmpty()) {
+            event.getHook()
+                    .editOriginal(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditButtonEvent.entriesAreEmpty"))
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
+            return;
+        }
+
+        EmbedBuilder editOverviewEmbed = new EmbedBuilder();
+        editOverviewEmbed.setTitle(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditButtonEvent.editOverviewEmbed.title"));
+        editOverviewEmbed.setDescription(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditButtonEvent.editOverviewEmbed.description"));
+
+        StringSelectMenu.Builder editRegexMenu = StringSelectMenu.create(
+                String.format("regexManageConfigureStringMenuEvents_Edit;%s", event.getUser().getId()));
+
+        setEmbedAndMenuFieldsForRegexEntries(editOverviewEmbed, editRegexMenu, bundle, 0, entries);
+
+        Button nextRegexManageButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexManageConfigureButtonEvents_Next;%s;%d", event.getUser().getId(), 25),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureEditButtonEvent.buttons.nextButton"));
+
+
+        if (entries.keySet().size() > 25) {
+            event.getHook()
+                    .editOriginalEmbeds(editOverviewEmbed.build())
+                    .setActionRow(editRegexMenu.build())
+                    .setActionRow(nextRegexManageButton)
+                    .queue();
+        } else {
+            event.getHook()
+                    .editOriginalEmbeds(editOverviewEmbed.build())
+                    .setActionRow(editRegexMenu.build())
+                    .queue();
+        }
+    }
+
+    private void regexManageConfigureTestButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, String @NotNull [] splitComponentId) {
+        String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
+        if (configureUtils.isRegexNotInMap(paramString)) {
+            event.deferEdit()
+                    .setEmbeds()
+                    .setComponents()
+                    .setContent(bundle.getString("configureEvents.regex.manage.regexManageConfigureTestButtonEvent.seasonIsInvalid"))
+                    .queue();
+        } else {
+            TextInput.Builder regexTest = TextInput.create(
+                    "regexTest",
+                    bundle.getString("configureEvents.regex.manage.regexManageConfigureTestButtonEvent.testModal.regexTest.title"),
+                    TextInputStyle.PARAGRAPH);
+            regexTest.setRequiredRange(1, 4000);
+            regexTest.setRequired(true);
+            regexTest.setPlaceholder(bundle.getString("configureEvents.regex.manage.regexManageConfigureTestButtonEvent.testModal.regexTest.placeholder"));
+
+            Modal.Builder testModal = Modal.create(
+                    String.format("regexManageModalEvents_TestModal;%s", paramString),
+                    bundle.getString("configureEvents.regex.manage.regexManageConfigureTestButtonEvent.testModal.regexTest.title"));
+
+            testModal.addActionRow(regexTest.build());
+
+            event.replyModal(testModal.build()).queue();
+        }
+    }
+
+
+    private void regexManageConfigureSaveButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, String @NotNull [] splitComponentId) {
+        event.deferEdit().queue();
+        String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
+        if (configureUtils.isRegexNotInMap(paramString)) {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent(bundle.getString("configureEvents.regex.manage.regexManageConfigureSaveButtonEvent.seasonIsInvalid"))
+                    .queue();
+        } else {
+            JSONObject regexData = configureUtils.getRegexByKey(paramString);
+            String regexString = regexData.getString("regex");
+            String regexName = regexData.getString("name");
+            long id = regexData.optLong("id", 0);
+            long returnValue = controller.addOrEditRegexToGuildRegexTable(regexString, regexName, guild, id);
+
+            if (returnValue != 0) {
+                event.getHook()
+                        .editOriginalEmbeds()
+                        .setComponents()
+                        .setContent(
+                                String.format(
+                                        bundle.getString("configureEvents.regex.manage.regexManageConfigureSaveButtonEvent.returnValueIs0"),
+                                        regexString))
+                        .map(x -> {
+                            configureUtils.removeRegexByKey(paramString);
+                            return null;
+                        })
+                        .queue();
+            } else {
+                event.getHook()
+                        .editOriginalEmbeds()
+                        .setComponents()
+                        .setContent(
+                                String.format(
+                                        bundle.getString("configureEvents.regex.manage.regexManageConfigureSaveButtonEvent.returnValueIs0"),
+                                        regexString))
+                        .map((x -> {
+                            configureUtils.removeRegexByKey(paramString);
+                            return null;
+                        }))
+                        .queue();
+            }
+        }
+    }
+
+    private void regexManageConfigureAddButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
+        TextInput.Builder regexPhrase = TextInput.create(
+                "regexPhrase",
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureAddButtonEvent.addRegexModal.regexPhrase.lable"),
+                TextInputStyle.PARAGRAPH);
+        regexPhrase.setPlaceholder(bundle.getString("configureEvents.regex.manage.regexManageConfigureAddButtonEvent.addRegexModal.regexPhrase.placeholder"));
+        regexPhrase.setRequired(true);
+        regexPhrase.setRequiredRange(1, 3000);
+
+        TextInput.Builder regexName = TextInput.create(
+                "regexName",
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureAddButtonEvent.addRegexModal.regexName.lable"),
+                TextInputStyle.SHORT);
+        regexName.setPlaceholder(bundle.getString("configureEvents.regex.manage.regexManageConfigureAddButtonEvent.addRegexModal.regexName.placeholder"));
+        regexName.setRequired(true);
+        regexName.setRequiredRange(1, 100);
+
+        Modal.Builder addRegexModal = Modal.create(
+                String.format("regexManageModalEvents_AddOrEditModal;%s", event.getUser().getId()),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureAddButtonEvent.addRegexModal.title"));
+        addRegexModal.addActionRow(regexPhrase.build());
+        addRegexModal.addActionRow(regexName.build());
+
+        event.replyModal(addRegexModal.build()).queue();
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @JDAModal(startWith = "regexManageModalEvents_")
+    public void regexManageModalEvents(@NotNull ModalInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getModalId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "regexManageModalEvents_AddOrEditModal" ->
+                    regexManageAddOrEditModalEvent(event, bundle, splitComponentId);
+            case "regexManageModalEvents_TestModal" -> regexManageTestModalEvent(event, bundle, splitComponentId);
+        }
+    }
+
+    private void regexManageTestModalEvent(@NotNull ModalInteractionEvent event, ResourceBundle bundle, String @NotNull [] splitComponentId) {
+        event.deferReply(true).queue();
+        String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
+        if (configureUtils.isRegexNotInMap(paramString)) {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent(bundle.getString("configureEvents.regex.manage.regexManageTestModalEvent.seasonIsInvalid"))
+                    .queue();
+        } else {
+            JSONObject regexData = configureUtils.getRegexByKey(paramString);
+            String regexString = regexData.getString("regex");
+
+            ModalMapping regexTestMapping = event.getValue("regexTest");
+            if (regexTestMapping == null) return;
+            String testString = regexTestMapping.getAsString();
+
+            try {
+                event.getHook().editOriginal(
+                                String.format(
+                                        bundle.getString("configureEvents.regex.manage.regexManageTestModalEvent.replySeasonIsValid"),
+                                        testString.matches(regexString)))
+                        .queue();
+            } catch (PatternSyntaxException e) {
+                event.getHook().editOriginal(
+                                String.format(
+                                        bundle.getString("configureEvents.regex.manage.regexManageTestModalEvent.errorTestMessage"),
+                                        e.getMessage()))
+                        .queue();
+            }
+        }
+    }
+
+    private void regexManageAddOrEditModalEvent(@NotNull ModalInteractionEvent event, ResourceBundle bundle, String[] splitComponentId) {
+        event.deferEdit().queue();
+        ModalMapping phraseMapping = event.getValue("regexPhrase");
+        ModalMapping nameMapping = event.getValue("regexName");
+        if (phraseMapping == null || nameMapping == null) return;
+        String regexPhrase = phraseMapping.getAsString();
+        String regexName = nameMapping.getAsString();
+
+
+        EmbedBuilder addShowEmbed = new EmbedBuilder();
+        addShowEmbed.setTitle(bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.title"));
+
+        String userId = event.getUser().getId();
+
+        String paramString = String.format("%s;%s", userId, LocalDateTime.now());
+
+        JSONObject regexData = new JSONObject();
+        regexData.put("regex", regexPhrase);
+        regexData.put("name", regexName);
+
+
+        if (splitComponentId.length == 3) {
+            regexData.put("id", Long.parseLong(splitComponentId[2]));
+        }
+
+        configureUtils.addRegexToMap(paramString, regexData);
+
+
+        addShowEmbed.setDescription(String.format(bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.description"), regexPhrase));
+        addShowEmbed.addField(
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.fields.save.name"),
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.fields.save.value"),
+                true);
+        addShowEmbed.addField(
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.fields.test.name"),
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.fields.test.value"),
+                true);
+        addShowEmbed.addField(
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.fields.edit.name"),
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.addOrEditShowEmbed.fields.edit.value"),
+                true);
+
+        Button saveRegexButton = Button.of(
+                ButtonStyle.SUCCESS,
+                String.format("regexManageConfigureButtonEvents_Save;%s", paramString),
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.buttons.save"));
+        Button testRegexButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexManageConfigureButtonEvents_Test;%s", paramString),
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.buttons.test"));
+        Button editRegexButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("regexManageConfigureButtonEvents_Edit;%s", paramString),
+                bundle.getString("configureEvents.regex.manage.regexManageAddOrEditModalEvent.buttons.edit"));
+
+        event.getHook()
+                .editOriginalEmbeds(addShowEmbed.build())
+                .setActionRow(saveRegexButton, testRegexButton, editRegexButton)
+                .delay(15, TimeUnit.MINUTES)
+                .map(x -> {
+                    configureUtils.removeRegexByKey(paramString);
+                    return null;
+                })
+                .queue();
+    }
+
+    private void setEmbedAndMenuFieldsForRegexEntries(EmbedBuilder actionEmbed, StringSelectMenu.Builder stringMenuBuilder, ResourceBundle bundle, int countFrom, @NotNull JSONObject entries) {
+        int i = 0;
+        for (String keyString : entries.keySet().stream().sorted().toList()) {
+            countFrom--;
+            if (countFrom < 0) {
+                i++;
+                JSONObject entry = entries.getJSONObject(keyString);
+                actionEmbed.addField(
+                        String.format(bundle.getString("configureEvents.regex.manage.setEmbedAndMenuFieldsForRegexEntries.actionEmbed.fieldName"), entry.getString("name")),
+                        String.format(bundle.getString("configureEvents.regex.manage.setEmbedAndMenuFieldsForRegexEntries.actionEmbed.fieldValuePreset"), entry.getString("regex")),
+                        false);
+                stringMenuBuilder.addOption(entry.getString("name"), String.valueOf(entry.getLong("id")));
+                if (i == 25) break;
+            }
+        }
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @JDAStringMenu(startWith = "regexManageConfigureStringMenuEvents_")
+    public void regexManageConfigureStringMenuEvents(@NotNull StringSelectInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "regexManageConfigureStringMenuEvents_Edit" -> regexManageConfigureEditStringMenuEvent(event, bundle);
+            case "regexManageConfigureStringMenuEvents_Remove" ->
+                    regexManageConfigureRemoveStringMenuEvent(event, bundle);
+        }
+    }
+
+    private void regexManageConfigureRemoveStringMenuEvent(@NotNull StringSelectInteractionEvent event, ResourceBundle bundle) {
+        event.deferEdit().queue();
+        long id = Long.parseLong(event.getValues().get(0));
+        JSONObject entry = controller.getRegexEntryById(String.valueOf(id));
+        if (entry.isEmpty()) {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent(bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveStringMenuEvent.entryIsEmpty"))
+                    .queue();
+            return;
+        }
+
+        long responseCode = controller.removeGuildRegexEntry(id);
+
+        String replyString;
+        if (responseCode != 0) {
+            replyString = String.format(bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveStringMenuEvent.errorResponse"), responseCode);
+        } else {
+            replyString = bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveStringMenuEvent.successResponse");
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(replyString)
+                .queue();
+    }
+
+    private void regexManageConfigureEditStringMenuEvent(@NotNull StringSelectInteractionEvent event, @NotNull ResourceBundle bundle) {
+        long id = Long.parseLong(event.getValues().get(0));
+        JSONObject entry = controller.getRegexEntryById(String.valueOf(id));
+        if (entry.isEmpty()) {
+            event.deferEdit()
+                    .setComponents()
+                    .setEmbeds()
+                    .setContent(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditStringMenuEvent.entryIsEmpty"))
+                    .queue();
+            return;
+        }
+
+        TextInput.Builder regexPhrase = TextInput.create(
+                "regexPhrase",
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureEditStringMenuEvent.editRegexModal.regexPhrase.lable"),
+                TextInputStyle.PARAGRAPH);
+        regexPhrase.setPlaceholder(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditStringMenuEvent.editRegexModal.regexPhrase.placeholder"));
+        regexPhrase.setRequired(true);
+        regexPhrase.setRequiredRange(1, 3000);
+        regexPhrase.setValue(entry.getString("regex"));
+
+        TextInput.Builder regexName = TextInput.create(
+                "regexName",
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureEditStringMenuEvent.editRegexModal.regexName.lable"),
+                TextInputStyle.SHORT);
+        regexName.setPlaceholder(bundle.getString("configureEvents.regex.manage.regexManageConfigureEditStringMenuEvent.editRegexModal.regexName.placeholder"));
+        regexName.setRequired(true);
+        regexName.setRequiredRange(1, 100);
+        regexName.setValue(entry.getString("name"));
+
+        Modal.Builder editRegexModal = Modal.create(
+                String.format("regexManageModalEvents_AddOrEditModal;%s;%d", event.getUser().getId(), id),
+                bundle.getString("configureEvents.regex.manage.regexManageConfigureEditStringMenuEvent.editRegexModal.title"));
+        editRegexModal.addActionRow(regexPhrase.build());
+        editRegexModal.addActionRow(regexName.build());
+
+        event.replyModal(editRegexModal.build()).queue();
+    }
+
 
     private void regexBlacklistConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
         event.deferReply(true).queue();
@@ -496,6 +1141,7 @@ public class ConfigureSlashCommandEvents {
         event.replyModal(phraseAddModal.build()).queue();
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @JDAModal(startWith = "regexBlacklistConfigureModalEvents_")
     public void regexBlacklistConfigureModalEvents(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();

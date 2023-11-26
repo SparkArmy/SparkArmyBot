@@ -183,4 +183,20 @@ public class ConfigController {
     public long deletePhraseFromGuildTextBlacklist(long id) {
         return main.getPostgres().removePhraseFromBlacklistTable(id);
     }
+
+    public long addOrEditRegexToGuildRegexTable(String phrase, String name, @NotNull Guild guild, long id) {
+        return main.getPostgres().addOrEditRegexToRegexTable(guild.getIdLong(), phrase, name, id);
+    }
+
+    public JSONObject getGuildRegexEntries(@NotNull Guild guild) {
+        return main.getPostgres().getRegexEntriesByGuildIdFromRegexTable(guild.getIdLong());
+    }
+
+    public JSONObject getRegexEntryById(String id) {
+        return main.getPostgres().getRegexEntryByDatabaseIdFromRegexTable(Long.parseLong(id));
+    }
+
+    public long removeGuildRegexEntry(long id) {
+        return main.getPostgres().removeRegexEntryByDatabaseIdFromRegexTable(id);
+    }
 }

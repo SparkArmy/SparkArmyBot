@@ -199,4 +199,16 @@ public class ConfigController {
     public long removeGuildRegexEntry(long id) {
         return main.getPostgres().removeRegexEntryByDatabaseIdFromRegexTable(id);
     }
+
+    public long setGuildFeedbackChannel(@NotNull Channel channel, @NotNull Guild guild) {
+        return main.getPostgres().writeInFeedbackChannelTable(channel.getIdLong(), guild.getIdLong());
+    }
+
+    public long removeGuildFeedbackChannel(@NotNull Guild guild) {
+        return main.getPostgres().removeFromFeedbackChannelTable(guild.getIdLong());
+    }
+
+    public long getGuildFeedbackChannel(@NotNull Guild guild) {
+        return main.getPostgres().getFeedbackChannelByGuildIdFromFeedbackChannelTable(guild.getIdLong());
+    }
 }

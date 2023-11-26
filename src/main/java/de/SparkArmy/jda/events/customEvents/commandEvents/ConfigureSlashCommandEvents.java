@@ -76,6 +76,7 @@ public class ConfigureSlashCommandEvents {
                     case "log-channels" -> channelLogchannelConfigureSubcommand(event, bundle, guild);
                     case "media-only-channel" -> channelMediaOnlyChannelConfigureSubcommand(event, bundle);
                     case "archive-category" -> channelArchiveCategoryConfigureSubcommand(event, bundle);
+                    case "feedback-channel" -> channelFeedbackChannelConfigureSubcommand(event, bundle);
                 }
             }
             case "roles" -> {
@@ -99,12 +100,6 @@ public class ConfigureSlashCommandEvents {
                     case "ping-roles" -> modmailPingRolesConfigureSubcommand(event);
                 }
             }
-            case "feedback" -> {
-                switch (subcommandName) {
-                    case "category" -> feedbackCategoryConfigureSubcommand(event);
-                    case "roles" -> feedbackRolesConfigureSubcommand(event);
-                }
-            }
         }
     }
 
@@ -121,12 +116,6 @@ public class ConfigureSlashCommandEvents {
         if (subcommandGroupName.equals("channel") && subcommandName.equals("log-channels")) {
             event.replyChoiceStrings(LogChannelType.getLogChannelTypes().stream().filter(x -> x.getId() > 0).map(LogChannelType::getName).toList()).queue();
         }
-    }
-
-    private void feedbackRolesConfigureSubcommand(SlashCommandInteractionEvent event) {
-    }
-
-    private void feedbackCategoryConfigureSubcommand(SlashCommandInteractionEvent event) {
     }
 
     private void modmailPingRolesConfigureSubcommand(SlashCommandInteractionEvent event) {
@@ -2215,6 +2204,127 @@ public class ConfigureSlashCommandEvents {
 
         hook.editOriginalEmbeds(specificMediaOnlyChannelEmbed.build())
                 .setComponents(editButtons, secondRow)
+                .queue();
+    }
+
+    private void channelFeedbackChannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferReply(true).queue();
+
+        EmbedBuilder overviewEmbed = new EmbedBuilder();
+        overviewEmbed.setTitle(bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.overviewEmbed.title"));
+        overviewEmbed.setDescription(bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.overviewEmbed.description"));
+
+        overviewEmbed.addField(
+                bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.overviewEmbed.fields.set.name"),
+                bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.overviewEmbed.fields.set.value"),
+                true);
+        overviewEmbed.addField(
+                bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.overviewEmbed.fields.remove.name"),
+                bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.overviewEmbed.fields.remove.value"),
+                true);
+
+        String userId = event.getUser().getId();
+        Button setCategoryButton = Button.of(
+                ButtonStyle.SUCCESS,
+                String.format("channelFeedbackCategoryConfigureButtonEvents_Set;%s", userId),
+                bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.buttons.setCategoryButton"));
+        Button removeCategoryButton = Button.of(
+                ButtonStyle.DANGER,
+                String.format("channelFeedbackCategoryConfigureButtonEvents_Remove;%s", userId),
+                bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSubcommand.buttons.removeCategoryButton"));
+
+        event.getHook()
+                .editOriginalEmbeds(overviewEmbed.build())
+                .setActionRow(setCategoryButton, removeCategoryButton)
+                .queue();
+    }
+
+    @JDAButton(startWith = "channelFeedbackCategoryConfigureButtonEvents_")
+    public void channelFeedbackChannelConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "channelFeedbackCategoryConfigureButtonEvents_Set" ->
+                    channelFeedbackChannelConfigureSetButtonEvent(event, bundle);
+            case "channelFeedbackCategoryConfigureButtonEvents_Remove" ->
+                    channelFeedbackChannelConfigureRemoveButtonEvent(event, bundle, guild);
+        }
+    }
+
+    private void channelFeedbackChannelConfigureRemoveButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+        long responseCode = controller.removeGuildFeedbackChannel(guild);
+
+        String replyString;
+        if (responseCode != 0) {
+            replyString = String.format(bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureRemoveButtonEvent.errorReply"), responseCode);
+        } else {
+            replyString = bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureRemoveButtonEvent.successReply");
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(replyString)
+                .queue();
+    }
+
+    private void channelFeedbackChannelConfigureSetButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferEdit().queue();
+
+        EmbedBuilder setFeedbackCategoryEmbed = new EmbedBuilder();
+        setFeedbackCategoryEmbed.setTitle(bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackCategoryChannelSetButtonEvent.setFeedbackCategoryEmbed.title"));
+        setFeedbackCategoryEmbed.setDescription(bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackCategoryChannelSetButtonEvent.setFeedbackCategoryEmbed.description"));
+
+        EntitySelectMenu.Builder feedbackCategorySelect = EntitySelectMenu.create(
+                String.format("channelFeedbackCategoryConfigureEntityMenuEvents_set;%s", event.getUser().getId()),
+                EntitySelectMenu.SelectTarget.CHANNEL);
+        feedbackCategorySelect.setChannelTypes(ChannelType.TEXT);
+
+        event.getHook().editOriginalEmbeds(setFeedbackCategoryEmbed.build())
+                .setActionRow(feedbackCategorySelect.build())
+                .queue();
+    }
+
+    @JDAEntityMenu(startWith = "channelFeedbackCategoryConfigureEntityMenuEvents_")
+    public void channelFeedbackChannelConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        if (splitComponentId[0].equals("channelFeedbackCategoryConfigureEntityMenuEvents_set")) {
+            channelFeedbackChannelConfigureSetEntityEvent(event, bundle, guild);
+        }
+    }
+
+    private void channelFeedbackChannelConfigureSetEntityEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+
+        long responseCode = controller.setGuildFeedbackChannel(event.getMentions().getChannels().get(0), guild);
+        String replyString;
+
+        if (responseCode != 0) {
+            replyString = String.format(bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSetEntityEvent.errorReply"), responseCode);
+        } else {
+            replyString = bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSetEntityEvent.successReply");
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(replyString)
                 .queue();
     }
 }

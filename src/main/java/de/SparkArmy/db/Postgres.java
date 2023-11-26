@@ -1488,6 +1488,67 @@ public class Postgres {
         }
     }
 
+    public long writeInFeedbackChannelTable(long channelId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+            if (existFeedbackChannelForGuild(conn, guildId)) {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblFeedbackChannel" SET "fcsChannelId" = ? WHERE "fk_fcsGuildId" = ?;
+                        """);
+            } else {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblFeedbackChannel" ("fcsChannelId", "fk_fcsGuildId") VALUES (?,?);
+                        """);
+            }
+            prepStmt.setLong(1, channelId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long removeFromFeedbackChannelTable(long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblFeedbackChannel" WHERE "fk_fcsGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long getFeedbackChannelByGuildIdFromFeedbackChannelTable(long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblFeedbackChannel" WHERE "fk_fcsGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            return getReturnValue(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    private boolean existFeedbackChannelForGuild(@NotNull Connection conn, long guildId) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guidconfigs."tblFeedbackChannel" WHERE "fk_fcsGuildId" = ?;
+                """);
+        prepStmt.setLong(1, guildId);
+        return checkResultSetForARow(prepStmt);
+    }
+
     private synchronized int getUpdatedRows(@NotNull PreparedStatement prepStmt, @NotNull Connection conn) throws SQLException {
         int updatedRows = prepStmt.executeUpdate();
         conn.close();

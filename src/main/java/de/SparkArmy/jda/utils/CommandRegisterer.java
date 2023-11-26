@@ -267,7 +267,8 @@ public class CommandRegisterer {
                                                                 .setChannelTypes(ChannelType.TEXT)
                                                 ),
                                         new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel"),
-                                        new SubcommandData("archive-category", "Manage the archive category")
+                                        new SubcommandData("archive-category", "Manage the archive category"),
+                                        new SubcommandData("feedback-channel", "Manage the feedback-channel")
                                 ),
                         new SubcommandGroupData("roles", "Configure the roles")
                                 .addSubcommands(
@@ -298,14 +299,17 @@ public class CommandRegisterer {
                                                 ),
                                         new SubcommandData("ping-roles", "Manage the roles were are pinged")
 
-                                ),
-                        new SubcommandGroupData("feedback", "Manage the feedback settings")
-                                .addSubcommands(
-                                        new SubcommandData("category", "Manage the category for feedback channels"),
-                                        new SubcommandData("roles", "Manage the roles with permissions for feedback")
                                 )
                 )
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+    }
+
+    @Contract(" -> new")
+    @JDACommandData
+    final @NotNull CommandData feedbackSlashCommand() {
+        return Commands.slash("feedback", "Send feedback to the staff")
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.ENABLED);
     }
 }

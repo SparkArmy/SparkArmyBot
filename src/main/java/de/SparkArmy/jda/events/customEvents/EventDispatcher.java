@@ -250,6 +250,7 @@ public class EventDispatcher {
         registerEvent(new CleanSlashCommandEvents(this));
         registerEvent(new MessageEvents(this));
         registerEvent(new ConfigureSlashCommandEvents(this));
+        registerEvent(new FeedbackSlashCommandEvents(this));
     }
 
     private void registerEvent(Object o) {

@@ -1,7 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.otherEvents;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.WebhookApi;
 import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
@@ -28,11 +27,9 @@ import java.util.concurrent.TimeUnit;
 public class MessageEvents {
 
     private final ConfigController controller;
-    private final WebhookApi webhookApi;
 
     public MessageEvents(@NotNull EventDispatcher dispatcher) {
         this.controller = dispatcher.getController();
-        this.webhookApi = dispatcher.getApi().getWebhookApi();
     }
 
     private ResourceBundle bundle(DiscordLocale locale) {
@@ -65,6 +62,7 @@ public class MessageEvents {
         controller.getMain().getPostgres().putMessageDataAndAttachmentsInTables(event.getMessage());
         mediaOnlyFunction(event);
         blacklistFunction(event);
+        regexFunction(event);
     }
 
     @JDAMessageUpdateEvent
@@ -140,8 +138,28 @@ public class MessageEvents {
         if (phrases.keySet().stream().map(x -> {
             JSONObject jObj = phrases.getJSONObject(x);
             return jObj.getString("phrase");
-        }).anyMatch(x -> messageContent.toLowerCase().contains(x.toLowerCase()))) {
+        }).anyMatch(messageContent::contains)) {
             event.getMessage().delete().reason("Blacklist phrase")
+                    .map(x -> {
+                        // TODO Send violations in ModLog
+                        return null;
+                    })
+                    .queue(null,
+                            new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+        }
+    }
+
+    private void regexFunction(@NotNull MessageReceivedEvent event) {
+        String messageContent = event.getMessage().getContentRaw();
+        if (messageContent.isBlank()) return;
+        if (checkMemberPermissions(event)) return;
+
+        JSONObject regexEntries = controller.getGuildRegexEntries(event.getGuild());
+        if (regexEntries.keySet().stream().map(x -> {
+            JSONObject jObj = regexEntries.getJSONObject(x);
+            return jObj.getString("regex");
+        }).anyMatch(messageContent::matches)) {
+            event.getMessage().delete().reason("Regex Phrase")
                     .map(x -> {
                         // TODO Send violations in ModLog
                         return null;

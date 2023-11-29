@@ -6,7 +6,10 @@ import de.SparkArmy.jda.utils.MediaOnlyPermissions;
 import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -210,5 +213,53 @@ public class ConfigController {
 
     public long getGuildFeedbackChannel(@NotNull Guild guild) {
         return main.getPostgres().getFeedbackChannelByGuildIdFromFeedbackChannelTable(guild.getIdLong());
+    }
+
+    public List<Long> getGuildModmailBlacklistedUsers(@NotNull Guild guild) {
+        return main.getPostgres().getBlacklistedModmailUsersFromModmailBlacklistTable(guild.getIdLong());
+    }
+
+    public long isUserOnGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return main.getPostgres().isGuildUserInModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+    }
+
+    public long removeUserFromGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return main.getPostgres().removeUserFromModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+    }
+
+    public long addUserToGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return main.getPostgres().addUserToModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+    }
+
+    public long setGuildModmailCategory(@NotNull Guild guild, @NotNull Category category) {
+        return main.getPostgres().writeCategoryIdInModmailChannelTable(category.getIdLong(), guild.getIdLong());
+    }
+
+    public long disableGuildModmail(@NotNull Guild guild) {
+        return main.getPostgres().removeDataFromModmailChannelTable(guild.getIdLong());
+    }
+
+    public long setGuildModmailArchiveChannel(@NotNull Guild guild, TextChannel channel) {
+        return main.getPostgres().setArchiveChannelInModmailChannelTable(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+    }
+
+    public long setGuildModmailLogChannel(@NotNull Guild guild, TextChannel channel) {
+        return main.getPostgres().setLogChannelInModmailChannelTable(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+    }
+
+    public long isRoleGuildModmailPingRole(@NotNull Role role) {
+        return main.getPostgres().isRoleInModmailPingRoleTable(role.getIdLong());
+    }
+
+    public long addGuildModmailPingRole(@NotNull Role role, @NotNull Guild guild) {
+        return main.getPostgres().addRoleToModmailPingRoleTable(role.getIdLong(), guild.getIdLong());
+    }
+
+    public long removeGuildModmailPingRole(@NotNull Role role) {
+        return main.getPostgres().removeRoleFromModmailPingRoleTable(role.getIdLong());
+    }
+
+    public List<Long> getGuildModmailPingRoles(@NotNull Guild guild) {
+        return main.getPostgres().getRoleIdsFromModmailPingRoleTable(guild.getIdLong());
     }
 }

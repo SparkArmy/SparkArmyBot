@@ -290,14 +290,15 @@ public class CommandRegisterer {
                                 ),
                         new SubcommandGroupData("modmail", "Manage the modmail settings")
                                 .addSubcommands(
-                                        new SubcommandData("category", "Manage the category for modmail channels"),
-                                        new SubcommandData("roles", "Manage the roles with permissions for modmail"),
-                                        new SubcommandData("archive-settings", "Manage the archive settings for modmail"),
+                                        new SubcommandData("category", "Manage the category and channel for modmail channels"),
                                         new SubcommandData("blacklist", "The blacklist for users")
                                                 .addOptions(
                                                         new OptionData(OptionType.USER, "user", "The user for the blacklist")
                                                 ),
                                         new SubcommandData("ping-roles", "Manage the roles were are pinged")
+                                                .addOptions(
+                                                        new OptionData(OptionType.ROLE, "role", "The role to add/remove")
+                                                )
 
                                 )
                 )

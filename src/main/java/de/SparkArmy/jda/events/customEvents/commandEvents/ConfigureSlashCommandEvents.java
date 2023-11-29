@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -93,11 +94,9 @@ public class ConfigureSlashCommandEvents {
             }
             case "modmail" -> {
                 switch (subcommandName) {
-                    case "category" -> modmailCategoryConfigureSubcommand(event);
-                    case "roles" -> modmailRolesConfigureSubcommand(event);
-                    case "archive-settings" -> modmailArchiveSettingsConfigureSubcommand(event);
-                    case "blacklist" -> modmailBlacklistConfigureSubcommand(event);
-                    case "ping-roles" -> modmailPingRolesConfigureSubcommand(event);
+                    case "category" -> modmailCategoryConfigureSubcommand(event, bundle);
+                    case "blacklist" -> modmailBlacklistConfigureSubcommand(event, bundle, guild);
+                    case "ping-roles" -> modmailPingRolesConfigureSubcommand(event, bundle, guild);
                 }
             }
         }
@@ -118,19 +117,394 @@ public class ConfigureSlashCommandEvents {
         }
     }
 
-    private void modmailPingRolesConfigureSubcommand(SlashCommandInteractionEvent event) {
+    private void modmailPingRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferReply(true).queue();
+        Role targetRole = event.getOption("role", OptionMapping::getAsRole);
+
+        if (targetRole == null) {
+            EmbedBuilder showPingedRolesEmbed = new EmbedBuilder();
+            showPingedRolesEmbed.setTitle(bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.showPingedRolesEmbed.title"));
+
+            List<Long> roleIds = controller.getGuildModmailPingRoles(guild);
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            if (roleIds.isEmpty()) {
+                stringBuilder.append(bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.showPingedRolesEmbed.noEntries"));
+            } else {
+                for (long id : roleIds) {
+                    stringBuilder.append(String.format("<@%d>, ", id));
+                }
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1).deleteCharAt(stringBuilder.length() - 1);
+            }
+
+            showPingedRolesEmbed.setDescription(stringBuilder);
+
+            event.getHook().editOriginalEmbeds(showPingedRolesEmbed.build()).queue();
+            return;
+        }
+
+        long returnValue;
+        String responseString;
+        if (controller.isRoleGuildModmailPingRole(targetRole) == 0) {
+            returnValue = controller.addGuildModmailPingRole(targetRole, guild);
+            if (returnValue == 0) {
+                responseString = bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.roleAdded");
+            } else {
+                responseString = bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.errorResponse");
+            }
+        } else {
+            returnValue = controller.removeGuildModmailPingRole(targetRole);
+            if (returnValue == 0) {
+                responseString = bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.roleRemoved");
+            } else {
+                responseString = bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.errorResponse");
+            }
+        }
+
+        event.getHook().editOriginal(responseString).queue();
     }
 
-    private void modmailBlacklistConfigureSubcommand(SlashCommandInteractionEvent event) {
+    private void modmailBlacklistConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferReply(true).queue();
+        User blacklistUser = event.getOption("user", OptionMapping::getAsUser);
+        if (blacklistUser == null) {
+            EmbedBuilder showBlacklistedModmailUsersEmbed = new EmbedBuilder();
+            showBlacklistedModmailUsersEmbed.setTitle(bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.showBlacklistedModmailUsersEmbed.title"));
+            showBlacklistedModmailUsersEmbed.setDescription(bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.showBlacklistedModmailUsersEmbed.description"));
+
+            List<Long> userIds = controller.getGuildModmailBlacklistedUsers(guild);
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("\n");
+            if (!userIds.isEmpty()) {
+                for (long id : userIds) {
+                    stringBuilder.append(String.format("<@%d>, ", id));
+                }
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1).deleteCharAt(stringBuilder.length() - 1);
+            } else {
+                stringBuilder.append(bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.showBlacklistedModmailUsersEmbed.noEntries"));
+            }
+            showBlacklistedModmailUsersEmbed.appendDescription(stringBuilder);
+
+            event.getHook()
+                    .editOriginalEmbeds(showBlacklistedModmailUsersEmbed.build())
+                    .queue();
+            return;
+        }
+
+        long returnValue;
+        String responseString;
+        if (controller.isUserOnGuildModmailBlacklist(guild, blacklistUser) == 0) {
+            returnValue = controller.addUserToGuildModmailBlacklist(guild, blacklistUser);
+            if (returnValue == 0) {
+                responseString = bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.userAdded");
+            } else {
+                responseString = bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.errorResponse");
+            }
+        } else {
+            returnValue = controller.removeUserFromGuildModmailBlacklist(guild, blacklistUser);
+            if (returnValue == 0) {
+                responseString = bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.userRemoved");
+            } else {
+                responseString = bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.errorResponse");
+            }
+        }
+
+        event.getHook().editOriginal(responseString).queue();
     }
 
-    private void modmailArchiveSettingsConfigureSubcommand(SlashCommandInteractionEvent event) {
+
+    private void modmailCategoryConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferReply(true).queue();
+
+        EmbedBuilder modmailChannelConfigEmbed = new EmbedBuilder();
+        modmailChannelConfigEmbed.setTitle(bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.title"));
+        modmailChannelConfigEmbed.setDescription(bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.description"));
+
+        modmailChannelConfigEmbed.addField(
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.fields.category.name"),
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.fields.category.value"),
+                true);
+        modmailChannelConfigEmbed.addField(
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.fields.archiveChannel.name"),
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.fields.archiveChannel.value"),
+                true);
+        modmailChannelConfigEmbed.addField(
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.fields.logChannel.name"),
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.modmailChannelConfigEmbed.fields.logChannel.value"),
+                true);
+
+        String userId = event.getUser().getId();
+        Button setCategoryButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("modmailCategoryButtonEvents_setCategory;%s", userId),
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.buttons.setCategoryButton"));
+        Button setArchiveChannelButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("modmailCategoryButtonEvents_setArchive;%s", userId),
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.buttons.setArchiveChannelButton"));
+        Button setLogChannelButton = Button.of(
+                ButtonStyle.SECONDARY,
+                String.format("modmailCategoryButtonEvents_setLog;%s", userId),
+                bundle.getString("configureEvents.modmail.category.modmailCategoryConfigureSubcommand.buttons.setLogChannelButton"));
+
+        event.getHook()
+                .editOriginalEmbeds(modmailChannelConfigEmbed.build())
+                .setActionRow(setCategoryButton, setArchiveChannelButton, setLogChannelButton)
+                .queue();
     }
 
-    private void modmailRolesConfigureSubcommand(SlashCommandInteractionEvent event) {
+    @JDAButton(startWith = "modmailCategoryButtonEvents_")
+    public void modmailCategoryButtonEvents(@NotNull ButtonInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "modmailCategoryButtonEvents_setCategory" -> modmailCategorySetCategoryButtonEvent(event, bundle);
+            case "modmailCategoryButtonEvents_disableModmail" ->
+                    modmailCategoryDisableModmailButtonEvent(event, bundle, guild);
+            case "modmailCategoryButtonEvents_setArchive" -> modmailCategorySetArchiveButtonEvent(event, bundle);
+            case "modmailCategoryButtonEvents_clearArchive" ->
+                    modmailCategoryClearArchiveButtonEvent(event, bundle, guild);
+            case "modmailCategoryButtonEvents_setLog" -> modmailCategorySetLogButtonEvent(event, bundle);
+            case "modmailCategoryButtonEvents_clearLog" -> modmailCategoryClearLogButtonEvent(event, bundle, guild);
+        }
     }
 
-    private void modmailCategoryConfigureSubcommand(SlashCommandInteractionEvent event) {
+    private void modmailCategoryClearLogButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+
+        long responseCode = controller.setGuildModmailArchiveChannel(guild, null);
+        String responseString;
+        if (responseCode == -15) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategoryClearLogButtonEvent.noCategorySet");
+        } else if (responseCode == 0) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategoryClearLogButtonEvent.successResponse");
+        } else {
+            responseString = String.format(bundle.getString("configureEvents.modmail.category.modmailCategoryClearLogButtonEvent.errorResponse"), responseCode);
+
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(responseString)
+                .queue();
+    }
+
+    private void modmailCategorySetLogButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferEdit().queue();
+
+        EmbedBuilder setLogChannelEmbed = new EmbedBuilder();
+        setLogChannelEmbed.setTitle(bundle.getString("configureEvents.modmail.category.modmailCategorySetLogButtonEvent.setArchiveChannelEmbed.title"));
+        setLogChannelEmbed.setDescription(bundle.getString("configureEvents.modmail.category.modmailCategorySetLogButtonEvent.setArchiveChannelEmbed.description"));
+
+        String userId = event.getUser().getId();
+        EntitySelectMenu.Builder archiveSelect = EntitySelectMenu.create(
+                String.format("modmailCategoryEntitySelectAction_setLog;%s", userId),
+                EntitySelectMenu.SelectTarget.CHANNEL);
+        archiveSelect.setChannelTypes(ChannelType.TEXT);
+
+        Button clearLogChannel = Button.of(
+                ButtonStyle.DANGER,
+                String.format("modmailCategoryButtonEvents_clearLog;%s", userId),
+                bundle.getString("configureEvents.modmail.category.modmailCategorySetLogButtonEvent.buttons.clearArchiveChannel"));
+
+        event.getHook()
+                .editOriginalEmbeds(setLogChannelEmbed.build())
+                .setComponents(
+                        ActionRow.of(archiveSelect.build()),
+                        ActionRow.of(clearLogChannel))
+                .queue();
+
+    }
+
+    private void modmailCategoryClearArchiveButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+
+        long responseCode = controller.setGuildModmailArchiveChannel(guild, null);
+        String responseString;
+        if (responseCode == -15) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategoryClearArchiveButtonEvent.noCategorySet");
+        } else if (responseCode == 0) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategoryClearArchiveButtonEvent.successResponse");
+        } else {
+            responseString = String.format(bundle.getString("configureEvents.modmail.category.modmailCategoryClearArchiveButtonEvent.errorResponse"), responseCode);
+
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(responseString)
+                .queue();
+    }
+
+    private void modmailCategorySetArchiveButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferEdit().queue();
+
+        EmbedBuilder setArchiveChannelEmbed = new EmbedBuilder();
+        setArchiveChannelEmbed.setTitle(bundle.getString("configureEvents.modmail.category.modmailCategorySetArchiveButtonEvent.setArchiveChannelEmbed.title"));
+        setArchiveChannelEmbed.setDescription(bundle.getString("configureEvents.modmail.category.modmailCategorySetArchiveButtonEvent.setArchiveChannelEmbed.description"));
+
+        String userId = event.getUser().getId();
+        EntitySelectMenu.Builder archiveSelect = EntitySelectMenu.create(
+                String.format("modmailCategoryEntitySelectAction_setArchive;%s", userId),
+                EntitySelectMenu.SelectTarget.CHANNEL);
+        archiveSelect.setChannelTypes(ChannelType.TEXT);
+
+        Button clearArchiveChannel = Button.of(
+                ButtonStyle.DANGER,
+                String.format("modmailCategoryButtonEvents_clearArchive;%s", userId),
+                bundle.getString("configureEvents.modmail.category.modmailCategorySetArchiveButtonEvent.buttons.clearArchiveChannel"));
+
+        event.getHook()
+                .editOriginalEmbeds(setArchiveChannelEmbed.build())
+                .setComponents(
+                        ActionRow.of(archiveSelect.build()),
+                        ActionRow.of(clearArchiveChannel))
+                .queue();
+    }
+
+    private void modmailCategoryDisableModmailButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+
+        long responseCode = controller.disableGuildModmail(guild);
+        String responseString;
+        if (responseCode != 0) {
+            responseString = String.format(bundle.getString("configureEvents.modmail.category.modmailCategoryDisableModmailButtonEvent.errorResponse"), responseCode);
+        } else {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategoryDisableModmailButtonEvent.successResponse");
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(responseString)
+                .queue();
+    }
+
+    private void modmailCategorySetCategoryButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
+        event.deferEdit().queue();
+
+        EmbedBuilder setCategoryEmbed = new EmbedBuilder();
+        setCategoryEmbed.setTitle(bundle.getString("configureEvents.modmail.category.modmailCategorySetCategoryButtonEvent.setCategoryEmbed.title"));
+        setCategoryEmbed.setDescription(bundle.getString("configureEvents.modmail.category.modmailCategorySetCategoryButtonEvent.setCategoryEmbed.description"));
+
+        String userId = event.getUser().getId();
+
+        EntitySelectMenu.Builder categorySelect = EntitySelectMenu.create(
+                String.format("modmailCategoryEntitySelectAction_setCategory;%s", userId),
+                EntitySelectMenu.SelectTarget.CHANNEL
+        );
+        categorySelect.setChannelTypes(ChannelType.CATEGORY);
+
+        Button disableModmail = Button.of(
+                ButtonStyle.DANGER,
+                String.format("modmailCategoryButtonEvents_disableModmail;%s", userId),
+                bundle.getString("configureEvents.modmail.category.modmailCategorySetCategoryButtonEvent.buttons.disableModmail"));
+
+        event.getHook()
+                .editOriginalEmbeds(setCategoryEmbed.build())
+                .setComponents(
+                        ActionRow.of(categorySelect.build()),
+                        ActionRow.of(disableModmail))
+                .queue();
+    }
+
+    @JDAEntityMenu(startWith = "modmailCategoryEntitySelectAction_")
+    public void modmailCategoryEntitySelectAction(@NotNull EntitySelectInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getComponentId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "modmailCategoryEntitySelectAction_setCategory" ->
+                    modmailCategorySetCategoryEntitySelectEvent(event, bundle, guild);
+            case "modmailCategoryEntitySelectAction_setArchive" ->
+                    modmailCategorySetArchiveEntitySelectEvent(event, bundle, guild);
+            case "modmailCategoryEntitySelectAction_setLog" ->
+                    modmailCategorySetLogEntitySelectEvent(event, bundle, guild);
+        }
+    }
+
+    private void modmailCategorySetLogEntitySelectEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+
+        TextChannel textChannel = (TextChannel) event.getMentions().getChannels().get(0);
+        if (textChannel == null) return;
+
+        long responseCode = controller.setGuildModmailLogChannel(guild, textChannel);
+        String responseString;
+
+        if (responseCode == -15) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetLogEntitySelectEvent.noCategorySet");
+        } else if (responseCode == 0) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetLogEntitySelectEvent.successResponse");
+        } else {
+            responseString = String.format(bundle.getString("configureEvents.modmail.category.modmailCategorySetLogEntitySelectEvent.errorResponse"), responseCode);
+
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(responseString)
+                .queue();
+    }
+
+    private void modmailCategorySetArchiveEntitySelectEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+
+        TextChannel textChannel = (TextChannel) event.getMentions().getChannels().get(0);
+        if (textChannel == null) return;
+
+        long responseCode = controller.setGuildModmailArchiveChannel(guild, textChannel);
+        String responseString;
+
+        if (responseCode == -15) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetArchiveEntitySelectEvent.noCategorySet");
+        } else if (responseCode == 0) {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetArchiveEntitySelectEvent.successResponse");
+        } else {
+            responseString = String.format(bundle.getString("configureEvents.modmail.category.modmailCategorySetArchiveEntitySelectEvent.errorResponse"), responseCode);
+
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(responseString)
+                .queue();
+    }
+
+    private void modmailCategorySetCategoryEntitySelectEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild) {
+        event.deferEdit().queue();
+
+        Category category = (Category) event.getMentions().getChannels().get(0);
+        if (category == null) return;
+
+        long responseCode = controller.setGuildModmailCategory(guild, category);
+        String responseString;
+
+        if (responseCode != 0) {
+            responseString = String.format(bundle.getString("configureEvents.modmail.category.modmailCategorySetCategoryEntitySelectEvent.errorResponse"), responseCode);
+        } else {
+            responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetCategoryEntitySelectEvent.successResponse");
+        }
+
+        event.getHook().editOriginalEmbeds()
+                .setComponents()
+                .setContent(responseString)
+                .queue();
     }
 
     private void regexManageConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
@@ -233,8 +607,9 @@ public class ConfigureSlashCommandEvents {
             if (regexEntries.keySet().size() > 25) {
                 event.getHook()
                         .editOriginalEmbeds(removeOverviewEmbed.build())
-                        .setActionRow(removeRegexMenu.build())
-                        .setActionRow(nextRegexManageButton)
+                        .setComponents(
+                                ActionRow.of(removeRegexMenu.build()),
+                                ActionRow.of(nextRegexManageButton))
                         .queue();
             } else {
                 event.getHook()
@@ -439,8 +814,10 @@ public class ConfigureSlashCommandEvents {
         if (entries.keySet().size() > 25) {
             event.getHook()
                     .editOriginalEmbeds(editOverviewEmbed.build())
-                    .setActionRow(editRegexMenu.build())
-                    .setActionRow(nextRegexManageButton)
+                    .setComponents(
+                            ActionRow.of(editRegexMenu.build()),
+                            ActionRow.of(nextRegexManageButton)
+                    )
                     .queue();
         } else {
             event.getHook()

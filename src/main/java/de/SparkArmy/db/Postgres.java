@@ -1549,6 +1549,234 @@ public class Postgres {
         return checkResultSetForARow(prepStmt);
     }
 
+    public long addUserToModmailBlacklistTable(long userId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO guidconfigs."tblModmailBlacklist" ("fk_mblUserId", "fk_mblGuildId") VALUES (?,?);
+                    """);
+            prepStmt.setLong(1, userId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long removeUserFromModmailBlacklistTable(long userId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblModmailBlacklist" WHERE "fk_mblUserId" = ? AND "fk_mblGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, userId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public List<Long> getBlacklistedModmailUsersFromModmailBlacklistTable(long guildId) {
+        List<Long> result = new ArrayList<>();
+        if (isPostgresDisabled) return result;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblModmailBlacklist" WHERE "fk_mblGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            ResultSet rs = prepStmt.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getLong(1));
+            }
+            conn.close();
+            return result;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return result;
+        }
+    }
+
+    public long isGuildUserInModmailBlacklistTable(long userId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT COUNT(*) FROM guidconfigs."tblModmailBlacklist" WHERE "fk_mblGuildId" = ? AND "fk_mblUserId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            prepStmt.setLong(2, userId);
+            ResultSet rs = prepStmt.executeQuery();
+            checkResultSetForARow(rs);
+            long result = rs.getLong(1);
+            conn.close();
+            return result;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long writeCategoryIdInModmailChannelTable(long categoryId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt;
+            if (isGuildIdInModmailChannelTable(conn, guildId)) {
+                prepStmt = conn.prepareStatement("""
+                        UPDATE guidconfigs."tblModmailChannel" SET "mdcCategoryId" = ? WHERE "fk_mdcGuildId" = ?;
+                         """);
+            } else {
+                prepStmt = conn.prepareStatement("""
+                        INSERT INTO guidconfigs."tblModmailChannel" ("mdcCategoryId","fk_mdcGuildId") VALUES (?,?);
+                        """);
+            }
+
+            prepStmt.setLong(1, categoryId);
+            prepStmt.setLong(2, guildId);
+
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long removeDataFromModmailChannelTable(long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            if (!isGuildIdInModmailChannelTable(conn, guildId)) return 0;
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblModmailChannel" WHERE "fk_mdcGuildId" = ?;
+                     """);
+            prepStmt.setLong(1, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long setArchiveChannelInModmailChannelTable(long guildId, Long channelId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            if (!isGuildIdInModmailChannelTable(conn, guildId)) return -15;
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE guidconfigs."tblModmailChannel" SET "mdcArchiveChannelId" = ? WHERE "fk_mdcGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, channelId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long setLogChannelInModmailChannelTable(long guildId, Long channelId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            if (!isGuildIdInModmailChannelTable(conn, guildId)) return -15;
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    UPDATE guidconfigs."tblModmailChannel" SET "mdcLogChannelId" = ? WHERE "fk_mdcGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, channelId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    private boolean isGuildIdInModmailChannelTable(@NotNull Connection conn, long guildId) throws SQLException {
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guidconfigs."tblModmailChannel" WHERE "fk_mdcGuildId" = ?;
+                """);
+        prepStmt.setLong(1, guildId);
+        return checkResultSetForARow(prepStmt);
+    }
+
+
+    public long isRoleInModmailPingRoleTable(long roleId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT COUNT(*) FROM guidconfigs."tblModmailPingRole" WHERE "fk_mprGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, roleId);
+            ResultSet rs = prepStmt.executeQuery();
+            checkResultSetForARow(rs);
+            long result = rs.getLong(1);
+            conn.close();
+            return result;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long addRoleToModmailPingRoleTable(long roleId, long guildId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    INSERT INTO guidconfigs."tblModmailPingRole" ("mprRoleId", "fk_mprGuildId") VALUES (?,?);
+                    """);
+            prepStmt.setLong(1, roleId);
+            prepStmt.setLong(2, guildId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public long removeRoleFromModmailPingRoleTable(long roleId) {
+        if (isPostgresDisabled) return -1;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    DELETE FROM guidconfigs."tblModmailPingRole" WHERE "mprRoleId" = ?;
+                     """);
+            prepStmt.setLong(1, roleId);
+            return getUpdatedRows(prepStmt, conn);
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return -3;
+        }
+    }
+
+    public List<Long> getRoleIdsFromModmailPingRoleTable(long guildId) {
+        List<Long> result = new ArrayList<>();
+        if (isPostgresDisabled) return result;
+        try {
+            Connection conn = connection();
+            PreparedStatement prepStmt = conn.prepareStatement("""
+                    SELECT * FROM guidconfigs."tblModmailPingRole" WHERE "fk_mprGuildId" = ?;
+                    """);
+            prepStmt.setLong(1, guildId);
+            ResultSet rs = prepStmt.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getLong(1));
+            }
+            conn.close();
+            return result;
+        } catch (SQLException e) {
+            Util.handleSQLExceptions(e);
+            return result;
+        }
+    }
+
     private synchronized int getUpdatedRows(@NotNull PreparedStatement prepStmt, @NotNull Connection conn) throws SQLException {
         int updatedRows = prepStmt.executeUpdate();
         conn.close();

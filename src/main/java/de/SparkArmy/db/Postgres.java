@@ -49,36 +49,43 @@ public class Postgres {
     }
 
     private boolean isGuildIdInDatabase(@NotNull Connection conn, long guildId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("SELECT COUNT(*) FROM guilddata.\"tblGuild\" WHERE \"gldId\" = ?;");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM "SparkArmyBotdata".guilddata."tblGuild" WHERE "gldId" = ?;
+                """);
         prepStmt.setLong(1, guildId);
         return checkResultSetForARow(prepStmt);
     }
 
     private void putGuildIdInGuildTable(@NotNull Connection conn, long guildId) throws SQLException {
         if (isGuildIdInDatabase(conn, guildId)) return;
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblGuild\" (\"gldId\")VALUES (?);");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                INSERT INTO guilddata."tblGuild" ("gldId") VALUES (?);
+                """);
         prepStmt.setLong(1, guildId);
         prepStmt.execute();
     }
 
     private boolean isUserIdInDatabase(@NotNull Connection conn, long userId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("SELECT COUNT(*) FROM guilddata.\"tblUser\" WHERE \"usrId\" = ?;");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guilddata."tblUser" WHERE "usrId" = ?;
+                """);
         prepStmt.setLong(1, userId);
         return checkResultSetForARow(prepStmt);
     }
 
     private void putUserIdInUserTable(@NotNull Connection conn, long userId) throws SQLException {
         if (isUserIdInDatabase(conn, userId)) return;
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblUser\" (\"usrId\")VALUES (?);");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                INSERT INTO guilddata."tblUser" ("usrId")VALUES (?);
+                """);
         prepStmt.setLong(1, userId);
         prepStmt.execute();
     }
 
     private boolean isMemberInMemberTable(@NotNull Connection conn, long userId, long guildId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM guilddata.\"tblMember\" WHERE \"fk_mbrUserId\" = ? AND \"fk_mbrGuildId\" = ?;");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guilddata."tblMember" WHERE "fk_mbrUserId" = ? AND "fk_mbrGuildId" = ?;
+                """);
         prepStmt.setLong(1, userId);
         prepStmt.setLong(2, guildId);
         return checkResultSetForARow(prepStmt);
@@ -90,8 +97,9 @@ public class Postgres {
         putUserIdInUserTable(conn, userId);
         putGuildIdInGuildTable(conn, guildId);
 
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblMember\" (\"fk_mbrUserId\",\"fk_mbrGuildId\") VALUES (?,?);");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                INSERT INTO guilddata."tblMember" ("fk_mbrUserId","fk_mbrGuildId") VALUES (?,?);
+                """);
         prepStmt.setLong(1, userId);
         prepStmt.setLong(2, guildId);
         prepStmt.execute();
@@ -99,40 +107,39 @@ public class Postgres {
 
     private long getMemberIdFromMemberTable(@NotNull Connection conn, long userId, long guildId) throws SQLException {
         putMemberInMemberTable(conn, userId, guildId);
-        ResultSet rs;
-        try (PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT \"mbrId\" FROM guilddata.\"tblMember\" WHERE \"fk_mbrUserId\" = ? AND \"fk_mbrGuildId\" = ?;")) {
-            prepStmt.setLong(1, userId);
-            prepStmt.setLong(2, guildId);
-            rs = prepStmt.executeQuery();
-            if (!rs.next()) return -1;
-            return rs.getLong(1);
-        }
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT "mbrId" FROM guilddata."tblMember" WHERE "fk_mbrUserId" = ? AND "fk_mbrGuildId" = ?;
+                """);
+        prepStmt.setLong(1, userId);
+        prepStmt.setLong(2, guildId);
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) return -1;
+        return rs.getLong(1);
     }
 
     private long getUserIdFromMemberTableByMemberId(@NotNull Connection conn, long mbrId) throws SQLException {
-        ResultSet rs;
-        try (PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT \"fk_mbrUserId\" FROM guilddata.\"tblMember\" WHERE \"mbrId\" = ?;")) {
-            prepStmt.setLong(1, mbrId);
-            rs = prepStmt.executeQuery();
-            if (!rs.next()) return -1;
-            return rs.getLong(1);
-        }
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT "fk_mbrUserId" FROM guilddata."tblMember" WHERE "mbrId" = ?;
+                """);
+        prepStmt.setLong(1, mbrId);
+        ResultSet rs = prepStmt.executeQuery();
+        if (!rs.next()) return -1;
+        return rs.getLong(1);
     }
 
-
     private boolean isModeratorInModeratorTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM guilddata.\"tblModerator\" WHERE \"fk_modMemberId\" = ?;");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM guilddata."tblModerator" WHERE "fk_modMemberId" = ?;
+                """);
         prepStmt.setLong(1, databaseMemberId);
         return checkResultSetForARow(prepStmt);
     }
 
     private long getModeratorIdFromModeratorTable(@NotNull Connection conn, long databaseMemberId) throws SQLException {
         putDataInModeratorTable(conn, databaseMemberId);
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT \"modId\" FROM guilddata.\"tblModerator\" WHERE \"fk_modMemberId\" = ?;");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT "modId" FROM guilddata."tblModerator" WHERE "fk_modMemberId" = ?;
+                """);
         prepStmt.setLong(1, databaseMemberId);
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) return -1;
@@ -141,7 +148,8 @@ public class Postgres {
 
     private long getMemberIdFromModeratorId(@NotNull Connection conn, long databaseModeratorId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT "fk_mbrUserId" FROM guilddata."tblMember" WHERE "mbrId" = (SELECT "fk_modMemberId" FROM guilddata."tblModerator" WHERE "modId" = ?);""");
+                SELECT "fk_mbrUserId" FROM guilddata."tblMember" WHERE "mbrId" = (SELECT "fk_modMemberId" FROM guilddata."tblModerator" WHERE "modId" = ?);
+                """);
         prepStmt.setLong(1, databaseModeratorId);
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) return -1;
@@ -150,15 +158,17 @@ public class Postgres {
 
     private void putDataInModeratorTable(Connection conn, long databaseMemberId) throws SQLException {
         if (isModeratorInModeratorTable(conn, databaseMemberId)) return;
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "INSERT INTO guilddata.\"tblModerator\" (\"fk_modMemberId\")VALUES (?);");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                INSERT INTO guilddata."tblModerator" ("fk_modMemberId") VALUES (?);
+                """);
         prepStmt.setLong(1, databaseMemberId);
         prepStmt.execute();
     }
 
     private long getPunishmentCountFromGuild(@NotNull Connection conn, long guildId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement(
-                "SELECT COUNT(*) FROM guilddata.\"tblPunishment\" WHERE \"fk_psmGuildId\" = ?;");
+        PreparedStatement prepStmt = conn.prepareStatement("""
+                SELECT COUNT(*) FROM botfunctiondata."tblPunishment" WHERE "fk_psmGuildId" = ?;
+                """);
         prepStmt.setLong(1, guildId);
         ResultSet rs = prepStmt.executeQuery();
         checkResultSetForARow(rs);
@@ -172,7 +182,7 @@ public class Postgres {
 
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT COUNT(*) FROM guilddata."tblPunishment" WHERE "fk_psmGuildId" = ?;
+                    SELECT COUNT(*) FROM botfunctiondata."tblPunishment" WHERE "fk_psmGuildId" = ?;
                     """);
             prepStmt.setLong(1, guildId);
             ResultSet rs = prepStmt.executeQuery();
@@ -208,7 +218,7 @@ public class Postgres {
 
             PreparedStatement prepStmt = conn.prepareStatement(
                     """
-                                INSERT INTO guilddata."tblPunishment" ("fk_psmMemberId","fk_psmModeratorId",
+                                INSERT INTO botfunctiondata."tblPunishment" ("fk_psmMemberId","fk_psmModeratorId",
                                 "fk_psmPunishmentTypeId","psmReason","psmTimestamp","psmGuildCount","fk_psmGuildId")
                                 VALUES (?,?,?,?,now(),?,?);
                             """);
@@ -237,7 +247,7 @@ public class Postgres {
             long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, moderatorId, guildId));
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    INSERT INTO guilddata."tblNote" ("fk_notMemberId", "notContent", "fk_notModeratorId","notTimestamp") VALUES (?,?,?,now());
+                    INSERT INTO botfunctiondata."tblNote" ("fk_notMemberId", "notContent", "fk_notModeratorId","notTimestamp") VALUES (?,?,?,now());
                     """);
             prepStmt.setLong(1, databaseMemberId);
             prepStmt.setLong(3, databaseModeratorId);
@@ -260,7 +270,7 @@ public class Postgres {
             long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, modId, guildId));
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    UPDATE guilddata."tblNote" SET "notContent" = ? WHERE "fk_notMemberId" = ? AND "fk_notModeratorId" = ? AND "notTimestamp" = ?;
+                    UPDATE botfunctiondata."tblNote" SET "notContent" = ? WHERE "fk_notMemberId" = ? AND "fk_notModeratorId" = ? AND "notTimestamp" = ?;
                     """);
             prepStmt.setString(1, note);
             prepStmt.setLong(2, databaseMemberId);
@@ -283,7 +293,7 @@ public class Postgres {
             long databaseModeratorId = getModeratorIdFromModeratorTable(conn, getMemberIdFromMemberTable(conn, modId, guildId));
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    DELETE FROM guilddata."tblNote" WHERE "notTimestamp" = ? AND "fk_notModeratorId" = ? AND  "fk_notMemberId" = ?;
+                    DELETE FROM botfunctiondata."tblNote" WHERE "notTimestamp" = ? AND "fk_notModeratorId" = ? AND  "fk_notMemberId" = ?;
                     """);
             prepStmt.setTimestamp(1, timestamp);
             prepStmt.setLong(2, databaseModeratorId);
@@ -304,8 +314,8 @@ public class Postgres {
             long databaseMemberId = getMemberIdFromMemberTable(conn, targetId, guildId);
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT * FROM guilddata."tblNote" WHERE "fk_notMemberId" = ? ORDER BY "notTimestamp";
-                                        """);
+                    SELECT * FROM botfunctiondata."tblNote" WHERE "fk_notMemberId" = ? ORDER BY "notTimestamp";
+                    """);
 
             prepStmt.setLong(1, databaseMemberId);
 
@@ -333,7 +343,7 @@ public class Postgres {
     private long getServiceIdByNotificationService(@NotNull Connection conn, @NotNull NotificationService service) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 SELECT "srvId" FROM notification."tblService" WHERE "srvName" = ?;
-                   """);
+                """);
         prepStmt.setString(1, service.getServiceName());
         ResultSet rs = prepStmt.executeQuery();
         checkResultSetForARow(rs);
@@ -529,7 +539,7 @@ public class Postgres {
         try {
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                                SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
+                    SELECT COUNT(*) FROM notification."tblReceivedVideos" WHERE "rcvId" = ?;
                     """);
             prepStmt.setString(1, videoId);
             boolean checkResult = checkResultSetForARow(prepStmt);
@@ -598,32 +608,28 @@ public class Postgres {
         }
     }
 
-    public JSONArray getMessageAttachmentsByMessageIDs(List<Long> messageIds) {
-        if (isPostgresDisabled) return new JSONArray();
+    public List<Long> getMessageAttachmentsIdsByMessageIDs(List<Long> messageIds) {
+        if (isPostgresDisabled) return new ArrayList<>();
         try {
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
                     SELECT * FROM guilddata."tblMessageAttachment" WHERE "fk_msaMessageId" = ?;
                     """);
 
-            JSONArray results = new JSONArray();
+            List<Long> results = new ArrayList<>();
 
             for (Long msgId : messageIds) {
                 prepStmt.setLong(1, msgId);
                 ResultSet rs = prepStmt.executeQuery();
                 while (rs.next()) {
-                    JSONObject entry = new JSONObject();
-                    entry.put("msaId", rs.getLong(1));
-                    entry.put("fk_msaMessageId", rs.getLong(2));
-                    entry.put("msaAttachment", rs.getByte(3));
-                    results.put(entry);
+                    results.add(rs.getLong(1));
                 }
             }
             conn.close();
             return results;
         } catch (SQLException e) {
             Util.handleSQLExceptions(e);
-            return new JSONArray();
+            return new ArrayList<>();
         }
     }
 
@@ -763,7 +769,7 @@ public class Postgres {
             if (isChannelInPeriodicCleanTable(conn, channel.getIdLong())) return;
 
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    INSERT INTO guilddata."tblPeriodicCleanData" ("fk_pcdGuildId", "pcdChannelId", "pcdNextExecution", "pcdActive","fk_pcdMemberId","pcdDays")
+                    INSERT INTO botfunctiondata."tblPeriodicCleanData" ("fk_pcdGuildId", "pcdChannelId", "pcdNextExecution", "pcdActive","fk_pcdMemberId","pcdDays")
                     VALUES (?,?,?,?,?,?);
                     """);
 
@@ -786,7 +792,7 @@ public class Postgres {
 
     private boolean isChannelInPeriodicCleanTable(@NotNull Connection conn, long channelId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT COUNT(*) FROM guilddata."tblPeriodicCleanData" WHERE "pcdChannelId" = ?;
+                SELECT COUNT(*) FROM botfunctiondata."tblPeriodicCleanData" WHERE "pcdChannelId" = ?;
                 """);
         prepStmt.setLong(1, channelId);
 
@@ -798,7 +804,7 @@ public class Postgres {
         try {
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    UPDATE guilddata."tblPeriodicCleanData" SET "pcdActive" = ?,"pcdNextExecution" = ?, "pcdDays" = ? WHERE "pcdChannelId" = ?;
+                    UPDATE botfunctiondata."tblPeriodicCleanData" SET "pcdActive" = ?,"pcdNextExecution" = ?, "pcdDays" = ? WHERE "pcdChannelId" = ?;
                     """);
             prepStmt.setBoolean(1, status);
             prepStmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now().plusDays(days)));
@@ -816,7 +822,7 @@ public class Postgres {
         try {
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT * FROM guilddata."tblPeriodicCleanData" WHERE "fk_pcdGuildId" = ? ORDER BY "pcdId";
+                    SELECT * FROM botfunctiondata."tblPeriodicCleanData" WHERE "fk_pcdGuildId" = ? ORDER BY "pcdId";
                     """);
             prepStmt.setLong(1, guildId);
             ResultSet rs = prepStmt.executeQuery();
@@ -844,7 +850,7 @@ public class Postgres {
         try {
             Connection conn = connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    DELETE FROM guilddata."tblPeriodicCleanData" WHERE "pcdId" = ?;
+                    DELETE FROM botfunctiondata."tblPeriodicCleanData" WHERE "pcdId" = ?;
                     """);
             prepStmt.setLong(1, pcdId);
             prepStmt.execute();

@@ -2,10 +2,8 @@ package de.SparkArmy.tasks.runnables;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.Postgres;
-import org.json.JSONObject;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class DeleteOldMessageAttachments implements Runnable {
@@ -19,12 +17,8 @@ public class DeleteOldMessageAttachments implements Runnable {
     @Override
     public void run() {
         Postgres db = controller.getMain().getPostgres();
-        List<Long> msaIds = new ArrayList<>();
+        List<Long> msaIds = db.getMessageAttachmentsIdsByMessageIDs(db.getMessageDataBeforeTimestamp(LocalDateTime.now().minusDays(21)));
 
-        for (Object o : db.getMessageAttachmentsByMessageIDs(db.getMessageDataBeforeTimestamp(LocalDateTime.now().minusDays(21)))) {
-            JSONObject jsonObject = (JSONObject) o;
-            msaIds.add(jsonObject.getLong("msaId"));
-        }
         db.deleteMessageAttachments(msaIds);
     }
 }

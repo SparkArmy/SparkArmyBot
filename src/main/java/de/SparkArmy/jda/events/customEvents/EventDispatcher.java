@@ -86,7 +86,7 @@ public class EventDispatcher {
         }
     }
 
-    private void interactionEvents(GenericInteractionCreateEvent event) {
+    private synchronized void interactionEvents(GenericInteractionCreateEvent event) {
         for (Object o : events) {
             for (Method m : o.getClass().getMethods()) {
                 try {
@@ -167,7 +167,7 @@ public class EventDispatcher {
         }
     }
 
-    private void messageEvents(GenericMessageEvent event) {
+    private synchronized void messageEvents(GenericMessageEvent event) {
         for (Object o : events) {
             for (Method m : o.getClass().getMethods()) {
                 try {
@@ -220,7 +220,7 @@ public class EventDispatcher {
         }
     }
 
-    private void otherEvents(Event event) {
+    private synchronized void otherEvents(Event event) {
         for (Object o : events) {
             for (Method m : o.getClass().getMethods()) {
                 try {
@@ -249,6 +249,8 @@ public class EventDispatcher {
         registerEvent(new NotificationSlashCommandEvents(this));
         registerEvent(new CleanSlashCommandEvents(this));
         registerEvent(new MessageEvents(this));
+        registerEvent(new ConfigureSlashCommandEvents(this));
+        registerEvent(new FeedbackSlashCommandEvents(this));
     }
 
     private void registerEvent(Object o) {

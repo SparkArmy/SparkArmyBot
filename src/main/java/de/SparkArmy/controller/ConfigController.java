@@ -1,20 +1,23 @@
 package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
-import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.jda.utils.LogChannelType;
+import de.SparkArmy.jda.utils.MediaOnlyPermissions;
+import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.entities.Guild;
-import org.jetbrains.annotations.Contract;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.awt.*;
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 
 public class ConfigController {
@@ -25,6 +28,7 @@ public class ConfigController {
     public Main getMain() {
         return this.main;
     }
+
 
     public ConfigController(@NotNull Main main) {
         this.main = main;
@@ -77,7 +81,7 @@ public class ConfigController {
 
             this.main.systemExit(0);
         }
-        String mainConfigAsString = FileHandler.getFileContent(this.configFolder,"main-config.json");
+        String mainConfigAsString = FileHandler.getFileContent(this.configFolder, "main-config.json");
         if (mainConfigAsString == null) {
             this.logger.error("The main-config.json is null");
             this.main.systemExit(12);
@@ -86,83 +90,176 @@ public class ConfigController {
         return new JSONObject(mainConfigAsString);
     }
 
-    private @Unmodifiable Collection<File> getGuildConfigs(@NotNull Guild guild){
-        File directory = FileHandler.getDirectoryInUserDirectory("configs/" + guild.getId());
-        if (0 == Objects.requireNonNull(directory.listFiles()).length){
-            FileHandler.createFile(directory,"config.json");
-            FileHandler.createFile(directory,"rules.json");
-            FileHandler.createFile(directory, "highlighted-keywords.json");
-
-            FileHandler.writeValuesInFile(directory, "config.json", this.guildConfigBlank());
-            FileHandler.writeValuesInFile(directory, "rules.json", new JSONObject());
-            FileHandler.writeValuesInFile(directory, "highlighted-keywords.json", new JSONObject());
-        }
-
-        return List.of(Objects.requireNonNull(directory.listFiles()));
+    public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild, String url) {
+        return main.getPostgres().writeInLogchannelTable(guild.getIdLong(), logChannelType.getId(), channel.getIdLong(), url);
     }
 
-    public JSONObject getSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type) {
-        if (this.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server").equals(guild.getId()))
-            return null;
-        return new JSONObject(Objects.requireNonNull(FileHandler.getFileContent(this.getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0).getAbsolutePath())));
+    public long getGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Guild guild) {
+        return main.getPostgres().getChannelIdFromLogchannelTable(logChannelType.getId(), guild.getIdLong());
     }
 
-    public JSONObject getGuildMainConfig(Guild guild) {
-        return this.getSpecificGuildConfig(guild, GuildConfigType.MAIN);
+    public String getGuildLoggingChannelUrl(@NotNull LogChannelType logChannelType, @NotNull Guild guild) {
+        return main.getPostgres().getUrlByLogchannelTypeAndGuildIdFromLogchannelTable(logChannelType.getId(), guild.getIdLong());
     }
 
-    public void writeInGuildMainConfig(Guild guild, JSONObject value) {
-        writeInSpecificGuildConfig(guild, GuildConfigType.MAIN, value);
+    public List<String> getLoggingChannelWebhookUrls() {
+        return main.getPostgres().getUrlsFromLogchannelTable();
     }
 
-    public void writeInSpecificGuildConfig(@NotNull Guild guild, GuildConfigType type, JSONObject value) {
-        if (this.getMainConfigFile().getJSONObject("otherKeys").getString("storage-server").equals(guild.getId()))
-            return;
-        File configFile = getGuildConfigs(guild).stream().filter(f -> f.getName().equals(type.getName())).toList().get(0);
-
-        FileHandler.writeValuesInFile(configFile.getAbsolutePath(), value);
+    public long setGuildArchiveCategory(@NotNull GuildChannel category, @NotNull Guild guild) {
+        return main.getPostgres().writeInArchiveCategoryTable(category.getIdLong(), guild.getIdLong());
     }
 
-    public void createLogChannelConfig(Guild guild) {
-        JSONObject logConfig = new JSONObject();
-        LogChannelType.getLogChannelTypes().stream()
-                .filter(x -> !x.equals(LogChannelType.UNKNOW))
-                .forEach(type -> logConfig.put(type.getName(), new JSONObject() {{
-                    put("channelId", "");
-                    put("webhookUrl", "");
-                }}));
-        logConfig.put("category", "");
-        JSONObject guildMainConfig = getGuildMainConfig(guild);
-        guildMainConfig.put("log-channel", logConfig);
-        writeInGuildMainConfig(guild, guildMainConfig);
+    public long getGuildArchiveCategory(@NotNull Guild guild) {
+        return main.getPostgres().getCategoryIdFromArchiveCategoryTable(guild.getIdLong());
     }
 
-    @Contract(" -> new")
-    private @NotNull JSONObject guildConfigBlank() {
-        return new JSONObject();
+    public long clearGuildArchiveCategory(@NotNull Guild guild) {
+        return main.getPostgres().clearGuildArchiveFromArchiveCategoryTable(guild.getIdLong());
     }
 
+    public long addOrEditGuildMediaOnlyChannel(long channelId, @NotNull Guild guild, @NotNull List<MediaOnlyPermissions> permissions) {
+        long guildId = guild.getIdLong();
+        boolean textPerms = permissions.contains(MediaOnlyPermissions.TEXT);
+        boolean attachmentsPerms = permissions.contains(MediaOnlyPermissions.ATTACHMENT);
+        boolean filePerms = permissions.contains(MediaOnlyPermissions.FILES);
+        boolean linkPerms = permissions.contains(MediaOnlyPermissions.LINKS);
+        return main.getPostgres().writeInMediaOnlyChannelTable(channelId, guildId, textPerms, attachmentsPerms, filePerms, linkPerms);
+    }
 
-    private enum GuildConfigType {
-        MAIN("config.json", "The main guild config"),
-        KEYWORDS("highlighted-keywords.json", "Keywords from guild"),
-        RULES("rules.json", "Rules from guild");
+    public JSONObject getGuildMediaOnlyChannels(@NotNull Guild guild) {
+        return main.getPostgres().getChannelIdsFromMediaOnlyChannelTable(guild.getIdLong());
+    }
 
+    public JSONObject getGuildMediaOnlyChannelPermissions(long channelId) {
+        return main.getPostgres().getChannelPermissionsByChannelIdFromMediaOnlyChannelTable(channelId);
+    }
 
-        private final String name;
-        private final String description;
+    public long removeGuildMediaOnlyChannel(long channelId) {
+        return main.getPostgres().removeChannelFromMediaOnlyChannelTable(channelId);
+    }
 
-        GuildConfigType(String name, String description) {
-            this.name = name;
-            this.description = description;
-        }
+    public long addGuildModerationRole(@NotNull Role role, @NotNull Guild guild) {
+        return main.getPostgres().addModRoleToModRolesTable(role.getIdLong(), guild.getIdLong());
+    }
 
-        public String getName() {
-            return name;
-        }
+    public long removeGuildModerationRole(@NotNull Role role) {
+        return main.getPostgres().deleteModRoleFromModRolesTable(role.getIdLong());
+    }
 
-        public String getDescription() {
-            return description;
-        }
+    public List<Long> getGuildModerationRoles(@NotNull Guild guild) {
+        return main.getPostgres().getModRoleIdsByGuildFromModRolesTable(guild.getIdLong());
+    }
+
+    public long setGuildWarnRole(@NotNull Role warnRole, @NotNull Guild guild) {
+        return main.getPostgres().addOrEditRoleIdInGuildWarnRoleTable(warnRole.getIdLong(), guild.getIdLong());
+    }
+
+    public long getGuildWarnRole(@NotNull Guild guild) {
+        return main.getPostgres().getWarnRoleIdByGuildFromMuteRoleTable(guild.getIdLong());
+    }
+
+    public long setGuildMuteRole(@NotNull Role muteRole, @NotNull Guild guild) {
+        return main.getPostgres().addOrEditRoleIdInGuildMuteRoleTable(muteRole.getIdLong(), guild.getIdLong());
+    }
+
+    public long getGuildMuteRole(@NotNull Guild guild) {
+        return main.getPostgres().getMuteRoleIdByGuildFromMuteRoleTable(guild.getIdLong());
+    }
+
+    public long addPhraseToGuildTextBlacklist(String phrase, @NotNull Guild guild) {
+        return main.getPostgres().addPhraseToBlacklistTable(phrase, guild.getIdLong());
+    }
+
+    public JSONObject getGuildBlacklistPhrases(@NotNull Guild guild) {
+        return main.getPostgres().getPhrasesByGuildIdFromBlacklistTable(guild.getIdLong());
+    }
+
+    public String getSpecificBlacklistPhrase(long id) {
+        return main.getPostgres().getSpecificBlacklistPhraseByIdFromBlacklistTable(id);
+    }
+
+    public long updatePhraseFromGuildTextBlacklist(String phrase, long databaseId) {
+        return main.getPostgres().updatePhraseInBlacklistTable(phrase, databaseId);
+    }
+
+    public long deletePhraseFromGuildTextBlacklist(long id) {
+        return main.getPostgres().removePhraseFromBlacklistTable(id);
+    }
+
+    public long addOrEditRegexToGuildRegexTable(String phrase, String name, @NotNull Guild guild, long id) {
+        return main.getPostgres().addOrEditRegexToRegexTable(guild.getIdLong(), phrase, name, id);
+    }
+
+    public JSONObject getGuildRegexEntries(@NotNull Guild guild) {
+        return main.getPostgres().getRegexEntriesByGuildIdFromRegexTable(guild.getIdLong());
+    }
+
+    public JSONObject getRegexEntryById(String id) {
+        return main.getPostgres().getRegexEntryByDatabaseIdFromRegexTable(Long.parseLong(id));
+    }
+
+    public long removeGuildRegexEntry(long id) {
+        return main.getPostgres().removeRegexEntryByDatabaseIdFromRegexTable(id);
+    }
+
+    public long setGuildFeedbackChannel(@NotNull Channel channel, @NotNull Guild guild) {
+        return main.getPostgres().writeInFeedbackChannelTable(channel.getIdLong(), guild.getIdLong());
+    }
+
+    public long removeGuildFeedbackChannel(@NotNull Guild guild) {
+        return main.getPostgres().removeFromFeedbackChannelTable(guild.getIdLong());
+    }
+
+    public long getGuildFeedbackChannel(@NotNull Guild guild) {
+        return main.getPostgres().getFeedbackChannelByGuildIdFromFeedbackChannelTable(guild.getIdLong());
+    }
+
+    public List<Long> getGuildModmailBlacklistedUsers(@NotNull Guild guild) {
+        return main.getPostgres().getBlacklistedModmailUsersFromModmailBlacklistTable(guild.getIdLong());
+    }
+
+    public long isUserOnGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return main.getPostgres().isGuildUserInModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+    }
+
+    public long removeUserFromGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return main.getPostgres().removeUserFromModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+    }
+
+    public long addUserToGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return main.getPostgres().addUserToModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+    }
+
+    public long setGuildModmailCategory(@NotNull Guild guild, @NotNull Category category) {
+        return main.getPostgres().writeCategoryIdInModmailChannelTable(category.getIdLong(), guild.getIdLong());
+    }
+
+    public long disableGuildModmail(@NotNull Guild guild) {
+        return main.getPostgres().removeDataFromModmailChannelTable(guild.getIdLong());
+    }
+
+    public long setGuildModmailArchiveChannel(@NotNull Guild guild, TextChannel channel) {
+        return main.getPostgres().setArchiveChannelInModmailChannelTable(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+    }
+
+    public long setGuildModmailLogChannel(@NotNull Guild guild, TextChannel channel) {
+        return main.getPostgres().setLogChannelInModmailChannelTable(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+    }
+
+    public long isRoleGuildModmailPingRole(@NotNull Role role) {
+        return main.getPostgres().isRoleInModmailPingRoleTable(role.getIdLong());
+    }
+
+    public long addGuildModmailPingRole(@NotNull Role role, @NotNull Guild guild) {
+        return main.getPostgres().addRoleToModmailPingRoleTable(role.getIdLong(), guild.getIdLong());
+    }
+
+    public long removeGuildModmailPingRole(@NotNull Role role) {
+        return main.getPostgres().removeRoleFromModmailPingRoleTable(role.getIdLong());
+    }
+
+    public List<Long> getGuildModmailPingRoles(@NotNull Guild guild) {
+        return main.getPostgres().getRoleIdsFromModmailPingRoleTable(guild.getIdLong());
     }
 }

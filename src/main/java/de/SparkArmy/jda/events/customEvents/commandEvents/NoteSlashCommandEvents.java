@@ -411,26 +411,6 @@ public class NoteSlashCommandEvents {
         }
     }
 
-//    private @NotNull Collection<RestAction<User>> setEmbedFieldsAndGetModerators(
-//            EmbedBuilder showNoteEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject notes) {
-//        Collection<RestAction<User>> restActions = new ArrayList<>();
-//        int i = 0;
-//
-//        for (String keyString : notes.keySet().stream().sorted().toList()) {
-//            countFrom--;
-//            if (countFrom < 0) {
-//                i++;
-//                JSONObject entry = notes.getJSONObject(keyString);
-//                String timeString = keyString.replace("T", " ").replaceAll(".\\d{5,}", " ");
-//                restActions.add(shardManager.retrieveUserById(entry.getLong("moderatorId"))
-//                        .onSuccess(user -> showNoteEmbed.addField(timeString + " from " + user.getEffectiveName(), entry.getString("noteContent"), false)));
-//                if (menuBuilder != null) menuBuilder.addOption(timeString, keyString);
-//                if (i == 25) break;
-//            }
-//        }
-//        return restActions;
-//    }
-
     private void setEmbedFieldsAndGetModerators(
             EmbedBuilder showNoteEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject notes) {
         int i = 0;

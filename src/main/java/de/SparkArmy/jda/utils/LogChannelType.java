@@ -3,7 +3,6 @@ package de.SparkArmy.jda.utils;
 import java.util.Arrays;
 import java.util.List;
 
-@SuppressWarnings("unused")
 public enum LogChannelType {
     UNKNOW(-1,"unknow"),
     MESSAGE(1,"message-log"),

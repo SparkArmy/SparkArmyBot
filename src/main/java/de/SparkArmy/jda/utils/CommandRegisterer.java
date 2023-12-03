@@ -4,6 +4,7 @@ import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.events.annotations.interactions.JDACommandData;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -249,5 +250,67 @@ public class CommandRegisterer {
                                 ))
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
+    }
+
+    @JDACommandData
+    final @NotNull CommandData configureSlashCommand() {
+        return Commands.slash("configure", "Configures the settings for the bot in the guild")
+                .addSubcommandGroups(
+                        new SubcommandGroupData("channel", "Configure channels")
+                                .addSubcommands(
+                                        new SubcommandData("log-channels", "Configure the Log-Channels")
+                                                .addOptions(
+                                                        new OptionData(OptionType.STRING, "type", "The log-channel-type")
+                                                                .setRequired(true)
+                                                                .setAutoComplete(true),
+                                                        new OptionData(OptionType.CHANNEL, "target-channel", "The channel where the logs will been sent")
+                                                                .setChannelTypes(ChannelType.TEXT)
+                                                ),
+                                        new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel"),
+                                        new SubcommandData("archive-category", "Manage the archive category"),
+                                        new SubcommandData("feedback-channel", "Manage the feedback-channel")
+                                ),
+                        new SubcommandGroupData("roles", "Configure the roles")
+                                .addSubcommands(
+                                        new SubcommandData("mod-roles", "Manage the mod roles")
+                                                .addOptions(
+                                                        new OptionData(OptionType.ROLE, "add", "Adds the role to the mod roles"),
+                                                        new OptionData(OptionType.ROLE, "remove", "Remove the role from the mod roles")
+                                                ),
+                                        new SubcommandData("punishment-roles", "Manage the punishment roles")
+                                                .addOptions(
+                                                        new OptionData(OptionType.ROLE, "warn-role", "Set the warn role"),
+                                                        new OptionData(OptionType.ROLE, "mute-role", "Set the mute role")
+                                                )
+                                ),
+                        new SubcommandGroupData("regex", "Manage regex settings")
+                                .addSubcommands(
+                                        new SubcommandData("blacklist", "Manage the blacklist"),
+                                        new SubcommandData("manage", "Manage the regex settings")
+                                ),
+                        new SubcommandGroupData("modmail", "Manage the modmail settings")
+                                .addSubcommands(
+                                        new SubcommandData("category", "Manage the category and channel for modmail channels"),
+                                        new SubcommandData("blacklist", "The blacklist for users")
+                                                .addOptions(
+                                                        new OptionData(OptionType.USER, "user", "The user for the blacklist")
+                                                ),
+                                        new SubcommandData("ping-roles", "Manage the roles were are pinged")
+                                                .addOptions(
+                                                        new OptionData(OptionType.ROLE, "role", "The role to add/remove")
+                                                )
+
+                                )
+                )
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+    }
+
+    @Contract(" -> new")
+    @JDACommandData
+    final @NotNull CommandData feedbackSlashCommand() {
+        return Commands.slash("feedback", "Send feedback to the staff")
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.ENABLED);
     }
 }

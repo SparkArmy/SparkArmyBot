@@ -195,27 +195,6 @@ public class CommandRegisterer {
     }
 
     @JDACommandData
-    final @NotNull CommandData nicknameSlashCommand() {
-        return Commands.slash("nickname", "Change or remove a nickname from member")
-                .addSubcommands(
-                        new SubcommandData("remove", "Remove the nickname from the member")
-                                .addOptions(
-                                        new OptionData(OptionType.USER, "member", "The target member")
-                                                .setRequired(true)
-                                ),
-                        new SubcommandData("change", "Change the nickname from the member")
-                                .addOptions(
-                                        new OptionData(OptionType.USER, "member", "The target member")
-                                                .setRequired(true),
-                                        new OptionData(OptionType.STRING, "nickname", "The new nickname")
-                                                .setRequired(true)
-                                )
-                )
-                .setGuildOnly(true)
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
-    }
-
-    @JDACommandData
     final @NotNull CommandData notificationSlashCommand() {
         return Commands.slash("notification", "Add, remove or change notifications from YouTube, Twitch or Twitter")
                 .addOptions(

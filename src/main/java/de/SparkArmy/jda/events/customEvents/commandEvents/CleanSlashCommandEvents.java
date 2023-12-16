@@ -1,7 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
-import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
 import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
@@ -19,7 +18,6 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
-import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -41,15 +39,18 @@ import java.util.ResourceBundle;
 
 public class CleanSlashCommandEvents {
 
-    private final Postgres postgres;
+    private final DatabaseAction postgres;
 
-    public CleanSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
-        ConfigController controller = dispatcher.getController();
-        this.postgres = controller.getMain().getPostgres();
+    public CleanSlashCommandEvents(@NotNull EventDispatcher ignoredDispatcher) {
+        this.postgres = new DatabaseAction();
     }
 
     private ResourceBundle bundle(DiscordLocale locale) {
         return Util.getResourceBundle("clean", locale);
+    }
+
+    private ResourceBundle standardBundle(DiscordLocale locale) {
+        return Util.getResourceBundle("standardPhrases", locale);
     }
 
     @JDASlashCommand(name = "clean")
@@ -58,15 +59,17 @@ public class CleanSlashCommandEvents {
         String subcommandName = event.getSubcommandName();
         if (subcommandName == null) return;
         ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardBundle = standardBundle(event.getUserLocale());
         switch (subcommandName) {
             case "all" -> allCleanSubcommand(event, bundle);
             case "last" -> lastCleanSubcommand(event, bundle);
-            case "add" -> addPeriodicCleanSubcommand(event, bundle);
+            case "add" -> addPeriodicCleanSubcommand(event, bundle, standardBundle);
             case "show" -> showPeriodicCleanSubcommand(event, bundle);
         }
     }
 
     private void allCleanSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle) {
+        event.deferReply(true).queue();
         Integer amount = event.getOption("count", 100, OptionMapping::getAsInt);
         User user = event.getOption("user", OptionMapping::getAsUser);
 
@@ -77,35 +80,43 @@ public class CleanSlashCommandEvents {
                     } else return x;
                 })
                 .map(x -> event.getChannel().purgeMessages(x))
-                .queue(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.executed")).queue(),
-                        new ErrorHandler()
-                                .handle(ErrorResponse.UNKNOWN_CHANNEL,
-                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.unknownChannel")).queue())
-                                .handle(ErrorResponse.MISSING_PERMISSIONS,
-                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.missingPermissions")).queue())
-                );
+                .flatMap(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.executed")))
+                .onErrorFlatMap(ErrorResponse.UNKNOWN_CHANNEL::test, x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.unknownChannel")))
+                .onErrorFlatMap(ErrorResponse.MISSING_PERMISSIONS::test, x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.missingPermissions")))
+                .queue();
     }
 
     private void lastCleanSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle) {
+        event.deferReply(true).queue();
         Integer days = event.getOption("days", 5, OptionMapping::getAsInt);
         event.getChannel().getHistory().retrievePast(100)
                 .map(x -> x.stream().filter(y -> y.getTimeCreated().isAfter(OffsetDateTime.now().minusDays(days))).toList())
                 .map(x -> event.getChannel().purgeMessages(x))
-                .queue(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.executed")).queue(),
-                        new ErrorHandler()
-                                .handle(ErrorResponse.UNKNOWN_CHANNEL,
-                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.unknownChannel")).queue())
-                                .handle(ErrorResponse.MISSING_PERMISSIONS,
-                                        e -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.missingPermissions")).queue())
-                );
+                .flatMap(x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.lastCleanSubcommand.executed")))
+                .onErrorFlatMap(ErrorResponse.UNKNOWN_CHANNEL::test, x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.unknownChannel")))
+                .onErrorFlatMap(ErrorResponse.MISSING_PERMISSIONS::test, x -> event.getHook().editOriginal(bundle.getString("cleanCommandEvents.allCleanSubcommand.missingPermissions")))
+                .queue();
     }
 
-    private void addPeriodicCleanSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
+    private void addPeriodicCleanSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle, ResourceBundle standardBundle) {
+        event.deferReply(true).queue();
         GuildChannel channel = event.getOption("channel", event.getGuildChannel(), OptionMapping::getAsChannel);
         Integer days = event.getOption("period", 7, OptionMapping::getAsInt);
 
-        postgres.putDataInPeriodicCleanTable(channel, days, event.getUser());
-        event.reply(bundle.getString("cleanCommandEvents.addPeriodicCleanSubcommand.executed")).queue();
+        long added = postgres.putDataInPeriodicCleanTable(channel.getIdLong(), channel.getGuild().getIdLong(), days, event.getUser().getIdLong());
+        if (added > 0) {
+            event.getHook()
+                    .editOriginal(bundle.getString("cleanCommandEvents.addPeriodicCleanSubcommand.executed"))
+                    .queue();
+        } else if (added == 0) {
+            event.getHook()
+                    .editOriginal(bundle.getString("cleanCommandEvents.addPeriodicCleanSubcommand.noChanges"))
+                    .queue();
+        } else {
+            event.getHook()
+                    .editOriginal(String.format(standardBundle.getString("replies.dbErrorReply"), added))
+                    .queue();
+        }
     }
 
     private void showPeriodicCleanSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle) {
@@ -212,6 +223,7 @@ public class CleanSlashCommandEvents {
 
     }
 
+    @SuppressWarnings("DuplicatedCode")
     private void beforeButtonAction(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, @NotNull JSONObject entries, String @NotNull [] splitComponentId) {
         event.deferEdit().queue();
         EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -238,6 +250,7 @@ public class CleanSlashCommandEvents {
 
     }
 
+    @SuppressWarnings("DuplicatedCode")
     private void nextButtonAction(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, @NotNull JSONObject entries, String @NotNull [] splitComponentId) {
         event.deferEdit().queue();
         EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -312,9 +325,9 @@ public class CleanSlashCommandEvents {
     }
 
     private void editPeriodCleanStringMenuAction(@NotNull StringSelectInteractionEvent event, @NotNull ResourceBundle bundle, String @NotNull [] splitComponentId, @NotNull Guild guild) {
-        JSONObject value = postgres.getDataFromPeriodicCleanTable(guild.getIdLong()).getJSONObject(event.getValues().get(0));
+        JSONObject value = postgres.getDataFromPeriodicCleanTable(guild.getIdLong()).getJSONObject(event.getValues().getFirst());
         Modal.Builder editActionModal = Modal.create(
-                String.format("cleanCommand_editPeriodicActionModal;%s;%d", splitComponentId[1], value.getLong("channelId")),
+                String.format("cleanCommand_editPeriodicActionModal;%s;%s", splitComponentId[1], event.getValues().getFirst()),
                 bundle.getString("cleanCommandEvents.editPeriodicCleanStringMenuAction.editActionModal.title"));
 
         TextInput.Builder days = TextInput.create(
@@ -351,35 +364,58 @@ public class CleanSlashCommandEvents {
         if (!event.getUser().getId().equals(splitComponentId[1])) return;
 
         event.deferEdit().queue();
-        long channelId = Long.parseLong(splitComponentId[2]);
+        long databaseId = Long.parseLong(splitComponentId[2]);
 
-        ModalMapping daysMapping = event.getValues().stream().filter(x -> x.getId().startsWith("days")).toList().get(0);
+        ModalMapping daysMapping = event.getValues().stream().filter(x -> x.getId().startsWith("days")).toList().getFirst();
         long days = Long.parseLong(daysMapping.getAsString());
 
-        ModalMapping activeMapping = event.getValues().stream().filter(x -> x.getId().startsWith("active")).toList().get(0);
+        ModalMapping activeMapping = event.getValues().stream().filter(x -> x.getId().startsWith("active")).toList().getFirst();
         boolean active = Boolean.getBoolean(activeMapping.getAsString());
 
-        postgres.editDataInPeriodicCleanTable(channelId, active, days);
-
-        event.getHook()
-                .editOriginalEmbeds()
-                .setComponents()
-                .setContent("Edited")
-                .queue();
+        //TODO implement ResourceBundle in replies
+        ResourceBundle standardBundle = standardBundle(event.getUserLocale());
+        long edited = postgres.editDataInPeriodicCleanTable(databaseId, active, days);
+        if (edited > 0) {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent("Edited")
+                    .queue();
+        } else if (edited == 0) {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent("No Data Edited")
+                    .queue();
+        } else {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent(String.format(standardBundle.getString("replies.dbErrorReply"), edited))
+                    .queue();
+        }
     }
 
 
     private void deletePeriodicCleanStringMenuAction(@NotNull StringSelectInteractionEvent event, ResourceBundle bundle) {
         event.deferEdit().queue();
-        if (postgres.deleteDataFromPeriodicCleanTable(Long.parseLong(event.getValues().get(0)))) {
+        ResourceBundle standardBundle = standardBundle(event.getUserLocale());
+        long removed = postgres.deleteDataFromPeriodicCleanTable(Long.parseLong(event.getValues().getFirst()));
+        if (removed > 0) {
             event.getHook()
                     .editOriginal(bundle.getString("cleanCommandEvents.deletePeriodicCleanStringMenuAction.deleted"))
                     .setComponents()
                     .setEmbeds()
                     .queue();
-        } else {
+        } else if (removed == 0) {
             event.getHook()
                     .editOriginal(bundle.getString("cleanCommandEvents.deletePeriodicCleanStringMenuAction.notDeleted"))
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
+        } else {
+            event.getHook()
+                    .editOriginal(String.format(standardBundle.getString("replies.dbErrorReply"), removed))
                     .setComponents()
                     .setEmbeds()
                     .queue();

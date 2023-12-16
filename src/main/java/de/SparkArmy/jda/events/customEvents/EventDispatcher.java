@@ -127,7 +127,6 @@ public class EventDispatcher {
     private void registerEvents() {
         registerEvent(new ArchiveSlashCommandEvents(this));
         registerEvent(new GeneralCommandEvents(this));
-        registerEvent(new NicknameSlashCommandEvents(this));
         registerEvent(new NoteSlashCommandEvents(this));
         registerEvent(new PunishmentCommandEvents(this));
         registerEvent(new NotificationSlashCommandEvents(this));

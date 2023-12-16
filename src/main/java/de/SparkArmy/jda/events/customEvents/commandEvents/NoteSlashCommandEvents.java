@@ -1,7 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
-import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
 import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
@@ -29,18 +28,18 @@ import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 import static de.SparkArmy.utils.Util.logger;
 
 public class NoteSlashCommandEvents {
-    private final Postgres db;
+    private final DatabaseAction db;
 
-    public NoteSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
-        ConfigController controller = dispatcher.getController();
-        this.db = controller.getMain().getPostgres();
+    // TODO Change Buttons and standard phrases to Standard Bundle
+    // TODO Check nextButton in second site directs to first page
+    public NoteSlashCommandEvents(@NotNull EventDispatcher ignoredDispatcher) {
+        this.db = new DatabaseAction();
     }
 
     final @NotNull Button nextButton(@NotNull ResourceBundle bundle, String @NotNull [] ids, int count, @NotNull NoteEmbedActionType actionType) {
@@ -130,6 +129,7 @@ public class NoteSlashCommandEvents {
         event.deferEdit().setEmbeds().setComponents().setContent(bundle.getString("events.closeShowEmbedClickEvent.closeMessage")).queue();
     }
 
+    @SuppressWarnings("DuplicatedCode")
     private void sendInitialEmbed(@NotNull ButtonInteractionEvent event, NoteEmbedActionType actionType) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -144,7 +144,7 @@ public class NoteSlashCommandEvents {
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
 
-        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().get(0));
+        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().getFirst());
         showNoteEmbed.setDescription(bundle.getString("events.showButtonClickEvent.showNoteEmbed.description"));
         showNoteEmbed.clearFields();
 
@@ -178,7 +178,7 @@ public class NoteSlashCommandEvents {
         int count = Integer.parseInt(splitId[2]);
         if (!ids[0].equals(event.getUser().getId())) return;
 
-        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().get(0));
+        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().getFirst());
         showNoteEmbed.clearFields();
 
         StringSelectMenu.Builder menuBuilder = StringSelectMenu.create(
@@ -229,11 +229,11 @@ public class NoteSlashCommandEvents {
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
         if (!event.getUser().getId().equals(ids[0])) return;
-        TextInput.Builder noteContent = TextInput.create(event.getValues().get(0), "Note Content", TextInputStyle.PARAGRAPH);
+        TextInput.Builder noteContent = TextInput.create(event.getValues().getFirst(), "Note Content", TextInputStyle.PARAGRAPH);
         noteContent.setMaxLength(1024);
 
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong());
-        noteContent.setValue(notes.getJSONObject(event.getValues().get(0)).getString("noteContent"));
+        noteContent.setValue(notes.getJSONObject(event.getValues().getFirst()).getString("noteContent"));
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
 
@@ -253,17 +253,19 @@ public class NoteSlashCommandEvents {
         if (!event.getUser().getId().equals(ids[0])) return;
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-        if (db.deleteDataFromNoteTable(
-                Long.parseLong(ids[1]),
-                Long.parseLong(ids[0]),
-                event.getGuild().getIdLong(),
-                Timestamp.valueOf(LocalDateTime.parse(event.getValues().get(0))))) {
+        long value = db.deleteDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong(), LocalDateTime.parse(event.getValues().getFirst().replace(" ", "T")));
+        if (value > 0) {
             event.getHook().editOriginal(bundle.getString("events.noteRemoveSelectEvent.success"))
                     .setComponents()
                     .setEmbeds()
                     .queue();
-        } else {
+        } else if (value == 0) {
             event.getHook().editOriginal(bundle.getString("events.noteRemoveSelectEvent.failedToPutInDB"))
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
+        } else {
+            event.getHook().editOriginal("Error"/*TODO Add "standardPhrases" Bundle*/)
                     .setComponents()
                     .setEmbeds()
                     .queue();
@@ -279,7 +281,7 @@ public class NoteSlashCommandEvents {
         if (!event.getUser().getId().equals(ids[0])) return;
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-        ModalMapping noteContentField = event.getValues().get(0);
+        ModalMapping noteContentField = event.getValues().getFirst();
 
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong());
 
@@ -288,15 +290,17 @@ public class NoteSlashCommandEvents {
             return;
         }
 
-        if (db.updateDataFromNoteTable(
-                noteContentField.getAsString(),
-                Long.parseLong(ids[0]),
-                Long.parseLong(ids[1]),
-                event.getGuild().getIdLong(),
-                Timestamp.valueOf(LocalDateTime.parse(noteContentField.getId())))) {
+        long updateValue = db.updateDataFromNoteTable(event.getGuild().getIdLong(), Long.parseLong(ids[1]), LocalDateTime.parse(noteContentField.getId().replace(" ", "T")), noteContentField.getAsString());
+
+        if (updateValue > 0) {
             event.getHook().editOriginal(bundle.getString("events.noteModalEvent.successMessage")).queue();
-        } else {
+        } else if (updateValue == 0) {
             event.getHook().editOriginal(bundle.getString("events.noteModalEvent.failedMessage")).queue();
+        } else {
+            event.getHook().editOriginal("Error"/*TODO Add "standardPhrases" Bundle*/)
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
         }
     }
 
@@ -403,11 +407,20 @@ public class NoteSlashCommandEvents {
             return;
         }
 
+        long addValue = db.putDataInNoteTable(guild.getIdLong(), targetUser.getIdLong(), event.getUser().getIdLong(), note, LocalDateTime.now());
 
-        if (db.putDataInNoteTable(note, targetUser.getIdLong(), event.getUser().getIdLong(), guild.getIdLong())) {
+        if (addValue > 0) {
             event.reply(bundle.getString("command.addNoteCommand.success")).setEphemeral(true).queue();
-        } else {
+        } else if (addValue == 0) {
             event.reply(bundle.getString("command.addNoteCommand.putInDBFailed")).setEphemeral(true).queue();
+        } else {
+            event.reply("Error " + addValue).setEphemeral(true)/* .editOriginal("Error"
+            TODO Add "standardPhrases" Bundle
+            TODO Change to EventHook
+            )*/
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
         }
     }
 
@@ -420,7 +433,7 @@ public class NoteSlashCommandEvents {
                 i++;
                 JSONObject entry = notes.getJSONObject(keyString);
                 String timeString = keyString.replace("T", " ").replaceAll(".\\d{5,}", " ");
-                showNoteEmbed.addField(timeString + " from <!@" + entry.getString("moderatorId") + ">",entry.getString("noteContent"),false);
+                showNoteEmbed.addField(timeString + " from <!@" + entry.getLong("moderatorId") + ">", entry.getString("noteContent"), false);
                 if (menuBuilder != null) menuBuilder.addOption(timeString,keyString);
                 if (i == 25) break;
             }

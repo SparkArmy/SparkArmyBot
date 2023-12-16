@@ -1,6 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.otherEvents;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.utils.Util;
@@ -19,17 +19,20 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
 public class MessageEvents {
 
-    private final ConfigController controller;
+    private final DatabaseAction db;
 
-    public MessageEvents(@NotNull EventDispatcher dispatcher) {
-        this.controller = dispatcher.getController();
+    private final List<Long> modRoleIds;
+
+    public MessageEvents(@NotNull EventDispatcher ignoredDispatcher) {
+        this.db = new DatabaseAction();
+        this.modRoleIds = db.getModerationRolesByGuildId();
     }
 
     private ResourceBundle bundle(DiscordLocale locale) {
@@ -38,15 +41,12 @@ public class MessageEvents {
 
     @JDAMessageBulkDeleteEvent
     public void messageBulkDeleteEvent(@NotNull MessageBulkDeleteEvent event) {
-        List<Long> msgIdsLong = event.getMessageIds().stream().map(Long::parseLong).toList();
-        controller.getMain().getPostgres().deleteMessagesFromMessageTable(msgIdsLong);
+        removeDataFromDatabase(event.getMessageIds().stream().map(Long::parseLong).toList());
     }
 
     @JDAMessageDeleteEvent
     public void messageDeleteEvent(@NotNull MessageDeleteEvent event) {
-        List<Long> ids = new ArrayList<>();
-        ids.add(event.getMessageIdLong());
-        controller.getMain().getPostgres().deleteMessagesFromMessageTable(ids);
+        removeDataFromDatabase(Collections.singletonList(event.getMessageIdLong()));
     }
 
     @JDAMessageReactionRemoveAllEvent
@@ -57,17 +57,28 @@ public class MessageEvents {
     public void messageReactionRemoveEmojiEvent(MessageReactionRemoveEmojiEvent event) {
     }
 
+    @JDAMessageUpdateEvent
+    public void messageUpdateEvent(@NotNull MessageUpdateEvent event) {
+        putDataInDatabase(event.getMessage());
+
+    }
+
     @JDAMessageReceivedEvent
     public void messageReceivedEvent(@NotNull MessageReceivedEvent event) {
-        controller.getMain().getPostgres().putMessageDataAndAttachmentsInTables(event.getMessage());
+        putDataInDatabase(event.getMessage());
         mediaOnlyFunction(event);
         blacklistFunction(event);
         regexFunction(event);
     }
 
-    @JDAMessageUpdateEvent
-    public void messageUpdateEvent(@NotNull MessageUpdateEvent event) {
-        controller.getMain().getPostgres().updateMessageDataInMessageTable(event.getMessage());
+
+    private synchronized void removeDataFromDatabase(List<Long> ids) {
+        db.removeMessageFromDatabase(ids);
+    }
+
+    private void putDataInDatabase(@NotNull Message message) {
+        if (message.getAuthor().isBot() || message.getAuthor().isSystem() || !message.isFromGuild()) return;
+        db.writeInMessageTable(message);
     }
 
     private void mediaOnlyFunction(@NotNull MessageReceivedEvent event) {
@@ -77,8 +88,7 @@ public class MessageEvents {
 
         if (checkMemberPermissions(event)) return;
 
-        JSONObject channelPermissions = controller.getGuildMediaOnlyChannelPermissions(event.getChannel().getIdLong());
-
+        JSONObject channelPermissions = db.getMediaOnlyChannelDataByChannelId(event.getChannel().getIdLong());
         if (channelPermissions.isEmpty()) return;
 
         boolean textPerms = channelPermissions.getBoolean("permText");
@@ -133,12 +143,9 @@ public class MessageEvents {
         if (messageContent.isBlank()) return;
         if (checkMemberPermissions(event)) return;
 
-        JSONObject phrases = controller.getGuildBlacklistPhrases(event.getGuild());
+        JSONObject phrases = db.getPhrasesFromBlacklistTableByGuildId(event.getGuild().getIdLong());
 
-        if (phrases.keySet().stream().map(x -> {
-            JSONObject jObj = phrases.getJSONObject(x);
-            return jObj.getString("phrase");
-        }).anyMatch(messageContent::contains)) {
+        if (phrases.keySet().stream().map(phrases::getString).anyMatch(messageContent::contains)) {
             event.getMessage().delete().reason("Blacklist phrase")
                     .map(x -> {
                         // TODO Send violations in ModLog
@@ -154,7 +161,7 @@ public class MessageEvents {
         if (messageContent.isBlank()) return;
         if (checkMemberPermissions(event)) return;
 
-        JSONObject regexEntries = controller.getGuildRegexEntries(event.getGuild());
+        JSONObject regexEntries = db.getRegexEntriesByGuildId(event.getGuild().getIdLong());
         if (regexEntries.keySet().stream().map(x -> {
             JSONObject jObj = regexEntries.getJSONObject(x);
             return jObj.getString("regex");
@@ -170,7 +177,6 @@ public class MessageEvents {
     }
 
     private boolean checkMemberPermissions(@NotNull MessageReceivedEvent event) {
-        List<Long> modRoleIds = controller.getGuildModerationRoles(event.getGuild());
         Member member = event.getMember();
         if (member == null) return false;
         return modRoleIds.stream().anyMatch(x -> member.getRoles().stream().map(ISnowflake::getIdLong).toList().contains(x));

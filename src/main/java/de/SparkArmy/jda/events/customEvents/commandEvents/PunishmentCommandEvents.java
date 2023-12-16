@@ -3,7 +3,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.jda.utils.punishments.Punishment;
@@ -63,6 +63,8 @@ public class PunishmentCommandEvents {
         User target = event.getOption("target-user", OptionMapping::getAsUser);
         String reason = event.getOption("reason", OptionMapping::getAsString); // Option is required
         Member moderator = event.getMember();
+        if (moderator == null) return;
+        if (reason == null) return;
 
         //noinspection ConstantConditions
         event.getGuild().retrieveBanList().queue(banList -> {
@@ -70,51 +72,46 @@ public class PunishmentCommandEvents {
                 hook.editOriginal(bundle.getString("command.userIsNotInBanList")).queue();
                 return;
             }
-            Postgres db = controller.getMain().getPostgres();
-            if (!db.getIsPostgresEnabled()) {
+            DatabaseAction db = new DatabaseAction();
 
-                event.getGuild().unban(target).reason(reason).queue(x -> {
-                            if (controller.getMain().getPostgres().putPunishmentDataInPunishmentTable(target, moderator, PunishmentType.UNBAN.getId(), reason)) {
-                                hook.editOriginal(bundle.getString("command.putInDB.unban.successfully.errorDB")).queue();
-                            } else {
-                                hook.editOriginal(bundle.getString("command.putInDB.unban.successfully")).queue();
-                            }
+            event.getGuild().unban(target).reason(reason).queue(x -> {
+                        if (db.putPunishmentDataInPunishmentTable(target.getIdLong(), moderator.getIdLong(), event.getGuild().getIdLong(), PunishmentType.UNBAN.getId(), reason) <= 0) { // TODO Add error handling
+                            hook.editOriginal(bundle.getString("command.putInDB.unban.successfully.errorDB")).queue();
+                        } else {
+                            hook.editOriginal(bundle.getString("command.putInDB.unban.successfully")).queue();
+                        }
 
-                            ResourceBundle guildBundle = Util.getResourceBundle("unban", event.getGuildLocale());
-                            User selfUser = event.getJDA().getSelfUser();
+                        ResourceBundle guildBundle = Util.getResourceBundle("unban", event.getGuildLocale());
+                        User selfUser = event.getJDA().getSelfUser();
 
-                            // Get punishmentNumber from guild
-                            long punishmentCount = db.getPunishmentCountFromGuild(hook.getInteraction().getGuild());
-                            if (punishmentCount == -1)
-                                punishmentCount = 1; // Fallback if postgres disabled or another error occur
+                        // Get punishmentNumber from guild
+                        long punishmentCount = db.getPunishmentCountFromGuild(moderator.getGuild().getIdLong());
+                        if (punishmentCount == -1)
+                            punishmentCount = 1; // Fallback if postgres disabled or another error occur
 
-                            WebhookEmbedBuilder logEmbed = new WebhookEmbedBuilder();
-                            logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, "unban"), null));
-                            logEmbed.addField(new WebhookEmbed.EmbedField(false,
-                                    guildBundle.getString("command.logEmbed.field.offender.name"),
-                                    String.format("%s (%s)", target.getEffectiveName(), target.getAsMention())));
-                            //noinspection ConstantConditions // Punishment events are all guild events
-                            logEmbed.addField(new WebhookEmbed.EmbedField(false,
-                                    guildBundle.getString("command.logEmbed.field.moderator.name"),
-                                    String.format("%s (%s)", moderator.getEffectiveName(), moderator.getAsMention())));
-                            //noinspection ConstantConditions // Reason is a requiered option
-                            logEmbed.addField(new WebhookEmbed.EmbedField(false,
-                                    guildBundle.getString("command.logEmbed.field.reason.name"),
-                                    reason));
-                            logEmbed.setAuthor(new WebhookEmbed.EmbedAuthor(selfUser.getName(), selfUser.getEffectiveAvatarUrl(), null));
-                            logEmbed.setTimestamp(OffsetDateTime.now());
-                            logEmbed.setColor(new Color(255, 0, 0).getRGB());
-                            logEmbed.setFooter(new WebhookEmbed.EmbedFooter(event.getGuild().getName(), event.getGuild().getIconUrl()));
+                        WebhookEmbedBuilder logEmbed = new WebhookEmbedBuilder();
+                        logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, "unban"), null));
+                        logEmbed.addField(new WebhookEmbed.EmbedField(false,
+                                guildBundle.getString("command.logEmbed.field.offender.name"),
+                                String.format("%s (%s)", target.getEffectiveName(), target.getAsMention())));
+                        logEmbed.addField(new WebhookEmbed.EmbedField(false,
+                                guildBundle.getString("command.logEmbed.field.moderator.name"),
+                                String.format("%s (%s)", moderator.getEffectiveName(), moderator.getAsMention())));
+                        logEmbed.addField(new WebhookEmbed.EmbedField(false,
+                                guildBundle.getString("command.logEmbed.field.reason.name"),
+                                reason));
+                        logEmbed.setAuthor(new WebhookEmbed.EmbedAuthor(selfUser.getName(), selfUser.getEffectiveAvatarUrl(), null));
+                        logEmbed.setTimestamp(OffsetDateTime.now());
+                        logEmbed.setColor(new Color(255, 0, 0).getRGB());
+                        logEmbed.setFooter(new WebhookEmbed.EmbedFooter(event.getGuild().getName(), event.getGuild().getIconUrl()));
 
-                            // TODO see Util
+                        // TODO see Util
 //                            Util.sendingModLogEmbed(logEmbed.build(), event.getGuild());
-                        },
-                        new ErrorHandler()
-                                .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("command.putInDB.unban.error.missingPermissions")).queue())
-                                .handle(ErrorResponse.UNKNOWN_USER, x -> hook.editOriginal(bundle.getString("command.putInDB.unban.error.unknownUser")).queue()));
-            } else {
-                hook.editOriginal(bundle.getString("command.putInDB.failed")).queue();
-            }
+                    },
+                    new ErrorHandler()
+                            .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("command.putInDB.unban.error.missingPermissions")).queue())
+                            .handle(ErrorResponse.UNKNOWN_USER, x -> hook.editOriginal(bundle.getString("command.putInDB.unban.error.unknownUser")).queue()));
+
         }, new ErrorHandler()
                 .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("command.missingPermissionToGetBanList")).queue()));
 

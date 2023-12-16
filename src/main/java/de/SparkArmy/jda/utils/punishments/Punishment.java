@@ -3,7 +3,7 @@ package de.SparkArmy.jda.utils.punishments;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class Punishment {
 
     private final ResourceBundle bundle;
-    private final Postgres db;
+    private final DatabaseAction db;
     private final ConfigController controller;
     private final Guild guild;
 
@@ -34,7 +34,7 @@ public class Punishment {
     public Punishment(@NotNull SlashCommandInteractionEvent event, PunishmentType type, @NotNull ConfigController controller) {
         event.deferReply(true).queue();
         this.bundle = Util.getResourceBundle("PunishmentClazz", event.getUserLocale());
-        this.db = controller.getMain().getPostgres();
+        this.db = new DatabaseAction();
         this.controller = controller;
         this.guild = event.getGuild();
         User target = event.getOption("target-user", OptionMapping::getAsUser);
@@ -92,9 +92,11 @@ public class Punishment {
                             .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.missingPermissions")).queue())
                             .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.ban.unknownMember")).queue()));
 
-            case SOFTBAN -> guild.ban(target, 1, TimeUnit.DAYS).reason(reason)
+            case SOFTBAN -> guild.ban(target, 1, TimeUnit.DAYS)
+                    .reason(reason)
                     .delay(3, TimeUnit.SECONDS)
-                    .onSuccess(x -> guild.unban(target).reason(reason)).queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.softban.successfully")).queue(),
+                    .flatMap(x -> guild.unban(target).reason(reason))
+                    .queue(x -> hook.editOriginal(bundle.getString("executePunishment.switchType.softban.successfully")).queue(),
                             new ErrorHandler()
                                     .handle(ErrorResponse.MISSING_PERMISSIONS, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.softban.missingPermissions")).queue())
                                     .handle(ErrorResponse.UNKNOWN_MEMBER, x -> hook.editOriginal(bundle.getString("executePunishment.switchType.softban.unknownMember")).queue()));
@@ -102,25 +104,24 @@ public class Punishment {
         }
     }
 
-    private void preparePunishment(User target, Member moderator, String reason, PunishmentType type, Integer days, InteractionHook hook) {
+    private void preparePunishment(@NotNull User target, @NotNull Member moderator, String reason, @NotNull PunishmentType type, Integer days, InteractionHook hook) {
 
-        if (db.getIsPostgresEnabled()) {
-            if (db.putPunishmentDataInPunishmentTable(target, moderator, type.getId(), reason)) {
-                hook.sendMessage(bundle.getString("preparePunishment.putDataInDbFailed")).setEphemeral(true).queue();
-                return;
-            }
+        if (db.putPunishmentDataInPunishmentTable(target.getIdLong(), moderator.getIdLong(), target.getIdLong(), type.getId(), reason) <= 0) { // TODO Add error handling
+            hook.sendMessage(bundle.getString("preparePunishment.putDataInDbFailed")).setEphemeral(true).queue();
+            return;
         }
+
         User selfUser = hook.getJDA().getSelfUser();
 
         // Get punishmentNumber from guild
-        long punishmentCount = db.getPunishmentCountFromGuild(hook.getInteraction().getGuild());
-        if (punishmentCount == -1) punishmentCount = 1; // Fallback if postgres disabled or another error occur
+        long punishmentCount = db.getPunishmentCountFromGuild(moderator.getGuild().getIdLong());
+        if (punishmentCount < 0) punishmentCount = 1; // Fallback if postgres disabled or another error occur
 
         ResourceBundle guildBundle = Util.getResourceBundle("PunishmentClazz", hook.getInteraction().getGuildLocale());
 
         // Log Embed
         WebhookEmbedBuilder logEmbed = new WebhookEmbedBuilder();
-        logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount, type.getName()), null));
+        logEmbed.setTitle(new WebhookEmbed.EmbedTitle(String.format("%d || %s", punishmentCount + 1, type.getName()), null));
         logEmbed.addField(new WebhookEmbed.EmbedField(false,
                 guildBundle.getString("preparePunishment.logEmbed.field.offender.name"),
                 String.format("%s (%s)", target.getEffectiveName(), target.getAsMention())));
@@ -135,7 +136,7 @@ public class Punishment {
         logEmbed.setColor(new Color(255, 0, 0).getRGB());
         logEmbed.setFooter(new WebhookEmbed.EmbedFooter(guild.getName(), guild.getIconUrl()));
 
-        // TODO See Util
+        // TODO See Util -> Change to WebhookUtil
 //        Util.sendingModLogEmbed(logEmbed.build(), guild);
 
 //        User Embed
@@ -208,7 +209,7 @@ public class Punishment {
                 hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetEqualsModerator", type.getName()))).queue();
             } else if (target.isBot()) {
                 hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetIsBot", type.getName()))).queue();
-            } else if (!x.getRoles().isEmpty() && !moderator.canInteract(x.getRoles().get(0))) {
+            } else if (!x.getRoles().isEmpty() && !moderator.canInteract(x.getRoles().getFirst())) {
                 hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetHaveHigherRole", type.getName()))).queue();
             } else if (x.hasPermission(Permission.ADMINISTRATOR)) {
                 hook.editOriginal(bundle.getString(String.format("checkPreconditions.retrieveMember.%s.targetIsAdmin", type.getName()))).queue();

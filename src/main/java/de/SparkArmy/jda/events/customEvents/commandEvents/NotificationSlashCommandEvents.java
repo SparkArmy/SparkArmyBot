@@ -2,7 +2,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import com.github.twitch4j.helix.domain.User;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
 import de.SparkArmy.twitch.TwitchApi;
@@ -44,14 +44,15 @@ import java.util.*;
 
 public class NotificationSlashCommandEvents {
     private final ConfigController controller;
-    private final Postgres db;
+    private final DatabaseAction db;
 
     private final Color notificationEmbedColor = new Color(0x941D9E);
 
+    //TODO update buttons and standard replies to "standardPhrases" bundle
 
     public NotificationSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
         this.controller = dispatcher.getController();
-        this.db = controller.getMain().getPostgres();
+        this.db = new DatabaseAction();
     }
 
     // Get the resource bundle for this command
@@ -183,17 +184,17 @@ public class NotificationSlashCommandEvents {
         // Get the embed from the message and check if on component null
         List<MessageEmbed> messageEmbeds = event.getMessage().getEmbeds();
         if (messageEmbeds.isEmpty()) return;
-        MessageEmbed showAddResultEmbed = messageEmbeds.get(0);
+        MessageEmbed showAddResultEmbed = messageEmbeds.getFirst();
         if (showAddResultEmbed.getFields().isEmpty()) return;
-        String userName = showAddResultEmbed.getFields().get(0).getName();
-        String value = showAddResultEmbed.getFields().get(0).getValue();
+        String userName = showAddResultEmbed.getFields().getFirst().getName();
+        String value = showAddResultEmbed.getFields().getFirst().getValue();
         if (value == null || userName == null) return;
 
         // Get channel-id
         String userId = value.split("\n")[0].split(" ")[1];
 
         ResourceBundle bundle = bundle(event.getUserLocale());
-        if (!db.putDataInContentCreatorTable(notificationService, userName, userId)) {
+        if (db.putDataInContentCreatorTable(notificationService, userName, userId) < 0) { //TODO Change to a long based method -> Print the db error
             hook.editOriginal(bundle.getString("notificationEvents.addServiceModalButtonOkClickEvent.putInContentCreatorTableFailed")).queue();
             return;
         }
@@ -243,9 +244,9 @@ public class NotificationSlashCommandEvents {
         notificationMessageInput.setMinLength(10);
         notificationMessageInput.setRequired(true);
         if (!event.getMessage().getEmbeds().isEmpty()) {
-            MessageEmbed msgEmbed = event.getMessage().getEmbeds().get(0);
+            MessageEmbed msgEmbed = event.getMessage().getEmbeds().getFirst();
             if (!msgEmbed.getFields().isEmpty()) {
-                notificationMessageInput.setValue(msgEmbed.getFields().get(0).getValue());
+                notificationMessageInput.setValue(msgEmbed.getFields().getFirst().getValue());
             }
         }
 
@@ -372,7 +373,7 @@ public class NotificationSlashCommandEvents {
 
         event.deferEdit().queue();
 
-        ModalMapping userNameMapping = event.getValues().get(0);
+        ModalMapping userNameMapping = event.getValues().getFirst();
         if (userNameMapping == null) return;
 
 
@@ -421,7 +422,7 @@ public class NotificationSlashCommandEvents {
 
         String userId;
         switch (notificationService) {
-            case TWITCH -> userId = controller.getMain().getTwitchApi().getUserInformation(userName).get(0).getId();
+            case TWITCH -> userId = controller.getMain().getTwitchApi().getUserInformation(userName).getFirst().getId();
             case YOUTUBE -> userId = controller.getMain().getYouTubeApi().getUserId(userName);
             default -> userId = "";
         }
@@ -465,12 +466,12 @@ public class NotificationSlashCommandEvents {
         ResourceBundle bundle = bundle(event.getUserLocale());
 
         // Get Embed
-        MessageEmbed messageEmbed = event.getMessage().getEmbeds().get(0);
+        MessageEmbed messageEmbed = event.getMessage().getEmbeds().getFirst();
         if (messageEmbed == null) return;
         List<MessageEmbed.Field> fields = messageEmbed.getFields();
         if (fields.isEmpty()) return;
 
-        MessageEmbed.Field notificationMessage = fields.get(0);
+        MessageEmbed.Field notificationMessage = fields.getFirst();
         if (notificationMessage.getValue() == null) return;
         Collection<GuildChannel> guildChannels = new ArrayList<>();
 
@@ -499,7 +500,9 @@ public class NotificationSlashCommandEvents {
             return;
         }
 
-        if (db.putDataInSubscribedChannelTable(guildChannels, userChannelId, notificationMessage.getValue())) {
+        long addValue = db.putDataInSubscribedChannelTable(guildChannels, userChannelId, notificationMessage.getValue());
+
+        if (addValue > 0) {
             controller.getMain().getTwitchApi().getChannelNotifications().updateListenedChannels();
             hook.editOriginalEmbeds()
                     .setComponents()
@@ -579,7 +582,7 @@ public class NotificationSlashCommandEvents {
         if (modalMapping == null) return;
 
 
-        if (db.updateDataInSubscribedChannelTable(modalMapping.getAsString(), channelId, targetId)) {
+        if (db.updateDataInSubscribedChannelTable(modalMapping.getAsString(), Long.parseLong(channelId), targetId) > 0) { // TODO Change db error reply
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
@@ -599,7 +602,7 @@ public class NotificationSlashCommandEvents {
     public void editNotificationMessageModalEvent(@NotNull ModalInteractionEvent event) {
         event.deferEdit().queue();
 
-        ModalMapping notificationMessageMapping = event.getValues().get(0);
+        ModalMapping notificationMessageMapping = event.getValues().getFirst();
         if (notificationMessageMapping == null) return;
         String notificationMessage = notificationMessageMapping.getAsString();
 
@@ -632,7 +635,7 @@ public class NotificationSlashCommandEvents {
 
         event.deferEdit().queue();
 
-        if (db.removeDataFromSubscribedChannelTable(event.getValues(), targetId)) {
+        if (db.removeDataFromSubscribedChannelTable(event.getValues(), targetId) > 0) { // TODO Change db error reply
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
@@ -678,7 +681,7 @@ public class NotificationSlashCommandEvents {
         for (Object o : tableData) {
             JSONObject jsonObject = (JSONObject) o;
             String cId = String.valueOf(jsonObject.getLong("messageChannelId"));
-            if (event.getValues().get(0).equals(cId)) {
+            if (event.getValues().getFirst().equals(cId)) {
                 channelId = cId;
                 oldMessage = jsonObject.getString("messageText");
             }
@@ -710,7 +713,8 @@ public class NotificationSlashCommandEvents {
         notificationChannelSelectEmbed.addField(getFieldAndRemoveEmbedFields(event.getMessage(), notificationChannelSelectEmbed));
 
         for (GuildChannel channel : event.getMentions().getChannels()) {
-            if (!db.existRowInSubscribedChannelTable(channel.getIdLong(), userChannelId)) {
+            long existValue = db.existRowInSubscribedChannelTable(channel.getIdLong(), userChannelId);
+            if (existValue == 0) {
                 notificationChannelSelectEmbed.addField(
                         channel.getName(),
                         """
@@ -718,7 +722,7 @@ public class NotificationSlashCommandEvents {
                                 URL: %s
                                 """.formatted(channel.getId(), channel.getJumpUrl()),
                         true);
-            } else {
+            } else if (existValue > 0) {
                 notificationChannelSelectEmbed.addField(
                         channel.getName(),
                         bundle(event.getUserLocale()).getString("notificationEvents.notificationChannelEntitySelectEvent.notificationSelectEmbed.channelExistDescription"),
@@ -740,11 +744,11 @@ public class NotificationSlashCommandEvents {
 
     // Helper Methods
     private @Nullable MessageEmbed.Field getFieldAndRemoveEmbedFields(@NotNull Message msg, EmbedBuilder embedBuilder) {
-        MessageEmbed originalEmbed = msg.getEmbeds().get(0);
+        MessageEmbed originalEmbed = msg.getEmbeds().getFirst();
         if (originalEmbed == null) return null;
 
         if (originalEmbed.getFields().isEmpty()) return null;
-        MessageEmbed.Field field = originalEmbed.getFields().get(0);
+        MessageEmbed.Field field = originalEmbed.getFields().getFirst();
         if (field == null) return null;
 
         embedBuilder.copyFrom(originalEmbed);

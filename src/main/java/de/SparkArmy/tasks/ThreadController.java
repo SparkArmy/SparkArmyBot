@@ -11,13 +11,12 @@ import java.util.concurrent.TimeUnit;
 
 public class ThreadController {
 
-
     @SuppressWarnings("resource")
     public ThreadController() {
         ScheduledExecutorService service = new ScheduledThreadPoolExecutor(2);
         ConfigController controller = Util.controller;
         service.scheduleWithFixedDelay(new YouTubePubSubSubscriber(controller), 0, 4, TimeUnit.DAYS);
-        service.scheduleWithFixedDelay(new DeleteOldMessageAttachments(controller), 0, 1, TimeUnit.DAYS);
+        service.scheduleWithFixedDelay(new DeleteOldMessageAttachments(), 0, 1, TimeUnit.DAYS);
     }
 
 

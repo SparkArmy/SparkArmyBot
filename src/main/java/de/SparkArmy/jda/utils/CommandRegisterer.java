@@ -243,7 +243,8 @@ public class CommandRegisterer {
                                                                 .setRequired(true)
                                                                 .setAutoComplete(true),
                                                         new OptionData(OptionType.CHANNEL, "target-channel", "The channel where the logs will been sent")
-                                                                .setChannelTypes(ChannelType.TEXT)
+                                                                .setChannelTypes(ChannelType.TEXT),
+                                                        new OptionData(OptionType.BOOLEAN, "remove", "The log-channel will be removed")
                                                 ),
                                         new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel"),
                                         new SubcommandData("archive-category", "Manage the archive category"),
@@ -277,8 +278,8 @@ public class CommandRegisterer {
                                         new SubcommandData("ping-roles", "Manage the roles were are pinged")
                                                 .addOptions(
                                                         new OptionData(OptionType.ROLE, "role", "The role to add/remove")
-                                                )
-
+                                                ),
+                                        new SubcommandData("message", "Send the message with the button to create a ticket")
                                 )
                 )
                 .setGuildOnly(true)

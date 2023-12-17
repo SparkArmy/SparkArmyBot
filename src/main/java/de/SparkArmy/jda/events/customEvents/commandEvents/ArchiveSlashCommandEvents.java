@@ -36,15 +36,15 @@ public class ArchiveSlashCommandEvents {
         ResourceBundle bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
 
         if (categoryId == 0) {
-            event.reply(bundle.getString("archiveEvents.initialSlashCommand.categoryIdReturn0")).queue();
+            event.reply(bundle.getString("archiveEvents.initialSlashCommand.categoryIdReturn0")).setEphemeral(true).queue();
         } else if (categoryId < 0) {
             event.reply(
                     String.format(bundle.getString("archiveEvents.initialSlashCommand.categoryIdReturnLower0"),
-                            categoryId)).queue();
+                            categoryId)).setEphemeral(true).queue();
         } else {
             Category category = guild.getCategoryById(categoryId);
             if (category == null) {
-                event.reply(bundle.getString("archiveEvents.initialSlashCommand.categoryIsNull")).queue();
+                event.reply(bundle.getString("archiveEvents.initialSlashCommand.categoryIsNull")).setEphemeral(true).queue();
                 return;
             }
             moveChannel(event, guild, category, targetChannel);
@@ -66,7 +66,7 @@ public class ArchiveSlashCommandEvents {
                     .queue(x -> event.reply(bundle.getString("archiveEvents.successful.move")).setEphemeral(true).queue(), new ErrorHandler()
                             .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("archiveEvents.error.noAccess")).setEphemeral(true).queue())
                             .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("archiveEvents.error.unknownChannel")).setEphemeral(true).queue()));
-            case VOICE -> guild.modifyVoiceChannelPositions()
+            case VOICE, STAGE -> guild.modifyVoiceChannelPositions()
                     .selectPosition(targetChannel)
                     .setCategory(archiveCategory, true)
                     .queue(x -> event.reply(bundle.getString("archiveEvents.successful.move")).setEphemeral(true).queue(), new ErrorHandler()

@@ -195,27 +195,6 @@ public class CommandRegisterer {
     }
 
     @JDACommandData
-    final @NotNull CommandData nicknameSlashCommand() {
-        return Commands.slash("nickname", "Change or remove a nickname from member")
-                .addSubcommands(
-                        new SubcommandData("remove", "Remove the nickname from the member")
-                                .addOptions(
-                                        new OptionData(OptionType.USER, "member", "The target member")
-                                                .setRequired(true)
-                                ),
-                        new SubcommandData("change", "Change the nickname from the member")
-                                .addOptions(
-                                        new OptionData(OptionType.USER, "member", "The target member")
-                                                .setRequired(true),
-                                        new OptionData(OptionType.STRING, "nickname", "The new nickname")
-                                                .setRequired(true)
-                                )
-                )
-                .setGuildOnly(true)
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(moderatorCommandPermissions()));
-    }
-
-    @JDACommandData
     final @NotNull CommandData notificationSlashCommand() {
         return Commands.slash("notification", "Add, remove or change notifications from YouTube, Twitch or Twitter")
                 .addOptions(
@@ -264,7 +243,8 @@ public class CommandRegisterer {
                                                                 .setRequired(true)
                                                                 .setAutoComplete(true),
                                                         new OptionData(OptionType.CHANNEL, "target-channel", "The channel where the logs will been sent")
-                                                                .setChannelTypes(ChannelType.TEXT)
+                                                                .setChannelTypes(ChannelType.TEXT),
+                                                        new OptionData(OptionType.BOOLEAN, "remove", "The log-channel will be removed")
                                                 ),
                                         new SubcommandData("media-only-channel", "Configure the MediaOnlyChannel"),
                                         new SubcommandData("archive-category", "Manage the archive category"),
@@ -280,7 +260,9 @@ public class CommandRegisterer {
                                         new SubcommandData("punishment-roles", "Manage the punishment roles")
                                                 .addOptions(
                                                         new OptionData(OptionType.ROLE, "warn-role", "Set the warn role"),
-                                                        new OptionData(OptionType.ROLE, "mute-role", "Set the mute role")
+                                                        new OptionData(OptionType.ROLE, "mute-role", "Set the mute role"),
+                                                        new OptionData(OptionType.BOOLEAN, "warn-disabled", "Disable the warn role"),
+                                                        new OptionData(OptionType.BOOLEAN, "mute-disabled", "Disable the mute role")
                                                 )
                                 ),
                         new SubcommandGroupData("regex", "Manage regex settings")
@@ -298,8 +280,8 @@ public class CommandRegisterer {
                                         new SubcommandData("ping-roles", "Manage the roles were are pinged")
                                                 .addOptions(
                                                         new OptionData(OptionType.ROLE, "role", "The role to add/remove")
-                                                )
-
+                                                ),
+                                        new SubcommandData("message", "Send the message with the button to create a ticket")
                                 )
                 )
                 .setGuildOnly(true)

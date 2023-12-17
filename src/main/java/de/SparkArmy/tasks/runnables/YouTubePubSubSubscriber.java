@@ -1,7 +1,7 @@
 package de.SparkArmy.tasks.runnables;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.utils.NotificationService;
 import okhttp3.*;
 import org.json.JSONArray;
@@ -13,6 +13,7 @@ import java.util.List;
 
 public class YouTubePubSubSubscriber implements Runnable {
     private final ConfigController controller;
+    private final DatabaseAction db = new DatabaseAction();
 
     public YouTubePubSubSubscriber(ConfigController controller) {
         this.controller = controller;
@@ -20,7 +21,6 @@ public class YouTubePubSubSubscriber implements Runnable {
 
     @Override
     public void run() {
-        Postgres db = controller.getMain().getPostgres();
         JSONArray data = db.getDataFromSubscribedChannelTableByService(NotificationService.YOUTUBE);
 
         List<String> urls = new ArrayList<>();

@@ -1,6 +1,6 @@
 package de.SparkArmy.webserver.mappings;
 
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -35,7 +35,7 @@ public class YouTubePubSubMapping {
     @PostMapping(value = "/pubsubservice/youtube", consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_ATOM_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_ATOM_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public void onYoutubeVideoPublished(@RequestBody @NotNull String s) {
-        Postgres db = Util.controller.getMain().getPostgres();
+        DatabaseAction db = new DatabaseAction();
         JSONObject requestBody = XML.toJSONObject(s);
         if (requestBody.isEmpty() || requestBody.isNull("feed")) return;
         JSONObject feed = requestBody.getJSONObject("feed");
@@ -50,10 +50,8 @@ public class YouTubePubSubMapping {
 
         if (updated.isAfter(published.plusMinutes(15))) return;
 
-        if (db.isIdInReceivedVideosTable(videoId)) {
+        if (db.putIdInReceivedVideosTable(videoId) <= 0) {
             return;
-        } else {
-            db.putIdInReceivedVideosTable(videoId);
         }
 
         JSONArray tableData = db.getDataFromSubscribedChannelTableByContentCreatorId(entry.getString("yt:channelId"));

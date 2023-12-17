@@ -6,6 +6,7 @@ import com.github.twitch4j.TwitchClientHelper;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.helix.domain.User;
 import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.utils.NotificationService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -37,7 +38,7 @@ public class ChannelNotifications {
     }
 
     public void registerListenedChannels() {
-        JSONArray tableData = controller.getMain().getPostgres().getDataFromSubscribedChannelTableByService(NotificationService.TWITCH);
+        JSONArray tableData = new DatabaseAction().getDataFromSubscribedChannelTableByService(NotificationService.TWITCH);
         for (Object o : tableData) {
             JSONObject object = (JSONObject) o;
             channelNames.add(object.getString("contentCreatorName"));
@@ -56,7 +57,7 @@ public class ChannelNotifications {
 
 
     public void onGoLive(@NotNull ChannelGoLiveEvent event) {
-        JSONArray tableData = controller.getMain().getPostgres().getDataFromSubscribedChannelTableByContentCreatorId(event.getChannel().getId());
+        JSONArray tableData = new DatabaseAction().getDataFromSubscribedChannelTableByContentCreatorId(event.getChannel().getId());
 
         Collection<MessageCreateAction> messageSendActions = new ArrayList<>();
 
@@ -77,7 +78,7 @@ public class ChannelNotifications {
 
     final @NotNull MessageEmbed twitchNotificationPattern(@NotNull ChannelGoLiveEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        User user = clientHelper.getTwitchHelix().getUsers(null, Collections.singletonList(event.getChannel().getId()), null).execute().getUsers().get(0);
+        User user = clientHelper.getTwitchHelix().getUsers(null, Collections.singletonList(event.getChannel().getId()), null).execute().getUsers().getFirst();
         embedBuilder.setTitle(event.getStream().getTitle(), "https://www.twitch.tv/%s".formatted(user.getLogin()));
         embedBuilder.setAuthor(event.getStream().getUserName(), null, user.getProfileImageUrl());
         embedBuilder.setColor(new Color(0x431282));

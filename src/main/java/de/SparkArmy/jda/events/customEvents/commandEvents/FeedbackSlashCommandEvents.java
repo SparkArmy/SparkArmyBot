@@ -1,9 +1,11 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
+import club.minnced.discord.webhook.WebhookClient;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -111,7 +113,10 @@ public class FeedbackSlashCommandEvents {
         if (channelId == 0) {
             return null;
         }
-        // TODO send warning in server log if channel is null
+        WebhookClient client = controller.getMain().getJdaApi().getWebhookApi().getSpecificWebhookClient(guild, LogChannelType.SERVER);
+        if (client != null) {
+            client.send("No feedback channel set");
+        }
         return guild.getGuildChannelById(channelId);
     }
 }

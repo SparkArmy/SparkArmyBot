@@ -1,8 +1,10 @@
 package de.SparkArmy.controller;
 
 import de.SparkArmy.Main;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.jda.utils.MediaOnlyPermissions;
+import de.SparkArmy.utils.ErrorCodes;
 import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
@@ -73,49 +75,54 @@ public class ConfigController {
                 try {
                     Desktop.getDesktop().open(FileHandler.getFileInDirectory(this.configFolder, "main-config.json"));
                 } catch (Exception ignored) {
+                    this.main.systemExit(ErrorCodes.GENERAL_CONFIG_ERROR.getId());
                 }
             } else {
-                this.logger.error("Can't create a main-config.json");
-                this.main.systemExit(1);
+                this.logger.error(ErrorCodes.GENERAL_CONFIG_CANT_CREATE_MAIN_CONFIG.getDescription());
+                this.main.systemExit(ErrorCodes.GENERAL_CONFIG_CANT_CREATE_MAIN_CONFIG.getId());
             }
 
             this.main.systemExit(0);
         }
         String mainConfigAsString = FileHandler.getFileContent(this.configFolder, "main-config.json");
         if (mainConfigAsString == null) {
-            this.logger.error("The main-config.json is null");
-            this.main.systemExit(12);
+            this.logger.error(ErrorCodes.GENERAL_CONFIG_IS_NULL.getDescription());
+            this.main.systemExit(ErrorCodes.GENERAL_CONFIG_IS_NULL.getId());
         }
         assert mainConfigAsString != null;
         return new JSONObject(mainConfigAsString);
     }
 
     public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild, String url) {
-        return main.getPostgres().writeInLogchannelTable(guild.getIdLong(), logChannelType.getId(), channel.getIdLong(), url);
+        return new DatabaseAction().writeInLogchannelTable(guild.getIdLong(), logChannelType, channel.getIdLong(), url);
+    }
+
+    public long removeGuildLoggingChannel(LogChannelType logChannelType, @NotNull Channel channel) {
+        return new DatabaseAction().removeLogChannelStateFromLogChannelTable(logChannelType, channel.getIdLong());
     }
 
     public long getGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Guild guild) {
-        return main.getPostgres().getChannelIdFromLogchannelTable(logChannelType.getId(), guild.getIdLong());
+        return new DatabaseAction().getLogChannelIdByLogChannelTypeAndGuildId(logChannelType, guild.getIdLong());
     }
 
     public String getGuildLoggingChannelUrl(@NotNull LogChannelType logChannelType, @NotNull Guild guild) {
-        return main.getPostgres().getUrlByLogchannelTypeAndGuildIdFromLogchannelTable(logChannelType.getId(), guild.getIdLong());
+        return new DatabaseAction().getLogChannelWebhookUrlByLogChannelTypeAndGuildId(logChannelType, guild.getIdLong());
     }
 
     public List<String> getLoggingChannelWebhookUrls() {
-        return main.getPostgres().getUrlsFromLogchannelTable();
+        return new DatabaseAction().getWebhookUrlsFromGuild();
     }
 
     public long setGuildArchiveCategory(@NotNull GuildChannel category, @NotNull Guild guild) {
-        return main.getPostgres().writeInArchiveCategoryTable(category.getIdLong(), guild.getIdLong());
+        return new DatabaseAction().setArchiveCategory(category.getIdLong(), guild.getIdLong());
     }
 
     public long getGuildArchiveCategory(@NotNull Guild guild) {
-        return main.getPostgres().getCategoryIdFromArchiveCategoryTable(guild.getIdLong());
+        return new DatabaseAction().getArchiveCategoryByGuildId(guild.getIdLong());
     }
 
     public long clearGuildArchiveCategory(@NotNull Guild guild) {
-        return main.getPostgres().clearGuildArchiveFromArchiveCategoryTable(guild.getIdLong());
+        return new DatabaseAction().removeArchiveCategoryByGuildId(guild.getIdLong());
     }
 
     public long addOrEditGuildMediaOnlyChannel(long channelId, @NotNull Guild guild, @NotNull List<MediaOnlyPermissions> permissions) {
@@ -124,142 +131,150 @@ public class ConfigController {
         boolean attachmentsPerms = permissions.contains(MediaOnlyPermissions.ATTACHMENT);
         boolean filePerms = permissions.contains(MediaOnlyPermissions.FILES);
         boolean linkPerms = permissions.contains(MediaOnlyPermissions.LINKS);
-        return main.getPostgres().writeInMediaOnlyChannelTable(channelId, guildId, textPerms, attachmentsPerms, filePerms, linkPerms);
+        return new DatabaseAction().addMediaOnlyChannel(channelId, guildId, textPerms, attachmentsPerms, filePerms, linkPerms);
     }
 
     public JSONObject getGuildMediaOnlyChannels(@NotNull Guild guild) {
-        return main.getPostgres().getChannelIdsFromMediaOnlyChannelTable(guild.getIdLong());
+        return new DatabaseAction().getMediaOnlyChannelDataByGuildId(guild.getIdLong());
     }
 
     public JSONObject getGuildMediaOnlyChannelPermissions(long channelId) {
-        return main.getPostgres().getChannelPermissionsByChannelIdFromMediaOnlyChannelTable(channelId);
+        return new DatabaseAction().getMediaOnlyChannelDataByChannelId(channelId);
     }
 
     public long removeGuildMediaOnlyChannel(long channelId) {
-        return main.getPostgres().removeChannelFromMediaOnlyChannelTable(channelId);
+        return new DatabaseAction().removeMediaOnlyChannel(channelId);
     }
 
-    public long addGuildModerationRole(@NotNull Role role, @NotNull Guild guild) {
-        return main.getPostgres().addModRoleToModRolesTable(role.getIdLong(), guild.getIdLong());
+    public long addGuildModerationRole(@NotNull Role role) {
+        return new DatabaseAction().addModerationRole(role.getIdLong(), role.getGuild().getIdLong());
     }
 
     public long removeGuildModerationRole(@NotNull Role role) {
-        return main.getPostgres().deleteModRoleFromModRolesTable(role.getIdLong());
+        return new DatabaseAction().removeModerationRole(role.getIdLong(), role.getGuild().getIdLong());
     }
 
     public List<Long> getGuildModerationRoles(@NotNull Guild guild) {
-        return main.getPostgres().getModRoleIdsByGuildFromModRolesTable(guild.getIdLong());
+        return new DatabaseAction().getModerationRolesByGuildId(guild.getIdLong());
     }
 
-    public long setGuildWarnRole(@NotNull Role warnRole, @NotNull Guild guild) {
-        return main.getPostgres().addOrEditRoleIdInGuildWarnRoleTable(warnRole.getIdLong(), guild.getIdLong());
+    public long setGuildWarnRole(@NotNull Role warnRole) {
+        return new DatabaseAction().setWarnRole(warnRole.getGuild().getIdLong(), warnRole.getIdLong());
+    }
+
+    public long disableGuildWarnRole(@NotNull Guild guild) {
+        return new DatabaseAction().disableWarnRole(guild.getIdLong());
     }
 
     public long getGuildWarnRole(@NotNull Guild guild) {
-        return main.getPostgres().getWarnRoleIdByGuildFromMuteRoleTable(guild.getIdLong());
+        return new DatabaseAction().getWarnRoleByGuildId(guild.getIdLong());
     }
 
-    public long setGuildMuteRole(@NotNull Role muteRole, @NotNull Guild guild) {
-        return main.getPostgres().addOrEditRoleIdInGuildMuteRoleTable(muteRole.getIdLong(), guild.getIdLong());
+    public long setGuildMuteRole(@NotNull Role muteRole) {
+        return new DatabaseAction().setMuteRole(muteRole.getGuild().getIdLong(), muteRole.getIdLong());
+    }
+
+    public long disableGuildMuteRole(@NotNull Guild guild) {
+        return new DatabaseAction().disableMuteRole(guild.getIdLong());
     }
 
     public long getGuildMuteRole(@NotNull Guild guild) {
-        return main.getPostgres().getMuteRoleIdByGuildFromMuteRoleTable(guild.getIdLong());
+        return new DatabaseAction().getMuteRoleByGuildId(guild.getIdLong());
     }
 
     public long addPhraseToGuildTextBlacklist(String phrase, @NotNull Guild guild) {
-        return main.getPostgres().addPhraseToBlacklistTable(phrase, guild.getIdLong());
+        return new DatabaseAction().addPhraseToBlacklistTable(phrase, guild.getIdLong());
     }
 
     public JSONObject getGuildBlacklistPhrases(@NotNull Guild guild) {
-        return main.getPostgres().getPhrasesByGuildIdFromBlacklistTable(guild.getIdLong());
+        return new DatabaseAction().getPhrasesFromBlacklistTableByGuildId(guild.getIdLong());
     }
 
     public String getSpecificBlacklistPhrase(long id) {
-        return main.getPostgres().getSpecificBlacklistPhraseByIdFromBlacklistTable(id);
+        return new DatabaseAction().getPhraseByDatabaseId(id);
     }
 
-    public long updatePhraseFromGuildTextBlacklist(String phrase, long databaseId) {
-        return main.getPostgres().updatePhraseInBlacklistTable(phrase, databaseId);
+    public long updatePhraseFromGuildTextBlacklist(String phrase, long databaseId, @NotNull Guild guild) {
+        return new DatabaseAction().updatePhraseInBlacklistTable(databaseId, phrase, guild.getIdLong());
     }
 
     public long deletePhraseFromGuildTextBlacklist(long id) {
-        return main.getPostgres().removePhraseFromBlacklistTable(id);
+        return new DatabaseAction().removePhraseFromBlacklistTable(id);
     }
 
     public long addOrEditRegexToGuildRegexTable(String phrase, String name, @NotNull Guild guild, long id) {
-        return main.getPostgres().addOrEditRegexToRegexTable(guild.getIdLong(), phrase, name, id);
+        return new DatabaseAction().writeInRegexTable(guild.getIdLong(), phrase, name, id);
     }
 
     public JSONObject getGuildRegexEntries(@NotNull Guild guild) {
-        return main.getPostgres().getRegexEntriesByGuildIdFromRegexTable(guild.getIdLong());
+        return new DatabaseAction().getRegexEntriesByGuildId(guild.getIdLong());
     }
 
     public JSONObject getRegexEntryById(String id) {
-        return main.getPostgres().getRegexEntryByDatabaseIdFromRegexTable(Long.parseLong(id));
+        return new DatabaseAction().getRegexEntryByDatabaseId(Long.parseLong(id));
     }
 
     public long removeGuildRegexEntry(long id) {
-        return main.getPostgres().removeRegexEntryByDatabaseIdFromRegexTable(id);
+        return new DatabaseAction().removeRegexEntry(id);
     }
 
-    public long setGuildFeedbackChannel(@NotNull Channel channel, @NotNull Guild guild) {
-        return main.getPostgres().writeInFeedbackChannelTable(channel.getIdLong(), guild.getIdLong());
+    public long setGuildFeedbackChannel(@NotNull GuildChannel channel) {
+        return new DatabaseAction().setGuildFeedbackChannel(channel.getIdLong(), channel.getGuild().getIdLong());
     }
 
     public long removeGuildFeedbackChannel(@NotNull Guild guild) {
-        return main.getPostgres().removeFromFeedbackChannelTable(guild.getIdLong());
+        return new DatabaseAction().removeGuildFeedbackChannel(guild.getIdLong());
     }
 
     public long getGuildFeedbackChannel(@NotNull Guild guild) {
-        return main.getPostgres().getFeedbackChannelByGuildIdFromFeedbackChannelTable(guild.getIdLong());
+        return new DatabaseAction().getGuildFeedbackChannelByGuildId(guild.getIdLong());
     }
 
     public List<Long> getGuildModmailBlacklistedUsers(@NotNull Guild guild) {
-        return main.getPostgres().getBlacklistedModmailUsersFromModmailBlacklistTable(guild.getIdLong());
+        return new DatabaseAction().getUserIdsFromModmailBlacklistTableByGuildId(guild.getIdLong());
     }
 
     public long isUserOnGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return main.getPostgres().isGuildUserInModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+        return new DatabaseAction().isUserOnModmailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
     public long removeUserFromGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return main.getPostgres().removeUserFromModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+        return new DatabaseAction().removeUserFromModmailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
     public long addUserToGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return main.getPostgres().addUserToModmailBlacklistTable(user.getIdLong(), guild.getIdLong());
+        return new DatabaseAction().addUserToModmailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
-    public long setGuildModmailCategory(@NotNull Guild guild, @NotNull Category category) {
-        return main.getPostgres().writeCategoryIdInModmailChannelTable(category.getIdLong(), guild.getIdLong());
+    public long setGuildModmailCategory(@NotNull Category category) {
+        return new DatabaseAction().writeCategegoryInModmailChannelTable(category.getIdLong(), category.getGuild().getIdLong());
     }
 
     public long disableGuildModmail(@NotNull Guild guild) {
-        return main.getPostgres().removeDataFromModmailChannelTable(guild.getIdLong());
+        return new DatabaseAction().removeDataFromModmailChannelTable(guild.getIdLong());
     }
 
     public long setGuildModmailArchiveChannel(@NotNull Guild guild, TextChannel channel) {
-        return main.getPostgres().setArchiveChannelInModmailChannelTable(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+        return new DatabaseAction().setModmailArchiveChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
     }
 
     public long setGuildModmailLogChannel(@NotNull Guild guild, TextChannel channel) {
-        return main.getPostgres().setLogChannelInModmailChannelTable(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+        return new DatabaseAction().setModmailLogChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
     }
 
     public long isRoleGuildModmailPingRole(@NotNull Role role) {
-        return main.getPostgres().isRoleInModmailPingRoleTable(role.getIdLong());
+        return new DatabaseAction().isRoleModmailPingRole(role.getIdLong(), role.getGuild().getIdLong());
     }
 
-    public long addGuildModmailPingRole(@NotNull Role role, @NotNull Guild guild) {
-        return main.getPostgres().addRoleToModmailPingRoleTable(role.getIdLong(), guild.getIdLong());
+    public long addGuildModmailPingRole(@NotNull Role role) {
+        return new DatabaseAction().addModmailPingRole(role.getGuild().getIdLong(), role.getIdLong());
     }
 
     public long removeGuildModmailPingRole(@NotNull Role role) {
-        return main.getPostgres().removeRoleFromModmailPingRoleTable(role.getIdLong());
+        return new DatabaseAction().removeModmailPingRole(role.getGuild().getIdLong(), role.getIdLong());
     }
 
     public List<Long> getGuildModmailPingRoles(@NotNull Guild guild) {
-        return main.getPostgres().getRoleIdsFromModmailPingRoleTable(guild.getIdLong());
+        return new DatabaseAction().getModmailPingRoleIdsByGuildId(guild.getIdLong());
     }
 }

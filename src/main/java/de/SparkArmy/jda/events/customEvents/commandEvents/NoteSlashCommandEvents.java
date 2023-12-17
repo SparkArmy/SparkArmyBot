@@ -1,7 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
-import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
+import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
 import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
 import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
@@ -17,6 +16,7 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -29,108 +29,88 @@ import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 import static de.SparkArmy.utils.Util.logger;
 
 public class NoteSlashCommandEvents {
-    private final Postgres db;
+    private final DatabaseAction db;
+    public NoteSlashCommandEvents(@NotNull EventDispatcher ignoredDispatcher) {
+        this.db = new DatabaseAction();
+    }
 
-    public NoteSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
-        ConfigController controller = dispatcher.getController();
-        this.db = controller.getMain().getPostgres();
+    private ResourceBundle bundle(DiscordLocale locale) {
+        return Util.getResourceBundle("note", locale);
+    }
+
+    private ResourceBundle standardPhrases(DiscordLocale locale) {
+        return Util.getResourceBundle("standardPhrases", locale);
     }
 
     final @NotNull Button nextButton(@NotNull ResourceBundle bundle, String @NotNull [] ids, int count, @NotNull NoteEmbedActionType actionType) {
         return Button.of(ButtonStyle.SECONDARY,
                 String.format("noteCommand_%sNoteEmbed_next;%s,%s;%d", actionType.getName(), ids[0], ids[1], count),
-                bundle.getString("events.showEmbedButtons.next.label"));
+                bundle.getString("buttons.next"));
     }
 
     final @NotNull Button beforeButton(@NotNull ResourceBundle bundle, String @NotNull [] ids, int count, @NotNull NoteEmbedActionType actionType) {
         return Button.of(ButtonStyle.SECONDARY,
                 String.format("noteCommand_%sNoteEmbed_before;%s,%s;%d", actionType.getName(), ids[0], ids[1], count),
-                bundle.getString("events.showEmbedButtons.before.label"));
+                bundle.getString("buttons.before"));
     }
 
     final @NotNull Button closeButton(@NotNull ResourceBundle bundle, String @NotNull [] ids, @NotNull NoteEmbedActionType actionType) {
         return Button.of(ButtonStyle.SECONDARY,
                 String.format("noteCommand_%sNoteEmbed_close;%s", actionType.getName(), ids[0]),
-                bundle.getString("events.showEmbedButtons.close.label"));
+                bundle.getString("buttons.close"));
     }
 
-    @JDAButton(startWith = "noteCommand_initialShowEmbed_show")
-    public void showButtonClickEvent(@NotNull ButtonInteractionEvent event) {
-        sendInitialEmbed(event, NoteEmbedActionType.SHOW);
+    @JDAButton(startWith = "noteCommand")
+    public void noteButtonsEvents(@NotNull ButtonInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+        String componentId = event.getComponentId();
+        String[] splitComponentId = componentId.split(";");
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
+
+        switch (splitComponentId[0]) {
+            case "noteCommand_initialShowEmbed_show" ->
+                    sendInitialEmbed(event, NoteEmbedActionType.SHOW, bundle, standardPhrases);
+            case "noteCommand_initialShowEmbed_edit" ->
+                    sendInitialEmbed(event, NoteEmbedActionType.EDIT, bundle, standardPhrases);
+            case "noteCommand_initialShowEmbed_remove" ->
+                    sendInitialEmbed(event, NoteEmbedActionType.REMOVE, bundle, standardPhrases);
+            case "noteCommand_showNoteEmbed_close",
+                    "noteCommand_editNoteEmbed_close",
+                    "noteCommand_removeNoteEmbed_close" -> closeEmbed(event, bundle);
+            case "noteCommand_showNoteEmbed_next" ->
+                    sendShowEmbed(event, ClickType.NEXT, NoteEmbedActionType.SHOW, standardPhrases);
+            case "noteCommand_editNoteEmbed_next" ->
+                    sendShowEmbed(event, ClickType.NEXT, NoteEmbedActionType.EDIT, standardPhrases);
+            case "noteCommand_removeNoteEmbed_next" ->
+                    sendShowEmbed(event, ClickType.NEXT, NoteEmbedActionType.REMOVE, standardPhrases);
+            case "noteCommand_showNoteEmbed_before" ->
+                    sendShowEmbed(event, ClickType.BEFORE, NoteEmbedActionType.SHOW, standardPhrases);
+            case "noteCommand_editNoteEmbed_before" ->
+                    sendShowEmbed(event, ClickType.BEFORE, NoteEmbedActionType.EDIT, standardPhrases);
+            case "noteCommand_removeNoteEmbed_before" ->
+                    sendShowEmbed(event, ClickType.BEFORE, NoteEmbedActionType.REMOVE, standardPhrases);
+        }
     }
 
-    @JDAButton(startWith = "noteCommand_initialShowEmbed_edit")
-    public void editButtonClickEvent(ButtonInteractionEvent event) {
-        sendInitialEmbed(event, NoteEmbedActionType.EDIT);
-    }
-
-    @JDAButton(startWith = "noteCommand_initialShowEmbed_remove")
-    public void removeButtonClickEvent(ButtonInteractionEvent event) {
-        sendInitialEmbed(event, NoteEmbedActionType.REMOVE);
-    }
-
-    @JDAButton(startWith = "noteCommand_showNoteEmbed_close")
-    public void closeShowEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        closeEmbed(event);
-    }
-
-    @JDAButton(startWith = "noteCommand_editNoteEmbed_close")
-    public void closeEditEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        closeEmbed(event);
-    }
-
-    @JDAButton(startWith = "noteCommand_removeNoteEmbed_close")
-    public void closeRemoveEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        closeEmbed(event);
-    }
-
-    @JDAButton(startWith = "noteCommand_showNoteEmbed_next")
-    public void nextShowEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        sendShowEmbed(event, ClickType.NEXT, NoteEmbedActionType.SHOW);
-    }
-
-    @JDAButton(startWith = "noteCommand_editNoteEmbed_next")
-    public void nextEditEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        sendShowEmbed(event, ClickType.NEXT, NoteEmbedActionType.EDIT);
-    }
-
-    @JDAButton(startWith = "noteCommand_removeNoteEmbed_next")
-    public void nextRemoveEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        sendShowEmbed(event, ClickType.NEXT, NoteEmbedActionType.REMOVE);
-    }
-
-    @JDAButton(startWith = "noteCommand_showNoteEmbed_before")
-    public void beforeShowEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        sendShowEmbed(event, ClickType.BEFORE, NoteEmbedActionType.SHOW);
-    }
-
-    @JDAButton(startWith = "noteCommand_editNoteEmbed_before")
-    public void beforeEditEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        sendShowEmbed(event, ClickType.BEFORE, NoteEmbedActionType.EDIT);
-    }
-
-    @JDAButton(startWith = "noteCommand_removeNoteEmbed_before")
-    public void beforeRemoveEmbedClickEvent(@NotNull ButtonInteractionEvent event) {
-        sendShowEmbed(event, ClickType.BEFORE, NoteEmbedActionType.REMOVE);
-    }
-
-    private void closeEmbed(@NotNull ButtonInteractionEvent event) {
+    private void closeEmbed(@NotNull ButtonInteractionEvent event, ResourceBundle bundle) {
         String[] splitId = event.getComponentId().split(";");
         String commandUserId = splitId[1];
         if (!event.getUser().getId().equals(commandUserId)) return;
 
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
         event.deferEdit().setEmbeds().setComponents().setContent(bundle.getString("events.closeShowEmbedClickEvent.closeMessage")).queue();
     }
 
-    private void sendInitialEmbed(@NotNull ButtonInteractionEvent event, NoteEmbedActionType actionType) {
+    @SuppressWarnings("DuplicatedCode")
+    private void sendInitialEmbed(@NotNull ButtonInteractionEvent event, NoteEmbedActionType actionType, ResourceBundle bundle, ResourceBundle standardPhrases) {
         Guild guild = event.getGuild();
         if (guild == null) return;
         event.deferEdit().queue();
@@ -142,9 +122,7 @@ public class NoteSlashCommandEvents {
 
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(targetUserId), guild.getIdLong());
 
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-
-        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().get(0));
+        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().getFirst());
         showNoteEmbed.setDescription(bundle.getString("events.showButtonClickEvent.showNoteEmbed.description"));
         showNoteEmbed.clearFields();
 
@@ -155,10 +133,10 @@ public class NoteSlashCommandEvents {
         ActionRow actionRow;
         if (notes.length() > 25) {
             actionRow = ActionRow.of(
-                    nextButton(bundle, ids, 25, actionType),
-                    closeButton(bundle, ids, actionType));
+                    nextButton(standardPhrases, ids, 25, actionType),
+                    closeButton(standardPhrases, ids, actionType));
         } else {
-            actionRow = ActionRow.of(closeButton(bundle, ids, actionType));
+            actionRow = ActionRow.of(closeButton(standardPhrases, ids, actionType));
         }
         switch (actionType) {
             case SHOW -> event.getHook().editOriginalEmbeds(showNoteEmbed.build()).setComponents(actionRow).queue();
@@ -167,7 +145,8 @@ public class NoteSlashCommandEvents {
         }
     }
 
-    private void sendShowEmbed(@NotNull ButtonInteractionEvent event, ClickType clicktype, NoteEmbedActionType actionType) {
+    @SuppressWarnings("DuplicatedCode")
+    private void sendShowEmbed(@NotNull ButtonInteractionEvent event, ClickType clicktype, NoteEmbedActionType actionType, ResourceBundle standardPhrases) {
         Guild guild = event.getGuild();
         if (guild == null) return;
         event.deferEdit().queue();
@@ -178,7 +157,7 @@ public class NoteSlashCommandEvents {
         int count = Integer.parseInt(splitId[2]);
         if (!ids[0].equals(event.getUser().getId())) return;
 
-        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().get(0));
+        EmbedBuilder showNoteEmbed = new EmbedBuilder(event.getMessage().getEmbeds().getFirst());
         showNoteEmbed.clearFields();
 
         StringSelectMenu.Builder menuBuilder = StringSelectMenu.create(
@@ -188,30 +167,29 @@ public class NoteSlashCommandEvents {
 
         setEmbedFieldsAndGetModerators(showNoteEmbed,menuBuilder,count,notes);
 
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
         ActionRow actionRow;
         int notesSize = notes.keySet().size();
         if (clicktype.equals(ClickType.BEFORE)) {
             if (count - 25 > 0) {
                 actionRow = ActionRow.of(
-                        beforeButton(bundle, ids, count - 25, actionType),
-                        nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
-                        closeButton(bundle, ids, actionType));
+                        beforeButton(standardPhrases, ids, count - 25, actionType),
+                        nextButton(standardPhrases, ids, Math.min(notesSize - count, 25), actionType),
+                        closeButton(standardPhrases, ids, actionType));
             } else {
                 actionRow = ActionRow.of(
-                        nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
-                        closeButton(bundle, ids, actionType));
+                        nextButton(standardPhrases, ids, Math.min(notesSize - count, 25), actionType),
+                        closeButton(standardPhrases, ids, actionType));
             }
         } else {
             if (notesSize - count > 1) {
                 actionRow = ActionRow.of(
-                        beforeButton(bundle, ids, count - 25, actionType),
-                        nextButton(bundle, ids, Math.min(notesSize - count, 25), actionType),
-                        closeButton(bundle, ids, actionType));
+                        beforeButton(standardPhrases, ids, count - 25, actionType),
+                        nextButton(standardPhrases, ids, Math.min(notesSize - count, 25), actionType),
+                        closeButton(standardPhrases, ids, actionType));
             } else {
                 actionRow = ActionRow.of(
-                        beforeButton(bundle, ids, count - 25, actionType),
-                        closeButton(bundle, ids, actionType));
+                        beforeButton(standardPhrases, ids, count - 25, actionType),
+                        closeButton(standardPhrases, ids, actionType));
             }
         }
 
@@ -229,11 +207,11 @@ public class NoteSlashCommandEvents {
         String[] splitId = event.getComponentId().split(";");
         String[] ids = splitId[1].split(",");
         if (!event.getUser().getId().equals(ids[0])) return;
-        TextInput.Builder noteContent = TextInput.create(event.getValues().get(0), "Note Content", TextInputStyle.PARAGRAPH);
+        TextInput.Builder noteContent = TextInput.create(event.getValues().getFirst(), "Note Content", TextInputStyle.PARAGRAPH);
         noteContent.setMaxLength(1024);
 
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong());
-        noteContent.setValue(notes.getJSONObject(event.getValues().get(0)).getString("noteContent"));
+        noteContent.setValue(notes.getJSONObject(event.getValues().getFirst()).getString("noteContent"));
 
         ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
 
@@ -252,18 +230,22 @@ public class NoteSlashCommandEvents {
         String[] ids = splitId[1].split(",");
         if (!event.getUser().getId().equals(ids[0])) return;
 
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-        if (db.deleteDataFromNoteTable(
-                Long.parseLong(ids[1]),
-                Long.parseLong(ids[0]),
-                event.getGuild().getIdLong(),
-                Timestamp.valueOf(LocalDateTime.parse(event.getValues().get(0))))) {
+        ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
+
+        long value = db.deleteDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong(), LocalDateTime.parse(event.getValues().getFirst().replace(" ", "T")));
+        if (value > 0) {
             event.getHook().editOriginal(bundle.getString("events.noteRemoveSelectEvent.success"))
                     .setComponents()
                     .setEmbeds()
                     .queue();
+        } else if (value < 0) {
+            event.getHook().editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), value))
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
         } else {
-            event.getHook().editOriginal(bundle.getString("events.noteRemoveSelectEvent.failedToPutInDB"))
+            event.getHook().editOriginal(standardPhrases.getString("replies.noDataEdit"))
                     .setComponents()
                     .setEmbeds()
                     .queue();
@@ -278,8 +260,9 @@ public class NoteSlashCommandEvents {
         String[] ids = splitId[1].split(",");
         if (!event.getUser().getId().equals(ids[0])) return;
 
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-        ModalMapping noteContentField = event.getValues().get(0);
+        ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
+        ModalMapping noteContentField = event.getValues().getFirst();
 
         JSONObject notes = db.getDataFromNoteTable(Long.parseLong(ids[1]), event.getGuild().getIdLong());
 
@@ -288,21 +271,24 @@ public class NoteSlashCommandEvents {
             return;
         }
 
-        if (db.updateDataFromNoteTable(
-                noteContentField.getAsString(),
-                Long.parseLong(ids[0]),
-                Long.parseLong(ids[1]),
-                event.getGuild().getIdLong(),
-                Timestamp.valueOf(LocalDateTime.parse(noteContentField.getId())))) {
+        long updateValue = db.updateDataFromNoteTable(event.getGuild().getIdLong(), Long.parseLong(ids[1]), LocalDateTime.parse(noteContentField.getId().replace(" ", "T")), noteContentField.getAsString());
+
+        if (updateValue > 0) {
             event.getHook().editOriginal(bundle.getString("events.noteModalEvent.successMessage")).queue();
+        } else if (updateValue < 0) {
+            event.getHook().editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), updateValue)).queue();
         } else {
-            event.getHook().editOriginal(bundle.getString("events.noteModalEvent.failedMessage")).queue();
+            event.getHook().editOriginal(standardPhrases.getString("replies.noDataEdit"))
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
         }
     }
 
     @JDASlashCommand(name = "note")
     public void initialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
+        ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
         String subcommandName = event.getSubcommandName();
 
         if (subcommandName == null) {
@@ -324,8 +310,8 @@ public class NoteSlashCommandEvents {
         }
 
         switch (subcommandName) {
-            case "add" -> addNoteCommand(event, targetUser, eventGuild);
-            case "show" -> showNoteCommand(event, commandMember, targetUser, eventGuild);
+            case "add" -> addNoteCommand(event, targetUser, eventGuild, bundle, standardPhrases);
+            case "show" -> showNoteCommand(event, commandMember, targetUser, eventGuild, bundle, standardPhrases);
             default -> {
                 logger.warn("noteSlashCommand has a default value in switch(subcommandName) with value: " + subcommandName);
                 event.reply(bundle.getString("command.dispatchSlashEvent.defaultReply")).setEphemeral(true).queue();
@@ -334,9 +320,7 @@ public class NoteSlashCommandEvents {
 
     }
 
-    private void showNoteCommand(@NotNull SlashCommandInteractionEvent event, Member commandExecutor, @NotNull User targetUser, @NotNull Guild guild) {
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-
+    private void showNoteCommand(@NotNull SlashCommandInteractionEvent event, Member commandExecutor, @NotNull User targetUser, @NotNull Guild guild, ResourceBundle bundle, ResourceBundle standardPhrases) {
 
         JSONObject notes = db.getDataFromNoteTable(targetUser.getIdLong(), guild.getIdLong());
 
@@ -349,13 +333,13 @@ public class NoteSlashCommandEvents {
         initialShowNoteEmbed.setTitle(String.format(bundle.getString("command.showNoteCommand.initialShowNoteEmbed.title"), targetUser.getName()));
         initialShowNoteEmbed.setDescription(bundle.getString("command.showNoteCommand.initialShowNoteEmbed.description"));
         initialShowNoteEmbed.addField(
-                bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.show.name"),
+                standardPhrases.getString("embeds.fields.name.show"),
                 bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.show.value"), true);
         initialShowNoteEmbed.addField(
-                bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.edit.name"),
+                standardPhrases.getString("embeds.fields.name.edit"),
                 bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.edit.value"), true);
         initialShowNoteEmbed.addField(
-                bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.remove.name"),
+                standardPhrases.getString("embeds.fields.name.remove"),
                 bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.remove.value"), true);
 
         String buttonIdPreset = "noteCommand_initialShowEmbed_%s;%s,%s";
@@ -363,13 +347,13 @@ public class NoteSlashCommandEvents {
         String targetId = targetUser.getId();
         Button editButton = Button.of(ButtonStyle.SECONDARY,
                 String.format(buttonIdPreset, "edit", commandUserId, targetId),
-                bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.edit.name"));
+                standardPhrases.getString("buttons.edit"));
         Button removeButton = Button.of(ButtonStyle.SECONDARY,
                 String.format(buttonIdPreset, "remove", commandUserId, targetId),
-                bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.remove.name"));
+                standardPhrases.getString("buttons.remove"));
         Button listButton = Button.of(ButtonStyle.SECONDARY,
                 String.format(buttonIdPreset, "show", commandUserId, targetId),
-                bundle.getString("command.showNoteCommand.initialShowNoteEmbed.field.show.name"));
+                standardPhrases.getString("buttons.show"));
 
 
         if (commandExecutor.getPermissions().contains(Permission.ADMINISTRATOR)) {
@@ -387,27 +371,31 @@ public class NoteSlashCommandEvents {
 
     }
 
-    private void addNoteCommand(@NotNull SlashCommandInteractionEvent event, User targetUser, Guild guild) {
-        ResourceBundle bundle = Util.getResourceBundle("note", event.getUserLocale());
-
-
+    private void addNoteCommand(@NotNull SlashCommandInteractionEvent event, User targetUser, Guild guild, ResourceBundle bundle, ResourceBundle standardPhrases) {
+        event.deferReply(true).queue();
         String note = event.getOption("note", OptionMapping::getAsString); // Option is required
 
         if (note == null || note.isEmpty()) {
-            event.reply(bundle.getString("command.addNoteCommand.noteIsNullOrEmpty")).setEphemeral(true).queue();
+            event.getHook().editOriginal(bundle.getString("command.addNoteCommand.noteIsNullOrEmpty")).queue();
             return;
         }
 
         if (note.length() > 1024) {
-            event.reply(bundle.getString("command.addNoteCommand.noteIsToLong")).setEphemeral(true).queue();
+            event.getHook().editOriginal(bundle.getString("command.addNoteCommand.noteIsToLong")).queue();
             return;
         }
 
+        long addValue = db.putDataInNoteTable(guild.getIdLong(), targetUser.getIdLong(), event.getUser().getIdLong(), note, LocalDateTime.now());
 
-        if (db.putDataInNoteTable(note, targetUser.getIdLong(), event.getUser().getIdLong(), guild.getIdLong())) {
-            event.reply(bundle.getString("command.addNoteCommand.success")).setEphemeral(true).queue();
+        if (addValue > 0) {
+            event.getHook().editOriginal(bundle.getString("command.addNoteCommand.success")).queue();
+        } else if (addValue < 0) {
+            event.getHook().editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), addValue)).queue();
         } else {
-            event.reply(bundle.getString("command.addNoteCommand.putInDBFailed")).setEphemeral(true).queue();
+            event.getHook().editOriginal(standardPhrases.getString("replies.noDataEdit"))
+                    .setComponents()
+                    .setEmbeds()
+                    .queue();
         }
     }
 
@@ -420,7 +408,7 @@ public class NoteSlashCommandEvents {
                 i++;
                 JSONObject entry = notes.getJSONObject(keyString);
                 String timeString = keyString.replace("T", " ").replaceAll(".\\d{5,}", " ");
-                showNoteEmbed.addField(timeString + " from <!@" + entry.getString("moderatorId") + ">",entry.getString("noteContent"),false);
+                showNoteEmbed.addField(timeString + " from <!@" + entry.getLong("moderatorId") + ">", entry.getString("noteContent"), false);
                 if (menuBuilder != null) menuBuilder.addOption(timeString,keyString);
                 if (i == 25) break;
             }

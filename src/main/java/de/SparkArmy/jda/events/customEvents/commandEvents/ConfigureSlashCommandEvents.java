@@ -34,6 +34,8 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -78,7 +80,7 @@ public class ConfigureSlashCommandEvents {
         switch (subcommandGroupName) {
             case "channel" -> {
                 switch (subcommandName) {
-                    case "log-channels" -> channelLogchannelConfigureSubcommand(event, bundle, guild);
+                    case "log-channels" -> channelLogchannelConfigureSubcommand(event, bundle, guild, standardPhrases);
                     case "media-only-channel" ->
                             channelMediaOnlyChannelConfigureSubcommand(event, bundle, standardPhrases);
                     case "archive-category" ->
@@ -89,8 +91,9 @@ public class ConfigureSlashCommandEvents {
             }
             case "roles" -> {
                 switch (subcommandName) {
-                    case "mod-roles" -> rolesModRolesConfigureSubcommand(event, bundle, guild, standardPhrases);
-                    case "punishment-roles" -> rolesPunishmentRolesConfigureSubcommand(event, bundle, guild);
+                    case "mod-roles" -> rolesModRolesConfigureSubcommand(event, bundle, standardPhrases);
+                    case "punishment-roles" ->
+                            rolesPunishmentRolesConfigureSubcommand(event, bundle, standardPhrases, guild);
                 }
             }
             case "regex" -> {
@@ -104,6 +107,7 @@ public class ConfigureSlashCommandEvents {
                     case "category" -> modmailCategoryConfigureSubcommand(event, bundle);
                     case "blacklist" -> modmailBlacklistConfigureSubcommand(event, bundle, guild, standardPhrases);
                     case "ping-roles" -> modmailPingRolesConfigureSubcommand(event, bundle, guild, standardPhrases);
+                    case "message" -> modmailMessageConfigureSubcommand(event, bundle);
                 }
             }
         }
@@ -122,6 +126,49 @@ public class ConfigureSlashCommandEvents {
         if (subcommandGroupName.equals("channel") && subcommandName.equals("log-channels")) {
             event.replyChoiceStrings(LogChannelType.getLogChannelTypes().stream().filter(x -> x.getId() > 0).map(LogChannelType::getName).toList()).queue();
         }
+    }
+
+    private void modmailMessageConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
+        TextInput.Builder message = TextInput.create("message",
+                bundle.getString("configureEvents.modmail.message.modmailMessageConfigureSubcommand.modal.inputs.message.lable"),
+                TextInputStyle.PARAGRAPH);
+        message.setRequiredRange(20, 4000);
+        message.setRequired(true);
+        message.setValue(bundle.getString("configureEvents.modmail.message.modmailMessageConfigureSubcommand.modal.inputs.message.defaultValue"));
+        message.setPlaceholder(bundle.getString("configureEvents.modmail.message.modmailMessageConfigureSubcommand.modal.inputs.message.placeholder"));
+
+        Modal.Builder messageModal = Modal.create(
+                String.format("modmailMessageConfigureModal;%s", event.getUser().getId()),
+                bundle.getString("configureEvents.modmail.message.modmailMessageConfigureSubcommand.modal.title"));
+        messageModal.addActionRow(message.build());
+        event.replyModal(messageModal.build()).queue();
+    }
+
+    @JDAModal(startWith = "modmailMessageConfigureModal")
+    public void modmailMessageConfigureModalEvent(@NotNull ModalInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) return;
+
+        String[] splitComponentId = event.getModalId().split(";");
+
+        String userId = event.getUser().getId();
+        if (!userId.equals(splitComponentId[1])) return;
+
+        ResourceBundle bundle = bundle(event.getUserLocale());
+
+        event.deferReply(true).queue();
+
+        ModalMapping messageMapping = event.getValue("message");
+        if (messageMapping == null) return;
+        String message = messageMapping.getAsString();
+
+        Button ticketCreateButton = Button.of(ButtonStyle.SUCCESS, "modmailCreateTicket", "Ticket");
+
+        event.getChannel()
+                .sendMessage(message)
+                .addActionRow(ticketCreateButton)
+                .flatMap(x -> event.getHook().editOriginal(bundle.getString("configureEvents.modmail.message.modmailMessageConfigureModalEvent.reply")))
+                .queue();
     }
 
     private void modmailPingRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
@@ -154,7 +201,7 @@ public class ConfigureSlashCommandEvents {
         long returnValue;
         String responseString;
         if (controller.isRoleGuildModmailPingRole(targetRole) == 0) {
-            returnValue = controller.addGuildModmailPingRole(targetRole, guild);
+            returnValue = controller.addGuildModmailPingRole(targetRole);
             if (returnValue == 0) {
                 responseString = bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.roleAdded");
             } else {
@@ -219,6 +266,7 @@ public class ConfigureSlashCommandEvents {
 
         event.getHook().editOriginal(responseString).queue();
     }
+
     private void modmailCategoryConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle) {
         event.deferReply(true).queue();
 
@@ -440,7 +488,7 @@ public class ConfigureSlashCommandEvents {
 
         switch (splitComponentId[0]) {
             case "modmailCategoryEntitySelectAction_setCategory" ->
-                    modmailCategorySetCategoryEntitySelectEvent(event, bundle, guild, standardPhrases);
+                    modmailCategorySetCategoryEntitySelectEvent(event, bundle, standardPhrases);
             case "modmailCategoryEntitySelectAction_setArchive" ->
                     modmailCategorySetArchiveEntitySelectEvent(event, bundle, guild, standardPhrases);
             case "modmailCategoryEntitySelectAction_setLog" ->
@@ -451,7 +499,7 @@ public class ConfigureSlashCommandEvents {
     private void modmailCategorySetLogEntitySelectEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        TextChannel textChannel = (TextChannel) event.getMentions().getChannels().get(0);
+        TextChannel textChannel = (TextChannel) event.getMentions().getChannels().getFirst();
         if (textChannel == null) return;
 
         long responseCode = controller.setGuildModmailLogChannel(guild, textChannel);
@@ -459,11 +507,12 @@ public class ConfigureSlashCommandEvents {
 
         if (responseCode == -15) {
             responseString = bundle.getString("configureEvents.modmail.category.noCategorySet");
-        } else if (responseCode == 0) {
+        } else if (responseCode > 0) {
             responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetLogEntitySelectEvent.successResponse");
-        } else {
+        } else if (responseCode < 0) {
             responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
-
+        } else {
+            responseString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()
@@ -475,7 +524,7 @@ public class ConfigureSlashCommandEvents {
     private void modmailCategorySetArchiveEntitySelectEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        TextChannel textChannel = (TextChannel) event.getMentions().getChannels().get(0);
+        TextChannel textChannel = (TextChannel) event.getMentions().getChannels().getFirst();
         if (textChannel == null) return;
 
         long responseCode = controller.setGuildModmailArchiveChannel(guild, textChannel);
@@ -483,10 +532,12 @@ public class ConfigureSlashCommandEvents {
 
         if (responseCode == -15) {
             responseString = bundle.getString("configureEvents.modmail.category.noCategorySet");
-        } else if (responseCode == 0) {
+        } else if (responseCode > 0) {
             responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetArchiveEntitySelectEvent.successResponse");
-        } else {
+        } else if (responseCode < 0) {
             responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
+        } else {
+            responseString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()
@@ -495,19 +546,21 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    private void modmailCategorySetCategoryEntitySelectEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
+    private void modmailCategorySetCategoryEntitySelectEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        Category category = (Category) event.getMentions().getChannels().get(0);
+        Category category = (Category) event.getMentions().getChannels().getFirst();
         if (category == null) return;
 
-        long responseCode = controller.setGuildModmailCategory(guild, category);
+        long responseCode = controller.setGuildModmailCategory(category);
         String responseString;
 
-        if (responseCode != 0) {
+        if (responseCode < 0) {
             responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
-        } else {
+        } else if (responseCode > 0) {
             responseString = bundle.getString("configureEvents.modmail.category.modmailCategorySetCategoryEntitySelectEvent.successResponse");
+        } else {
+            responseString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()
@@ -576,7 +629,7 @@ public class ConfigureSlashCommandEvents {
             case "regexManageConfigureButtonEvents_RemoveAction" ->
                     regexManageConfigureRemoveButtonEvent(event, bundle, guild, standardPhrases);
             case "regexManageConfigureButtonEvents_Save" ->
-                    regexManageConfigureSaveButtonEvent(event, bundle, guild, splitComponentId);
+                    regexManageConfigureSaveButtonEvent(event, bundle, guild, splitComponentId, standardPhrases);
             case "regexManageConfigureButtonEvents_Test" ->
                     regexManageConfigureTestButtonEvent(event, bundle, splitComponentId);
             case "regexManageConfigureButtonEvents_Edit" ->
@@ -642,12 +695,12 @@ public class ConfigureSlashCommandEvents {
             return;
         }
 
-        MessageEmbed originalEmbed = event.getMessage().getEmbeds().get(0);
+        MessageEmbed originalEmbed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder beforeActionEmbed = new EmbedBuilder(originalEmbed);
         beforeActionEmbed.clearFields();
 
-        String stringMenuId = event.getMessage().getActionRows().get(0).getActionComponents().get(0).getId();
+        String stringMenuId = event.getMessage().getActionRows().getFirst().getActionComponents().getFirst().getId();
 
         if (stringMenuId == null) return;
 
@@ -697,12 +750,12 @@ public class ConfigureSlashCommandEvents {
             return;
         }
 
-        MessageEmbed originalEmbed = event.getMessage().getEmbeds().get(0);
+        MessageEmbed originalEmbed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder nextActionEmbed = new EmbedBuilder(originalEmbed);
         nextActionEmbed.clearFields();
 
-        String stringMenuId = event.getMessage().getActionRows().get(0).getActionComponents().get(0).getId();
+        String stringMenuId = event.getMessage().getActionRows().getFirst().getActionComponents().getFirst().getId();
 
         if (stringMenuId == null) return;
 
@@ -740,6 +793,7 @@ public class ConfigureSlashCommandEvents {
                     .queue();
         }
     }
+
     private void regexManageConfigureEditRegexButtonEvent(ButtonInteractionEvent event, ResourceBundle bundle, String @NotNull [] splitComponentId) {
         String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
         if (configureUtils.isRegexNotInMap(paramString)) {
@@ -834,6 +888,7 @@ public class ConfigureSlashCommandEvents {
                     .queue();
         }
     }
+
     private void regexManageConfigureTestButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, String @NotNull [] splitComponentId) {
         String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
         if (configureUtils.isRegexNotInMap(paramString)) {
@@ -860,7 +915,8 @@ public class ConfigureSlashCommandEvents {
             event.replyModal(testModal.build()).queue();
         }
     }
-    private void regexManageConfigureSaveButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, String @NotNull [] splitComponentId) {
+
+    private void regexManageConfigureSaveButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, String @NotNull [] splitComponentId, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
         String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
         if (configureUtils.isRegexNotInMap(paramString)) {
@@ -876,20 +932,20 @@ public class ConfigureSlashCommandEvents {
             long id = regexData.optLong("id", 0);
             long returnValue = controller.addOrEditRegexToGuildRegexTable(regexString, regexName, guild, id);
 
-            if (returnValue != 0) {
+            if (returnValue < 0) {
                 event.getHook()
                         .editOriginalEmbeds()
                         .setComponents()
                         .setContent(
                                 String.format(
-                                        bundle.getString("configureEvents.regex.manage.regexManageConfigureSaveButtonEvent.returnValueIsNot0"),
-                                        regexString))
+                                        standardPhrases.getString("replies.dbErrorReply"),
+                                        returnValue))
                         .map(x -> {
                             configureUtils.removeRegexByKey(paramString);
                             return null;
                         })
                         .queue();
-            } else {
+            } else if (returnValue > 0) {
                 event.getHook()
                         .editOriginalEmbeds()
                         .setComponents()
@@ -902,9 +958,21 @@ public class ConfigureSlashCommandEvents {
                             return null;
                         }))
                         .queue();
+            } else {
+                event.getHook()
+                        .editOriginalEmbeds()
+                        .setComponents()
+                        .setContent(
+                                standardPhrases.getString("replies.noDataEdit"))
+                        .map((x -> {
+                            configureUtils.removeRegexByKey(paramString);
+                            return null;
+                        }))
+                        .queue();
             }
         }
     }
+
     private void regexManageConfigureAddButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
         TextInput.Builder regexPhrase = TextInput.create(
                 "regexPhrase",
@@ -950,6 +1018,7 @@ public class ConfigureSlashCommandEvents {
             case "regexManageModalEvents_TestModal" -> regexManageTestModalEvent(event, bundle, splitComponentId);
         }
     }
+
     private void regexManageTestModalEvent(@NotNull ModalInteractionEvent event, ResourceBundle bundle, String @NotNull [] splitComponentId) {
         event.deferReply(true).queue();
         String paramString = String.format("%s;%s", splitComponentId[1], splitComponentId[2]);
@@ -1048,6 +1117,7 @@ public class ConfigureSlashCommandEvents {
                 })
                 .queue();
     }
+
     private void setEmbedAndMenuFieldsForRegexEntries(EmbedBuilder actionEmbed, StringSelectMenu.Builder stringMenuBuilder, ResourceBundle bundle, int countFrom, @NotNull JSONObject entries) {
         int i = 0;
         for (String keyString : entries.keySet().stream().sorted().toList()) {
@@ -1087,7 +1157,7 @@ public class ConfigureSlashCommandEvents {
 
     private void regexManageConfigureRemoveStringMenuEvent(@NotNull StringSelectInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
-        long id = Long.parseLong(event.getValues().get(0));
+        long id = Long.parseLong(event.getValues().getFirst());
         JSONObject entry = controller.getRegexEntryById(String.valueOf(id));
         if (entry.isEmpty()) {
             event.getHook()
@@ -1101,10 +1171,12 @@ public class ConfigureSlashCommandEvents {
         long responseCode = controller.removeGuildRegexEntry(id);
 
         String replyString;
-        if (responseCode != 0) {
+        if (responseCode < 0) {
             replyString = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
-        } else {
+        } else if (responseCode > 0) {
             replyString = bundle.getString("configureEvents.regex.manage.regexManageConfigureRemoveStringMenuEvent.successResponse");
+        } else {
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()
@@ -1112,8 +1184,9 @@ public class ConfigureSlashCommandEvents {
                 .setContent(replyString)
                 .queue();
     }
+
     private void regexManageConfigureEditStringMenuEvent(@NotNull StringSelectInteractionEvent event, @NotNull ResourceBundle bundle) {
-        long id = Long.parseLong(event.getValues().get(0));
+        long id = Long.parseLong(event.getValues().getFirst());
         JSONObject entry = controller.getRegexEntryById(String.valueOf(id));
         if (entry.isEmpty()) {
             event.deferEdit()
@@ -1158,15 +1231,15 @@ public class ConfigureSlashCommandEvents {
         blacklistActionEmbed.setDescription(bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureSubcommand.blacklistActionEmbed.description"));
 
         blacklistActionEmbed.addField(
-                bundle.getString("embeds.fields.name.add"),
+                standardPhrases.getString("embeds.fields.name.add"),
                 bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureSubcommand.blacklistActionEmbed.fields.addField.value"),
                 true);
         blacklistActionEmbed.addField(
-                bundle.getString("embeds.fields.name.edit"),
+                standardPhrases.getString("embeds.fields.name.edit"),
                 bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureSubcommand.blacklistActionEmbed.fields.editField.value"),
                 true);
         blacklistActionEmbed.addField(
-                bundle.getString("embeds.fields.name.remove"),
+                standardPhrases.getString("embeds.fields.name.remove"),
                 bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureSubcommand.blacklistActionEmbed.fields.removeField.value"),
                 true);
 
@@ -1232,12 +1305,12 @@ public class ConfigureSlashCommandEvents {
             return;
         }
 
-        MessageEmbed originalEmbed = event.getMessage().getEmbeds().get(0);
+        MessageEmbed originalEmbed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder beforeActionEmbed = new EmbedBuilder(originalEmbed);
         beforeActionEmbed.clearFields();
 
-        String stringMenuId = event.getMessage().getActionRows().get(0).getActionComponents().get(0).getId();
+        String stringMenuId = event.getMessage().getActionRows().getFirst().getActionComponents().getFirst().getId();
 
         if (stringMenuId == null) return;
 
@@ -1289,12 +1362,12 @@ public class ConfigureSlashCommandEvents {
             return;
         }
 
-        MessageEmbed originalEmbed = event.getMessage().getEmbeds().get(0);
+        MessageEmbed originalEmbed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder nextActionEmbed = new EmbedBuilder(originalEmbed);
         nextActionEmbed.clearFields();
 
-        String stringMenuId = event.getMessage().getActionRows().get(0).getActionComponents().get(0).getId();
+        String stringMenuId = event.getMessage().getActionRows().getFirst().getActionComponents().getFirst().getId();
 
         if (stringMenuId == null) return;
 
@@ -1421,17 +1494,17 @@ public class ConfigureSlashCommandEvents {
                     .queue();
         }
     }
+
     private void setEmbedAndMenuFieldsForBlacklistEntries(EmbedBuilder actionEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, @NotNull JSONObject entries, ResourceBundle bundle) {
         int i = 0;
         for (String key : entries.keySet().stream().sorted().toList()) {
             countFrom--;
             if (countFrom < 0) {
                 i++;
-                JSONObject entry = entries.getJSONObject(key);
                 actionEmbed.addField(String.format(
                         bundle.getString("configureEvents.regex.blacklist.setEmbedAndMenuFieldsForBlacklistEntries.actionEmbed.fieldPreset"),
                         i
-                ), entry.getString("phrase"), false);
+                ), entries.getString(key), false);
                 menuBuilder.addOption(String.valueOf(i), key);
                 if (i == 25) break;
             }
@@ -1462,16 +1535,18 @@ public class ConfigureSlashCommandEvents {
     private void regexBlacklistConfigureRemoveStringEvent(@NotNull StringSelectInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        long responseCode = controller.deletePhraseFromGuildTextBlacklist(Long.parseLong(event.getValues().get(0)));
+        long responseCode = controller.deletePhraseFromGuildTextBlacklist(Long.parseLong(event.getValues().getFirst()));
 
         String replyString;
 
-        if (responseCode != 0) {
+        if (responseCode < 0) {
             replyString = String.format(
                     standardPhrases.getString("replies.dbErrorReply"),
                     responseCode);
-        } else {
+        } else if (responseCode > 0) {
             replyString = bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureRemoveStringEvent.successfullyDeleted");
+        } else {
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook()
@@ -1480,6 +1555,7 @@ public class ConfigureSlashCommandEvents {
                 .setComponents()
                 .queue();
     }
+
     private void regexBlacklistConfigureEditStringEvent(@NotNull StringSelectInteractionEvent event, @NotNull ResourceBundle bundle) {
         TextInput.Builder phraseTextField = TextInput.create(
                 "phraseTextField",
@@ -1489,7 +1565,7 @@ public class ConfigureSlashCommandEvents {
         phraseTextField.setRequired(true);
         phraseTextField.setPlaceholder(bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureEditStringEvent.phraseEditModal.phraseTextField.placeholder"));
 
-        long id = Long.parseLong(event.getValues().get(0));
+        long id = Long.parseLong(event.getValues().getFirst());
         String value = controller.getSpecificBlacklistPhrase(id);
         if (value != null) phraseTextField.setValue(value);
 
@@ -1519,26 +1595,28 @@ public class ConfigureSlashCommandEvents {
             case "regexBlacklistConfigureModalEvents_AddModal" ->
                     regexBlacklistConfigureAddModalEvent(event, bundle, guild, standardPhrases);
             case "regexBlacklistConfigureModalEvents_EditModal" ->
-                    regexBlacklistConfigureEditModalEvent(event, bundle, splitComponentId, standardPhrases);
+                    regexBlacklistConfigureEditModalEvent(event, bundle, splitComponentId, standardPhrases, guild);
         }
     }
 
-    private void regexBlacklistConfigureEditModalEvent(@NotNull ModalInteractionEvent event, ResourceBundle bundle, String[] splitComponentId, ResourceBundle standardPhrases) {
+    private void regexBlacklistConfigureEditModalEvent(@NotNull ModalInteractionEvent event, ResourceBundle bundle, String[] splitComponentId, ResourceBundle standardPhrases, Guild guild) {
         event.deferEdit().queue();
         ModalMapping phraseTextMapping = event.getValue("phraseTextField");
         if (phraseTextMapping == null) return;
         String phraseText = phraseTextMapping.getAsString();
 
-        long responseCode = controller.updatePhraseFromGuildTextBlacklist(phraseText, Long.parseLong(splitComponentId[2]));
+        long responseCode = controller.updatePhraseFromGuildTextBlacklist(phraseText, Long.parseLong(splitComponentId[2]), guild);
 
         String replyText;
 
-        if (responseCode == 0) {
+        if (responseCode > 0) {
             replyText = String.format(
                     bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureEditModalEvent.successfullyUpdatet"),
                     phraseText);
-        } else {
+        } else if (responseCode < 0) {
             replyText = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
+        } else {
+            replyText = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook()
@@ -1558,13 +1636,15 @@ public class ConfigureSlashCommandEvents {
 
         String replyText;
 
-        if (responseCode == 0) {
+        if (responseCode > 0) {
             replyText = String.format(
                     bundle.getString("configureEvents.regex.blacklist.regexBlacklistConfigureAddModalEvent.successfullyAdded"),
                     phraseText);
-        } else {
+        } else if (responseCode < 0) {
             replyText = String.format(
                     standardPhrases.getString("replies.dbErrorReply"), responseCode);
+        } else {
+            replyText = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook()
@@ -1574,10 +1654,12 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    private void rolesPunishmentRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
+    private void rolesPunishmentRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases, Guild guild) {
         event.deferReply(true).queue();
         Role warnRole = event.getOption("warn-role", OptionMapping::getAsRole);
         Role muteRole = event.getOption("mute-role", OptionMapping::getAsRole);
+        boolean warnDisabled = event.getOption("warn-disabled", false, OptionMapping::getAsBoolean);
+        boolean muteDisabled = event.getOption("mute-disabled", false, OptionMapping::getAsBoolean);
 
         String replyString;
 
@@ -1586,33 +1668,42 @@ public class ConfigureSlashCommandEvents {
         if (warnRole == null && muteRole == null) {
             replyString = bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.bothRolesAreNull");
         } else if (warnRole != null && muteRole != null) {
-            warnRoleResponse = controller.setGuildWarnRole(warnRole, guild);
-            muteRoleResponse = controller.setGuildMuteRole(muteRole, guild);
+            warnRoleResponse = controller.setGuildWarnRole(warnRole);
+            muteRoleResponse = controller.setGuildMuteRole(muteRole);
             replyString = String.format(
                     bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.bothRolesNonNull"),
                     warnRole.getAsMention(), muteRole.getAsMention());
         } else if (warnRole == null) {
-            muteRoleResponse = controller.setGuildMuteRole(muteRole, guild);
+            muteRoleResponse = controller.setGuildMuteRole(muteRole);
             replyString = String.format(
                     bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.warnRoleIsNull"),
                     muteRole.getAsMention());
         } else {
-            warnRoleResponse = controller.setGuildWarnRole(warnRole, guild);
+            warnRoleResponse = controller.setGuildWarnRole(warnRole);
             replyString = String.format(
                     bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.muteRoleIsNull"),
                     warnRole.getAsMention());
         }
 
-        if (warnRoleResponse + muteRoleResponse != 0) {
+        if (warnDisabled) {
+            warnRoleResponse = controller.disableGuildWarnRole(guild);
+        }
+        if (muteDisabled) {
+            muteRoleResponse = controller.disableGuildMuteRole(guild);
+        }
+
+        if (warnRoleResponse + muteRoleResponse < 0) {
             replyString = String.format(
                     bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.errorResponse"),
                     warnRoleResponse, muteRoleResponse);
+        } else if (warnRoleResponse + muteRoleResponse == 0) {
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginal(replyString).queue();
     }
 
-    private void rolesModRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
+    private void rolesModRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferReply(true).queue();
         Role addRolle = event.getOption("add", OptionMapping::getAsRole);
         Role removeRole = event.getOption("remove", OptionMapping::getAsRole);
@@ -1659,9 +1750,10 @@ public class ConfigureSlashCommandEvents {
             return;
         }
 
-        sendModRoleConfigureResponse(event.getHook(), addRolle, removeRole, bundle, guild);
+        sendModRoleConfigureResponse(event.getHook(), addRolle, removeRole, bundle, standardPhrases);
     }
-    private void sendModRoleConfigureResponse(InteractionHook hook, Role addRole, Role removeRole, ResourceBundle bundle, Guild guild) {
+
+    private void sendModRoleConfigureResponse(InteractionHook hook, Role addRole, Role removeRole, ResourceBundle bundle, ResourceBundle standardPhrases) {
         String responseString;
 
         long addResponse = 0;
@@ -1671,7 +1763,7 @@ public class ConfigureSlashCommandEvents {
             responseString = String.format(
                     bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.twoOptionMappings"),
                     addRole.getAsMention(), removeRole.getAsMention());
-            addResponse = controller.addGuildModerationRole(addRole, guild);
+            addResponse = controller.addGuildModerationRole(addRole);
             removeResponse = controller.removeGuildModerationRole(removeRole);
         } else if (addRole == null) {
             responseString = String.format(
@@ -1682,13 +1774,15 @@ public class ConfigureSlashCommandEvents {
             responseString = String.format(
                     bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.removeRoleIsNull"),
                     addRole.getAsMention());
-            addResponse = controller.addGuildModerationRole(addRole, guild);
+            addResponse = controller.addGuildModerationRole(addRole);
         }
 
-        if (addResponse + removeResponse != 0) {
+        if (addResponse + removeResponse < 0) {
             responseString = String.format(
                     bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.errorToAddOrRemove"),
                     addResponse, removeResponse);
+        } else if (addResponse + removeResponse == 0) {
+            responseString = standardPhrases.getString("replies.noDataEdit");
         }
 
         hook.editOriginal(responseString)
@@ -1718,6 +1812,7 @@ public class ConfigureSlashCommandEvents {
                     rolesModRolesConfigureShowButtonEvent(event, bundle, guild);
         }
     }
+
     private void rolesModRolesConfigureShowButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle, Guild guild) {
         event.deferEdit().queue();
         List<Long> roleIds = controller.getGuildModerationRoles(guild);
@@ -1730,7 +1825,7 @@ public class ConfigureSlashCommandEvents {
 
             for (long id : roleIds) {
                 Role role = guild.getRoleById(id);
-                descriptionStringBuilder.append(role != null ? role.getName() : String.format("<@%d>", id));
+                descriptionStringBuilder.append(role != null ? String.format("%s,", role.getName()) : String.format("<@%d> ,", id));
             }
             descriptionStringBuilder.deleteCharAt(descriptionStringBuilder.length() - 1);
             description = String.format(
@@ -1750,6 +1845,7 @@ public class ConfigureSlashCommandEvents {
                 .queue();
 
     }
+
     private void rolesModRolesConfigureRemoveButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
         event.deferEdit().queue();
         EmbedBuilder removeModRoleEmbed = new EmbedBuilder();
@@ -1765,6 +1861,7 @@ public class ConfigureSlashCommandEvents {
                 .setActionRow(removeModRoleMenu.build())
                 .queue();
     }
+
     private void rolesModRolesConfigureAddRoleButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
         event.deferEdit().queue();
         EmbedBuilder addModRoleEmbed = new EmbedBuilder();
@@ -1793,12 +1890,13 @@ public class ConfigureSlashCommandEvents {
         if (!userId.equals(splitComponentId[1])) return;
 
         ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
 
         switch (splitComponentId[0]) {
             case "rolesModRolesConfigureEntityMenus_removeRoleMenu" ->
-                    sendModRoleConfigureResponse(event.getHook(), null, event.getMentions().getRoles().get(0), bundle, guild);
+                    sendModRoleConfigureResponse(event.getHook(), null, event.getMentions().getRoles().getFirst(), bundle, standardPhrases);
             case "rolesModRolesConfigureEntityMenus_addRoleMenu" ->
-                    sendModRoleConfigureResponse(event.getHook(), event.getMentions().getRoles().get(0), null, bundle, guild);
+                    sendModRoleConfigureResponse(event.getHook(), event.getMentions().getRoles().getFirst(), null, bundle, standardPhrases);
         }
     }
 
@@ -1849,10 +1947,13 @@ public class ConfigureSlashCommandEvents {
         ResourceBundle bundle = bundle(event.getUserLocale());
 
         switch (splitComponentId[0]) {
-            case "channelArchiveCategoryConfigureButtons_editButton" -> channelArchiveCategoryConfigureEditButtonEvent(event, bundle, guild);
-            case "channelArchiveCategoryConfigureButtons_clearButton" -> channelArchiveCategoryConfigureClearButtonEvent(event, bundle, guild);
+            case "channelArchiveCategoryConfigureButtons_editButton" ->
+                    channelArchiveCategoryConfigureEditButtonEvent(event, bundle, guild);
+            case "channelArchiveCategoryConfigureButtons_clearButton" ->
+                    channelArchiveCategoryConfigureClearButtonEvent(event, bundle, guild);
         }
     }
+
     private void channelArchiveCategoryConfigureClearButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild) {
         event.deferEdit().queue();
         long value = controller.clearGuildArchiveCategory(guild);
@@ -1871,6 +1972,7 @@ public class ConfigureSlashCommandEvents {
                 .setComponents()
                 .queue();
     }
+
     private void channelArchiveCategoryConfigureEditButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle, @NotNull Guild guild) {
         event.deferEdit().queue();
         EmbedBuilder channelArchiveEditEmbed = new EmbedBuilder();
@@ -1931,22 +2033,25 @@ public class ConfigureSlashCommandEvents {
         ResourceBundle bundle = bundle(event.getUserLocale());
 
         if (splitComponentId[0].equals("channelArchiveConfigureMenus_archiveChannelPicker")) {
-            channelArchiveCategoryConfigureArchiveChannelPickerMenuEvent(event, bundle, guild);
+            channelArchiveCategoryConfigureArchiveChannelPickerMenuEvent(event, bundle, guild, standardPhrases(event.getUserLocale()));
         }
     }
-    private void channelArchiveCategoryConfigureArchiveChannelPickerMenuEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild) {
+
+    private void channelArchiveCategoryConfigureArchiveChannelPickerMenuEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardBundle) {
         event.deferEdit().queue();
 
-        GuildChannel category = event.getMentions().getChannels().get(0);
+        GuildChannel category = event.getMentions().getChannels().getFirst();
 
         long value = controller.setGuildArchiveCategory(category, guild);
 
         String contentString;
 
-        if (value == 0) {
+        if (value > 0) {
             contentString = String.format(bundle.getString("configureEvents.channel.archiveCategory.channelArchiveCategoryConfigureArchiveChannelPickerMenuEvent.valueEquals0"), category.getName());
-        } else {
+        } else if (value == 0) {
             contentString = String.format(bundle.getString("configureEvents.channel.archiveCategory.channelArchiveCategoryConfigureArchiveChannelPickerMenuEvent.valueLower0"), value);
+        } else {
+            contentString = String.format(standardBundle.getString("replies.dbErrorReply"), value);
         }
         event.getHook()
                 .editOriginalEmbeds()
@@ -1954,7 +2059,8 @@ public class ConfigureSlashCommandEvents {
                 .setComponents()
                 .queue();
     }
-    private void channelLogchannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild) {
+
+    private void channelLogchannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         String typeMapping = event.getOption("type", OptionMapping::getAsString);
         if (typeMapping == null) return;
         LogChannelType logChannelType = LogChannelType.getLogChannelTypeByName(typeMapping);
@@ -1962,6 +2068,7 @@ public class ConfigureSlashCommandEvents {
             event.reply(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logChannelTypeUnkonwn")).queue();
             return;
         }
+        boolean toRemove = event.getOption("remove", false, OptionMapping::getAsBoolean);
 
         event.deferReply(true).queue();
 
@@ -1987,20 +2094,63 @@ public class ConfigureSlashCommandEvents {
             return;
         }
 
-        channel.createWebhook(typeMapping)
-                .map(x -> controller.setGuildLoggingChannel(logChannelType, channel, guild, x.getUrl()))
-                .flatMap(x -> {
-                    if (x == 0) {
-                        return event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logchannelSet"),
-                                channel.getId(), logChannelType.getName()));
-                    } else {
-                        return event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.errorToSetChannel"),
-                                x));
-                    }
-                })
-                .queue();
+        if (toRemove) {
+            long value = controller.removeGuildLoggingChannel(logChannelType, channel);
+            if (value < 0) {
+                event.getHook().editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), value)).queue();
+            } else if (value > 0) {
+                channel.retrieveWebhooks()
+                        .map(x -> x.stream().filter(y -> y.getName().equals(typeMapping)).toList())
+                        .flatMap(x -> {
+                            List<AuditableRestAction<Void>> webhooks = new ArrayList<>();
+                            x.forEach(y -> webhooks.add(channel.deleteWebhookById(y.getId())));
+                            return RestAction.allOf(webhooks);
+                        })
+                        .flatMap(x -> event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logchannelRemoved"))))
+                        .queue();
+            } else {
+                event.getHook().editOriginal(standardPhrases.getString("replies.noDataEdit")).queue();
+            }
+            return;
+        }
 
+        long existChannelId = controller.getGuildLoggingChannel(logChannelType, guild);
 
+        if (existChannelId > 0) {
+            if (existChannelId == channel.getIdLong()) {
+                event.getHook().editOriginal(String.format(standardPhrases.getString("replies.noDataEdit"))).queue();
+            } else {
+                channel.createWebhook(typeMapping)
+                        .map(x -> controller.setGuildLoggingChannel(logChannelType, channel, guild, x.getUrl()))
+                        .flatMap(x -> {
+                            if (x > 0) {
+                                return event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logchannelSet"),
+                                        channel.getId(), logChannelType.getName()));
+                            } else if (x < 0) {
+                                return event.getHook().editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), x));
+                            } else {
+                                return event.getHook().editOriginal(standardPhrases.getString("replies.noDataEdit"));
+                            }
+                        })
+                        .queue();
+            }
+        } else if (existChannelId < 0) {
+            event.getHook().editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), existChannelId)).queue();
+        } else {
+            channel.createWebhook(typeMapping)
+                    .map(x -> controller.setGuildLoggingChannel(logChannelType, channel, guild, x.getUrl()))
+                    .flatMap(x -> {
+                        if (x > 0) {
+                            return event.getHook().editOriginal(String.format(bundle.getString("configureEvents.channel.logchannel.channelLogchannelConfigureSubcommand.logchannelSet"),
+                                    channel.getId(), logChannelType.getName()));
+                        } else if (x < 0) {
+                            return event.getHook().editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), x));
+                        } else {
+                            return event.getHook().editOriginal(standardPhrases.getString("replies.noDataEdit"));
+                        }
+                    })
+                    .queue();
+        }
     }
 
     private void channelMediaOnlyChannelConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, @NotNull ResourceBundle bundle, @NotNull ResourceBundle standardPhrases) {
@@ -2100,10 +2250,12 @@ public class ConfigureSlashCommandEvents {
 
         String responseString;
 
-        if (returnValue != 0) {
+        if (returnValue < 0) {
             responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), returnValue);
-        } else {
+        } else if (returnValue > 0) {
             responseString = bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelSaveButtonEvent.success");
+        } else {
+            responseString = bundle.getString(standardPhrases.getString("replies.noDataEdit"));
         }
 
         event.getHook()
@@ -2162,9 +2314,10 @@ public class ConfigureSlashCommandEvents {
 
         return permissions;
     }
+
     private void channelMediaOnlyChannelBeforeButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, int count, @NotNull String action) {
         event.deferEdit().queue();
-        EmbedBuilder beforeMediaOnlyChannelEmbed = new EmbedBuilder(event.getMessage().getEmbeds().get(0));
+        EmbedBuilder beforeMediaOnlyChannelEmbed = new EmbedBuilder(event.getMessage().getEmbeds().getFirst());
         beforeMediaOnlyChannelEmbed.clearFields();
         StringSelectMenu.Builder beforeMediaOnlyChannelMenu;
         if (action.equals("edit")) {
@@ -2211,9 +2364,10 @@ public class ConfigureSlashCommandEvents {
                 .setComponents(firstRow, secondRow)
                 .queue();
     }
+
     private void channelMediaOnlyChannelNextButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, int count, @NotNull String action) {
         event.deferEdit().queue();
-        EmbedBuilder nextMediaOnlyChannelEmbed = new EmbedBuilder(event.getMessage().getEmbeds().get(0));
+        EmbedBuilder nextMediaOnlyChannelEmbed = new EmbedBuilder(event.getMessage().getEmbeds().getFirst());
         nextMediaOnlyChannelEmbed.clearFields();
         StringSelectMenu.Builder nextMediaOnlyChannelMenu;
         if (action.equals("edit")) {
@@ -2260,6 +2414,7 @@ public class ConfigureSlashCommandEvents {
                 .setComponents(firstRow, secondRow)
                 .queue();
     }
+
     private void channelMediaOnlyChannelAddButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
         event.deferEdit().queue();
         EmbedBuilder addMediaOnlyChannelEmbed = new EmbedBuilder();
@@ -2277,6 +2432,7 @@ public class ConfigureSlashCommandEvents {
                 .setActionRow(addMediaOnlyChannelMenu.build())
                 .queue();
     }
+
     private void channelMediaOnlyChannelEditButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle, Guild guild, int count) {
         event.deferEdit().queue();
         EmbedBuilder editMediaOnlyChannelEmbed = new EmbedBuilder();
@@ -2309,6 +2465,7 @@ public class ConfigureSlashCommandEvents {
 
         sendMediaOnlyChannelActionEmbed(event, editMediaOnlyChannelEmbed, guildMediaOnlyChannels.length(), firstRow, nextButton);
     }
+
     private void channelMediaOnlyChannelRemoveButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle, Guild guild, int count) {
         event.deferEdit().queue();
         EmbedBuilder removeMediaOnlyChannelEmbed = new EmbedBuilder();
@@ -2355,6 +2512,7 @@ public class ConfigureSlashCommandEvents {
                     .queue();
         }
     }
+
     private void setEmbedAndMenuFieldsForMediaOnlyChannelEmbedsAndMenus(EmbedBuilder actionEmbed, StringSelectMenu.Builder menuBuilder, int countFrom, Guild guild, @NotNull JSONObject mediaOnlyChannels, ResourceBundle bundle) {
         int i = 0;
         for (String key : mediaOnlyChannels.keySet().stream().sorted().toList()) {
@@ -2408,7 +2566,7 @@ public class ConfigureSlashCommandEvents {
     private void channelMediaOnlyChannelAddMenuEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        long channelId = event.getMentions().getChannels().get(0).getIdLong();
+        long channelId = event.getMentions().getChannels().getFirst().getIdLong();
 
         sendSpecificMediaOnlyChannelEmbed(event.getHook(), channelId, bundle, new ArrayList<>(), guild, standardPhrases);
     }
@@ -2436,16 +2594,18 @@ public class ConfigureSlashCommandEvents {
 
     private void channelMediaOnlyChannelRemoveEditMenuEvent(@NotNull StringSelectInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
-        long channelId = Long.parseLong(event.getValues().get(0));
+        long channelId = Long.parseLong(event.getValues().getFirst());
 
         long response = controller.removeGuildMediaOnlyChannel(channelId);
 
         String responseString;
 
-        if (response != 0) {
+        if (response < 0) {
             responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), response);
-        } else {
+        } else if (response > 0) {
             responseString = bundle.getString("configureEvents.channel.mediaOnlyChannel.channelMediaOnlyChannelRemoveEditMenuEvent.success");
+        } else {
+            responseString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook()
@@ -2457,7 +2617,7 @@ public class ConfigureSlashCommandEvents {
 
     private void channelMediaOnlyChannelEditMenuEvent(@NotNull StringSelectInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
-        long channelId = Long.parseLong(event.getValues().get(0));
+        long channelId = Long.parseLong(event.getValues().getFirst());
         JSONObject storedPermissions = controller.getGuildMediaOnlyChannelPermissions(channelId);
         List<MediaOnlyPermissions> permissions = new ArrayList<>();
         if (storedPermissions.getBoolean("permText")) {
@@ -2614,10 +2774,12 @@ public class ConfigureSlashCommandEvents {
         long responseCode = controller.removeGuildFeedbackChannel(guild);
 
         String replyString;
-        if (responseCode != 0) {
+        if (responseCode < 0) {
             replyString = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
-        } else {
+        } else if (responseCode > 0) {
             replyString = bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureRemoveButtonEvent.successReply");
+        } else {
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()
@@ -2625,6 +2787,7 @@ public class ConfigureSlashCommandEvents {
                 .setContent(replyString)
                 .queue();
     }
+
     private void channelFeedbackChannelConfigureSetButtonEvent(@NotNull ButtonInteractionEvent event, @NotNull ResourceBundle bundle) {
         event.deferEdit().queue();
 
@@ -2656,20 +2819,22 @@ public class ConfigureSlashCommandEvents {
         ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
 
         if (splitComponentId[0].equals("channelFeedbackCategoryConfigureEntityMenuEvents_set")) {
-            channelFeedbackChannelConfigureSetEntityEvent(event, bundle, guild, standardPhrases);
+            channelFeedbackChannelConfigureSetEntityEvent(event, bundle, standardPhrases);
         }
     }
 
-    private void channelFeedbackChannelConfigureSetEntityEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
+    private void channelFeedbackChannelConfigureSetEntityEvent(@NotNull EntitySelectInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        long responseCode = controller.setGuildFeedbackChannel(event.getMentions().getChannels().get(0), guild);
+        long responseCode = controller.setGuildFeedbackChannel(event.getMentions().getChannels().getFirst());
         String replyString;
 
-        if (responseCode != 0) {
+        if (responseCode < 0) {
             replyString = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
-        } else {
+        } else if (responseCode > 0) {
             replyString = bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSetEntityEvent.successReply");
+        } else {
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()

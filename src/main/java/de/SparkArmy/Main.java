@@ -1,7 +1,6 @@
 package de.SparkArmy;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.Postgres;
 import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.twitch.TwitchApi;
 import de.SparkArmy.utils.Util;
@@ -19,7 +18,6 @@ public class Main {
     private final JdaApi jdaApi;
 
     private final TwitchApi twitchApi;
-    private final Postgres postgres;
     private final YouTubeApi youTubeApi;
 
 
@@ -30,7 +28,6 @@ public class Main {
         // Initialize ConfigController
         this.controller = new ConfigController(this);
         Util.controller = this.controller;
-        this.postgres = new Postgres(this);
 
 
         //Register Apis
@@ -65,10 +62,6 @@ public class Main {
 
     public Logger getLogger() {
         return logger;
-    }
-
-    public Postgres getPostgres() {
-        return postgres;
     }
 
     public TwitchApi getTwitchApi() {

@@ -260,7 +260,9 @@ public class CommandRegisterer {
                                         new SubcommandData("punishment-roles", "Manage the punishment roles")
                                                 .addOptions(
                                                         new OptionData(OptionType.ROLE, "warn-role", "Set the warn role"),
-                                                        new OptionData(OptionType.ROLE, "mute-role", "Set the mute role")
+                                                        new OptionData(OptionType.ROLE, "mute-role", "Set the mute role"),
+                                                        new OptionData(OptionType.BOOLEAN, "warn-disabled", "Disable the warn role"),
+                                                        new OptionData(OptionType.BOOLEAN, "mute-disabled", "Disable the mute role")
                                                 )
                                 ),
                         new SubcommandGroupData("regex", "Manage regex settings")

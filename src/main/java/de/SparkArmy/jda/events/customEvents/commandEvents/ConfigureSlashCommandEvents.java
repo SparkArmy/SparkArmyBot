@@ -92,7 +92,8 @@ public class ConfigureSlashCommandEvents {
             case "roles" -> {
                 switch (subcommandName) {
                     case "mod-roles" -> rolesModRolesConfigureSubcommand(event, bundle, standardPhrases);
-                    case "punishment-roles" -> rolesPunishmentRolesConfigureSubcommand(event, bundle);
+                    case "punishment-roles" ->
+                            rolesPunishmentRolesConfigureSubcommand(event, bundle, standardPhrases, guild);
                 }
             }
             case "regex" -> {
@@ -1653,11 +1654,12 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    // TODO Add Option to disable punishment roles
-    private void rolesPunishmentRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle) {
+    private void rolesPunishmentRolesConfigureSubcommand(@NotNull SlashCommandInteractionEvent event, ResourceBundle bundle, ResourceBundle standardPhrases, Guild guild) {
         event.deferReply(true).queue();
         Role warnRole = event.getOption("warn-role", OptionMapping::getAsRole);
         Role muteRole = event.getOption("mute-role", OptionMapping::getAsRole);
+        boolean warnDisabled = event.getOption("warn-disabled", false, OptionMapping::getAsBoolean);
+        boolean muteDisabled = event.getOption("mute-disabled", false, OptionMapping::getAsBoolean);
 
         String replyString;
 
@@ -1681,12 +1683,21 @@ public class ConfigureSlashCommandEvents {
             replyString = String.format(
                     bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.muteRoleIsNull"),
                     warnRole.getAsMention());
-        } //TODO Add no data changed response
+        }
+
+        if (warnDisabled) {
+            warnRoleResponse = controller.disableGuildWarnRole(guild);
+        }
+        if (muteDisabled) {
+            muteRoleResponse = controller.disableGuildMuteRole(guild);
+        }
 
         if (warnRoleResponse + muteRoleResponse < 0) {
             replyString = String.format(
                     bundle.getString("configureEvents.roles.punishmentRoles.rolesPunishmentRolesConfigureSubcommand.errorResponse"),
                     warnRoleResponse, muteRoleResponse);
+        } else if (warnRoleResponse + muteRoleResponse == 0) {
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginal(replyString).queue();
@@ -1739,10 +1750,10 @@ public class ConfigureSlashCommandEvents {
             return;
         }
 
-        sendModRoleConfigureResponse(event.getHook(), addRolle, removeRole, bundle);
+        sendModRoleConfigureResponse(event.getHook(), addRolle, removeRole, bundle, standardPhrases);
     }
 
-    private void sendModRoleConfigureResponse(InteractionHook hook, Role addRole, Role removeRole, ResourceBundle bundle) {
+    private void sendModRoleConfigureResponse(InteractionHook hook, Role addRole, Role removeRole, ResourceBundle bundle, ResourceBundle standardPhrases) {
         String responseString;
 
         long addResponse = 0;
@@ -1764,12 +1775,14 @@ public class ConfigureSlashCommandEvents {
                     bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.removeRoleIsNull"),
                     addRole.getAsMention());
             addResponse = controller.addGuildModerationRole(addRole);
-        } // TODO Add response if no entry changed
+        }
 
         if (addResponse + removeResponse < 0) {
             responseString = String.format(
                     bundle.getString("configureEvents.roles.modRoles.sendModRoleConfigureResponse.errorToAddOrRemove"),
                     addResponse, removeResponse);
+        } else if (addResponse + removeResponse == 0) {
+            responseString = standardPhrases.getString("replies.noDataEdit");
         }
 
         hook.editOriginal(responseString)
@@ -1877,12 +1890,13 @@ public class ConfigureSlashCommandEvents {
         if (!userId.equals(splitComponentId[1])) return;
 
         ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
 
         switch (splitComponentId[0]) {
             case "rolesModRolesConfigureEntityMenus_removeRoleMenu" ->
-                    sendModRoleConfigureResponse(event.getHook(), null, event.getMentions().getRoles().getFirst(), bundle);
+                    sendModRoleConfigureResponse(event.getHook(), null, event.getMentions().getRoles().getFirst(), bundle, standardPhrases);
             case "rolesModRolesConfigureEntityMenus_addRoleMenu" ->
-                    sendModRoleConfigureResponse(event.getHook(), event.getMentions().getRoles().getFirst(), null, bundle);
+                    sendModRoleConfigureResponse(event.getHook(), event.getMentions().getRoles().getFirst(), null, bundle, standardPhrases);
         }
     }
 
@@ -2765,7 +2779,7 @@ public class ConfigureSlashCommandEvents {
         } else if (responseCode > 0) {
             replyString = bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureRemoveButtonEvent.successReply");
         } else {
-            replyString = "No Action executed"; // TODO Bundle
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()
@@ -2820,7 +2834,7 @@ public class ConfigureSlashCommandEvents {
         } else if (responseCode > 0) {
             replyString = bundle.getString("configureEvents.channel.feedback-channel.channelFeedbackChannelConfigureSetEntityEvent.successReply");
         } else {
-            replyString = "No Action"; //TODO Bundle
+            replyString = standardPhrases.getString("replies.noDataEdit");
         }
 
         event.getHook().editOriginalEmbeds()

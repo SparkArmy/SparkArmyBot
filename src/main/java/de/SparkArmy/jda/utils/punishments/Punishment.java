@@ -1,9 +1,11 @@
 package de.SparkArmy.jda.utils.punishments;
 
+import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
+import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -29,11 +31,13 @@ public class Punishment {
     private final DatabaseAction db;
     private final ConfigController controller;
     private final Guild guild;
+    private final ResourceBundle standardPhrases;
 
 
     public Punishment(@NotNull SlashCommandInteractionEvent event, PunishmentType type, @NotNull ConfigController controller) {
         event.deferReply(true).queue();
         this.bundle = Util.getResourceBundle("PunishmentClazz", event.getUserLocale());
+        this.standardPhrases = Util.getResourceBundle("standardPhrases", event.getUserLocale());
         this.db = new DatabaseAction();
         this.controller = controller;
         this.guild = event.getGuild();
@@ -105,9 +109,9 @@ public class Punishment {
     }
 
     private void preparePunishment(@NotNull User target, @NotNull Member moderator, String reason, @NotNull PunishmentType type, Integer days, InteractionHook hook) {
-
-        if (db.putPunishmentDataInPunishmentTable(target.getIdLong(), moderator.getIdLong(), target.getIdLong(), type.getId(), reason) <= 0) { // TODO Add error handling
-            hook.sendMessage(bundle.getString("preparePunishment.putDataInDbFailed")).setEphemeral(true).queue();
+        long value = db.putPunishmentDataInPunishmentTable(target.getIdLong(), moderator.getIdLong(), guild.getIdLong(), type.getId(), reason);
+        if (value < 0) {
+            hook.sendMessage(String.format(standardPhrases.getString("replies.dbErrorReply"), value)).setEphemeral(true).queue();
             return;
         }
 
@@ -136,8 +140,8 @@ public class Punishment {
         logEmbed.setColor(new Color(255, 0, 0).getRGB());
         logEmbed.setFooter(new WebhookEmbed.EmbedFooter(guild.getName(), guild.getIconUrl()));
 
-        // TODO See Util -> Change to WebhookUtil
-//        Util.sendingModLogEmbed(logEmbed.build(), guild);
+        WebhookClient client = controller.getMain().getJdaApi().getWebhookApi().getSpecificWebhookClient(guild, LogChannelType.MOD);
+        if (client != null) client.send(logEmbed.build());
 
 //        User Embed
         EmbedBuilder userEmbed = new EmbedBuilder();

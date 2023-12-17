@@ -48,16 +48,18 @@ public class NotificationSlashCommandEvents {
 
     private final Color notificationEmbedColor = new Color(0x941D9E);
 
-    //TODO update buttons and standard replies to "standardPhrases" bundle
-
     public NotificationSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
         this.controller = dispatcher.getController();
         this.db = new DatabaseAction();
     }
 
     // Get the resource bundle for this command
-    final ResourceBundle bundle(DiscordLocale locale) {
+    private ResourceBundle bundle(DiscordLocale locale) {
         return Util.getResourceBundle("notification", locale);
+    }
+
+    private ResourceBundle standardPhrase(DiscordLocale locale) {
+        return Util.getResourceBundle("standardPhrases", locale);
     }
 
     private final List<String> values = Arrays.stream(NotificationService.values()).toList().stream().map(NotificationService::getServiceName).toList();
@@ -73,6 +75,7 @@ public class NotificationSlashCommandEvents {
     @JDASlashCommand(name = "notification")
     public void notificationInitialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrase(event.getUserLocale());
         String service = event.getOption("platform", OptionMapping::getAsString);
         // Check if event from guild -> command is guild only
         if (!event.isFromGuild()) return;
@@ -116,7 +119,7 @@ public class NotificationSlashCommandEvents {
             NotificationService notificationService = NotificationService.getNotificationServiceByName(service);
             if (notificationService == null) return;
             event.deferReply(true).queue();
-            sendSpecificPlatformEmbed(notificationService, event.getHook());
+            sendSpecificPlatformEmbed(notificationService, event.getHook(), bundle, standardPhrases);
         }
     }
 
@@ -125,13 +128,13 @@ public class NotificationSlashCommandEvents {
     final @NotNull Button nextButton(@NotNull ResourceBundle bundle, String commandUserId, String targetId, int count, @NotNull ActionType actionType) {
         return Button.of(ButtonStyle.SECONDARY,
                 String.format("noteCommand_%sNotificationEmbed_next;%s;%s;%d", actionType.getName(), commandUserId, targetId, count),
-                bundle.getString("notificationEvents.showEmbedButtons.next.label"));
+                bundle.getString("buttons.next"));
     }
 
     final @NotNull Button beforeButton(@NotNull ResourceBundle bundle, String commandUserId, String targetId, int count, @NotNull ActionType actionType) {
         return Button.of(ButtonStyle.SECONDARY,
                 String.format("noteCommand_%sNotificationEmbed_before;%s;%s;%d", actionType.getName(), commandUserId, targetId, count),
-                bundle.getString("notificationEvents.showEmbedButtons.before.label"));
+                bundle.getString("buttons.before"));
     }
 
     @JDAButton(startWith = "notification_")
@@ -142,13 +145,16 @@ public class NotificationSlashCommandEvents {
         // Get String of the component-owner-id
         String componentOwnerId = splitComponentIds[1];
 
+        ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrase(event.getUserLocale());
+
         // compare eventUserId and componentOwnerId
         // Return if not equal
         if (!componentOwnerId.equals(event.getUser().getId())) return;
         // Dispatch button notification events by id
         switch (splitComponentIds[0]) {
             case "notification_initialSlashCommand_selectPlatformEmbedButton" ->
-                    dispatchSelectPlatformButtonClickEvent(event, splitComponentIds);
+                    dispatchSelectPlatformButtonClickEvent(event, splitComponentIds, bundle, standardPhrases);
             case "notification_sendSpecificPlatformEmbed_platformEmbed_add", "notification_addServiceResultEmbed_edit" ->
                     addOrEditOrRemoveButtonEvent(event, ActionType.ADD, splitComponentIds);
             case "notification_sendSpecificPlatformEmbed_platformEmbed_edit" ->
@@ -156,24 +162,26 @@ public class NotificationSlashCommandEvents {
             case "notification_sendSpecificPlatformEmbed_platformEmbed_remove" ->
                     addOrEditOrRemoveButtonEvent(event, ActionType.REMOVE, splitComponentIds);
             case "noteCommand_editNotificationEmbed_before" ->
-                    showAnnouncementChannelList(event, ActionType.EDIT, ClickType.BEFORE, splitComponentIds);
+                    showAnnouncementChannelList(event, ActionType.EDIT, ClickType.BEFORE, splitComponentIds, bundle, standardPhrases);
             case "noteCommand_editNotificationEmbed_next" ->
-                    showAnnouncementChannelList(event, ActionType.EDIT, ClickType.NEXT, splitComponentIds);
+                    showAnnouncementChannelList(event, ActionType.EDIT, ClickType.NEXT, splitComponentIds, bundle, standardPhrases);
             case "noteCommand_removeNotificationEmbed_before" ->
-                    showAnnouncementChannelList(event, ActionType.REMOVE, ClickType.BEFORE, splitComponentIds);
+                    showAnnouncementChannelList(event, ActionType.REMOVE, ClickType.BEFORE, splitComponentIds, bundle, standardPhrases);
             case "noteCommand_removeNotificationEmbed_next" ->
-                    showAnnouncementChannelList(event, ActionType.REMOVE, ClickType.NEXT, splitComponentIds);
-            case "notification_addServiceResultEmbed_ok" -> addServiceModalButtonOkClickEvent(event, splitComponentIds);
+                    showAnnouncementChannelList(event, ActionType.REMOVE, ClickType.NEXT, splitComponentIds, bundle, standardPhrases);
+            case "notification_addServiceResultEmbed_ok" ->
+                    addServiceModalButtonOkClickEvent(event, splitComponentIds, bundle, standardPhrases);
             case "notification_editNotificationMessage" -> editNotificationMessageClickEvent(event, splitComponentIds);
             case "notification_notificationChannelSelect_ok" ->
-                    notificationChannelSelectOkClickEvent(event, splitComponentIds);
+                    notificationChannelSelectOkClickEvent(event, splitComponentIds, bundle, standardPhrases);
             default -> {
             }
         }
     }
 
-    // Replies an embed with the standard notification Message, a button to edit this message and a select menu for the channel
-    private void addServiceModalButtonOkClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids) {
+    // Replies with an embed with the standard notification Message,
+    // a button to edit this message and a select menu for the channel
+    private void addServiceModalButtonOkClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
         InteractionHook hook = event.getHook();
         String componentOwnerId = ids[1];
@@ -192,10 +200,9 @@ public class NotificationSlashCommandEvents {
 
         // Get channel-id
         String userId = value.split("\n")[0].split(" ")[1];
-
-        ResourceBundle bundle = bundle(event.getUserLocale());
-        if (db.putDataInContentCreatorTable(notificationService, userName, userId) < 0) { //TODO Change to a long based method -> Print the db error
-            hook.editOriginal(bundle.getString("notificationEvents.addServiceModalButtonOkClickEvent.putInContentCreatorTableFailed")).queue();
+        long dbValue = db.putDataInContentCreatorTable(notificationService, userName, userId);
+        if (dbValue < 0) {
+            hook.editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), dbValue)).queue();
             return;
         }
 
@@ -259,30 +266,29 @@ public class NotificationSlashCommandEvents {
     }
 
     // Replies an Embed where you can select a NotificationService
-    private void dispatchSelectPlatformButtonClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids) {
+    private void dispatchSelectPlatformButtonClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids, ResourceBundle bundle, ResourceBundle standardPhrases) {
         String serviceString = ids[2];
         NotificationService notificationService = NotificationService.getNotificationServiceByName(serviceString);
         if (notificationService == null) return;
         event.deferEdit().queue();
-        sendSpecificPlatformEmbed(notificationService, event.getHook());
+        sendSpecificPlatformEmbed(notificationService, event.getHook(), bundle, standardPhrases);
     }
 
     // Replies an Embed where you can select an action for the NotificationService
-    private void sendSpecificPlatformEmbed(@NotNull NotificationService platform, @NotNull InteractionHook hook) {
-        ResourceBundle bundle = bundle(hook.getInteraction().getUserLocale());
+    private void sendSpecificPlatformEmbed(@NotNull NotificationService platform, @NotNull InteractionHook hook, @NotNull ResourceBundle bundle, @NotNull ResourceBundle standardPhrases) {
         EmbedBuilder platformEmbed = new EmbedBuilder();
         platformEmbed.setTitle(String.format(bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.title"), platform.getServiceName()));
         platformEmbed.setDescription(bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.description"));
         platformEmbed.addField(
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.title"),
+                standardPhrases.getString("embeds.fields.name.add"),
                 bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.description"),
                 true);
         platformEmbed.addField(
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.title"),
+                standardPhrases.getString("embeds.fields.name.edit"),
                 bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.description"),
                 true);
         platformEmbed.addField(
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.title"),
+                standardPhrases.getString("embeds.fields.name.remove"),
                 bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.description"),
                 true);
         platformEmbed.setColor(notificationEmbedColor);
@@ -292,15 +298,15 @@ public class NotificationSlashCommandEvents {
         buttons.add(Button.of(
                 ButtonStyle.SECONDARY,
                 buttonPattern.formatted(ActionType.ADD.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.add.title")));
+                standardPhrases.getString("buttons.add")));
         buttons.add(Button.of(
                 ButtonStyle.SECONDARY,
                 buttonPattern.formatted(ActionType.EDIT.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.edit.title")));
+                standardPhrases.getString("buttons.edit")));
         buttons.add(Button.of(
                 ButtonStyle.SECONDARY,
                 buttonPattern.formatted(ActionType.REMOVE.name, hook.getInteraction().getUser().getId(), platform.getServiceName()),
-                bundle.getString("notificationEvents.sendSpecificPlatformEmbed.platformEmbed.fields.remove.title")));
+                standardPhrases.getString("buttons.remove")));
 
         hook.editOriginalEmbeds(platformEmbed.build()).setComponents(ActionRow.of(buttons)).queue();
     }
@@ -347,29 +353,31 @@ public class NotificationSlashCommandEvents {
         // Return if not equal
         if (!componentOwnerId.equals(event.getUser().getId())) return;
 
+        ResourceBundle bundle = bundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrase(event.getUserLocale());
+
         // Dispatch modal events by id
         switch (splitComponentIds[0]) {
             case "notification_addServiceModal" ->
-                    initialNotificationModalEvent(event, ActionType.ADD, splitComponentIds);
+                    initialNotificationModalEvent(event, ActionType.ADD, splitComponentIds, bundle, standardPhrases);
             case "notification_editServiceModal" ->
-                    initialNotificationModalEvent(event, ActionType.EDIT, splitComponentIds);
+                    initialNotificationModalEvent(event, ActionType.EDIT, splitComponentIds, bundle, standardPhrases);
             case "notification_removeServiceModal" ->
-                    initialNotificationModalEvent(event, ActionType.REMOVE, splitComponentIds);
+                    initialNotificationModalEvent(event, ActionType.REMOVE, splitComponentIds, bundle, standardPhrases);
             case "notification_editNotificationMessageModal" -> editNotificationMessageModalEvent(event);
-            case "notification_channelMsgEdit" -> editChannelMessageModalEvent(event, splitComponentIds);
+            case "notification_channelMsgEdit" ->
+                    editChannelMessageModalEvent(event, splitComponentIds, bundle, standardPhrases);
         }
 
     }
 
     // Replies an Embed for the specific use case
-    private void initialNotificationModalEvent(@NotNull ModalInteractionEvent event, ActionType actionType, String @NotNull [] ids) {
+    private void initialNotificationModalEvent(@NotNull ModalInteractionEvent event, ActionType actionType, String @NotNull [] ids, ResourceBundle bundle, ResourceBundle standardPhrases) {
         String componentOwnerId = ids[1];
         String serviceString = ids[2];
         if (!event.getUser().getId().equals(componentOwnerId)) return;
         NotificationService notificationService = NotificationService.getNotificationServiceByName(serviceString);
         if (notificationService == null) return;
-
-        ResourceBundle bundle = bundle(event.getUserLocale());
 
         event.deferEdit().queue();
 
@@ -444,7 +452,7 @@ public class NotificationSlashCommandEvents {
         if (tableData.length() > 25) {
             event.getHook().editOriginalEmbeds(initialShowAnnouncementChannelEmbed.build())
                     .setComponents(
-                            ActionRow.of(nextButton(bundle, componentOwnerId, userId, 25, actionType)),
+                            ActionRow.of(nextButton(standardPhrases, componentOwnerId, userId, 25, actionType)),
                             ActionRow.of(stringMenu.build()))
                     .queue();
         } else {
@@ -455,15 +463,13 @@ public class NotificationSlashCommandEvents {
     }
 
     // Write the data in the database
-    private void notificationChannelSelectOkClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids) {
+    private void notificationChannelSelectOkClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
         InteractionHook hook = event.getHook();
         // Get component-id and check the ids from buttonUser and buttonId
         String componentOwnerId = ids[1];
         String userChannelId = ids[2];
         if (!event.getUser().getId().equals(componentOwnerId)) return;
-
-        ResourceBundle bundle = bundle(event.getUserLocale());
 
         // Get Embed
         MessageEmbed messageEmbed = event.getMessage().getEmbeds().getFirst();
@@ -508,20 +514,23 @@ public class NotificationSlashCommandEvents {
                     .setComponents()
                     .setContent(bundle.getString("notificationEvents.notificationChannelSelectOkClickEvent.successReply"))
                     .queue();
+        } else if (addValue < 0) {
+            hook.editOriginalEmbeds()
+                    .setComponents()
+                    .setContent(String.format(standardPhrases.getString("replies.dbErrorReply"), addValue))
+                    .queue();
         } else {
             hook.editOriginalEmbeds()
                     .setComponents()
-                    .setContent(bundle.getString("notificationEvents.notificationChannelSelectOkClickEvent.failReply"))
+                    .setContent(standardPhrases.getString("replies.noDataEdit"))
                     .queue();
         }
     }
 
-    private void showAnnouncementChannelList(@NotNull ButtonInteractionEvent event, @NotNull ActionType actionType, @NotNull ClickType clickType, String @NotNull [] ids) {
+    private void showAnnouncementChannelList(@NotNull ButtonInteractionEvent event, @NotNull ActionType actionType, @NotNull ClickType clickType, String @NotNull [] ids, ResourceBundle bundle, ResourceBundle standardPhrases) {
         String componentOwnerId = ids[1];
         String targetId = ids[2];
         int count = Integer.parseInt(ids[3]);
-
-        ResourceBundle bundle = bundle(event.getUserLocale());
 
         event.deferEdit().queue();
 
@@ -538,14 +547,14 @@ public class NotificationSlashCommandEvents {
                 event.getHook().editOriginalEmbeds(initialShowAnnouncementChannelEmbed.build())
                         .setComponents(
                                 ActionRow.of(
-                                        beforeButton(bundle, componentOwnerId, targetId, count - 25, actionType),
-                                        nextButton(bundle, componentOwnerId, targetId, Math.min(tableData.length() - count, 25), actionType)),
+                                        beforeButton(standardPhrases, componentOwnerId, targetId, count - 25, actionType),
+                                        nextButton(standardPhrases, componentOwnerId, targetId, Math.min(tableData.length() - count, 25), actionType)),
                                 ActionRow.of(stringMenu.build()))
                         .queue();
             } else {
                 event.getHook().editOriginalEmbeds(initialShowAnnouncementChannelEmbed.build())
                         .setComponents(
-                                ActionRow.of(nextButton(bundle, componentOwnerId, targetId, Math.min(tableData.length() - count, 25), actionType)),
+                                ActionRow.of(nextButton(standardPhrases, componentOwnerId, targetId, Math.min(tableData.length() - count, 25), actionType)),
                                 ActionRow.of(stringMenu.build()))
                         .queue();
             }
@@ -555,13 +564,13 @@ public class NotificationSlashCommandEvents {
                         .setComponents(
                                 ActionRow.of(
                                         beforeButton(bundle, componentOwnerId, targetId, count - 25, actionType),
-                                        nextButton(bundle, componentOwnerId, targetId, Math.min(tableData.length() - count, 25), actionType)),
+                                        nextButton(standardPhrases, componentOwnerId, targetId, Math.min(tableData.length() - count, 25), actionType)),
                                 ActionRow.of(stringMenu.build()))
                         .queue();
             } else {
                 event.getHook().editOriginalEmbeds(initialShowAnnouncementChannelEmbed.build())
                         .setComponents(
-                                ActionRow.of(beforeButton(bundle, componentOwnerId, targetId, count - 25, actionType)),
+                                ActionRow.of(beforeButton(standardPhrases, componentOwnerId, targetId, count - 25, actionType)),
                                 ActionRow.of(stringMenu.build()))
                         .queue();
             }
@@ -570,29 +579,33 @@ public class NotificationSlashCommandEvents {
 
     // Event in EDIT routine
     // Update message in database
-    private void editChannelMessageModalEvent(@NotNull ModalInteractionEvent event, String @NotNull [] ids) {
+    private void editChannelMessageModalEvent(@NotNull ModalInteractionEvent event, String @NotNull [] ids, ResourceBundle bundle, ResourceBundle standardPhrases) {
         String targetId = ids[2];
         String channelId = ids[3];
 
         event.deferEdit().queue();
 
-        ResourceBundle bundle = bundle(event.getUserLocale());
-
         ModalMapping modalMapping = event.getValue("notification_notificationChannelEditModal_textInput_messageInput");
         if (modalMapping == null) return;
 
-
-        if (db.updateDataInSubscribedChannelTable(modalMapping.getAsString(), Long.parseLong(channelId), targetId) > 0) { // TODO Change db error reply
+        long value = db.updateDataInSubscribedChannelTable(modalMapping.getAsString(), Long.parseLong(channelId), targetId);
+        if (value > 0) {
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
                     .setContent(bundle.getString("notificationEvents.editChannelMessageModalEvent.successfullyEdit"))
                     .queue();
+        } else if (value < 0) {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent(String.format(standardPhrases.getString("replies.dbErrorReply"), value))
+                    .queue();
         } else {
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
-                    .setContent(bundle.getString("notificationEvents.editChannelMessageModalEvent.dbError"))
+                    .setContent(standardPhrases.getString("replies.noDataEdit"))
                     .queue();
         }
     }
@@ -633,21 +646,28 @@ public class NotificationSlashCommandEvents {
 
         if (!event.getUser().getId().equals(componentOwnerId)) return;
 
-        event.deferEdit().queue();
+        ResourceBundle standardPhrases = standardPhrase(event.getUserLocale());
 
-        if (db.removeDataFromSubscribedChannelTable(event.getValues(), targetId) > 0) { // TODO Change db error reply
+        event.deferEdit().queue();
+        long value = db.removeDataFromSubscribedChannelTable(event.getValues(), targetId);
+        if (value > 0) {
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
                     .setContent(bundle(event.getUserLocale()).getString("notificationEvents.showAnnouncementEmbedRemoveMenu.removed"))
                     .queue();
+        } else if (value < 0) {
+            event.getHook()
+                    .editOriginalEmbeds()
+                    .setComponents()
+                    .setContent(String.format(standardPhrases.getString("replies.dbErrorReply"), value))
+                    .queue();
         } else {
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
-                    .setContent(bundle(event.getUserLocale()).getString("notificationEvents.showAnnouncementEmbedRemoveMenu.dbError"))
+                    .setContent(standardPhrases.getString("replies.noDataEdit"))
                     .queue();
-
         }
 
 

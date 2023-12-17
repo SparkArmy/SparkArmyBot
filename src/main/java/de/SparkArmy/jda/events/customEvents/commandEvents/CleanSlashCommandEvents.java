@@ -372,20 +372,19 @@ public class CleanSlashCommandEvents {
         ModalMapping activeMapping = event.getValues().stream().filter(x -> x.getId().startsWith("active")).toList().getFirst();
         boolean active = Boolean.getBoolean(activeMapping.getAsString());
 
-        //TODO implement ResourceBundle in replies
         ResourceBundle standardBundle = standardBundle(event.getUserLocale());
         long edited = postgres.editDataInPeriodicCleanTable(databaseId, active, days);
         if (edited > 0) {
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
-                    .setContent("Edited")
+                    .setContent(standardBundle.getString("replies.dataEdit"))
                     .queue();
         } else if (edited == 0) {
             event.getHook()
                     .editOriginalEmbeds()
                     .setComponents()
-                    .setContent("No Data Edited")
+                    .setContent(standardBundle.getString("replies.noDataEdit"))
                     .queue();
         } else {
             event.getHook()

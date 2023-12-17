@@ -679,7 +679,7 @@ public class DatabaseAction {
                 "lgcIsCommandLog", "lgcIsLeaveLog", "lgcIsServerLog", "lgcIsVoiceLog","lgcIsModLog") VALUES (?,?,?,?,?,?,?,?,?);
                 """);
 
-        if (!messageLog && !memberLog && !commandLog && !leaveLog && !serverLog && !voiceLog)
+        if (!messageLog && !memberLog && !commandLog && !leaveLog && !serverLog && !voiceLog && !modLog)
             return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
 
         prepStmt.setLong(1, channelId);
@@ -1542,12 +1542,13 @@ public class DatabaseAction {
         if (setModeratorState < 0) return setModeratorState;
 
         PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO botfunctiondata."tblPunishment" ("fk_psmMemberId", "fk_psmModeratorId", "fk_psmPunishmentTypeId", "psmReason", "psmTimestamp") VALUES (?,?,?,?,now());
+                INSERT INTO botfunctiondata."tblPunishment" ("fk_psmMemberId", "fk_psmModeratorId", "fk_psmPunishmentTypeId", "psmReason", "psmTimestamp","fk_psmGuildId") VALUES (?,?,?,?,now(),?);
                 """);
         prepStmt.setLong(1, getTargetUserDatabaseMemberId);
         prepStmt.setLong(2, getModeratorDatabaseMemberId);
         prepStmt.setInt(3, punishmentType);
         prepStmt.setString(4, reason);
+        prepStmt.setLong(5, guildId);
         return prepStmt.executeUpdate();
     }
 
@@ -1909,7 +1910,6 @@ public class DatabaseAction {
             entry.put("permFiles", resultSet.getBoolean("mocIsFileAllowed"));
             entry.put("permAttachment", resultSet.getBoolean("mocIsAttachmentAllowed"));
             connection.close();
-            logger.info("returned");
             return entry;
         } catch (SQLException e) {
             handleSQLException(e);
@@ -1957,7 +1957,6 @@ public class DatabaseAction {
         List<Long> roleIds = new ArrayList<>();
         try {
             Connection connection = DatabaseSource.connection();
-            logger.info(String.valueOf(LocalDateTime.now()));
             PreparedStatement preparedStatement = connection.prepareStatement("""
                     SELECT "rolRoleId" FROM guilddata."tblRole" WHERE "fk_rolGuildId" = ? AND "rolIsModRole" = true;
                     """);
@@ -1967,7 +1966,6 @@ public class DatabaseAction {
                 roleIds.add(resultSet.getLong("rolRoleId"));
             }
             connection.close();
-            logger.info(String.valueOf(LocalDateTime.now()));
             return roleIds;
         } catch (SQLException e) {
             handleSQLException(e);
@@ -1979,7 +1977,6 @@ public class DatabaseAction {
         List<Long> roleIds = new ArrayList<>();
         try {
             Connection connection = DatabaseSource.connection();
-            logger.info(String.valueOf(LocalDateTime.now()));
             PreparedStatement preparedStatement = connection.prepareStatement("""
                     SELECT "rolRoleId" FROM guilddata."tblRole" WHERE "rolIsModRole" = true;
                     """);
@@ -1988,7 +1985,6 @@ public class DatabaseAction {
                 roleIds.add(resultSet.getLong("rolRoleId"));
             }
             connection.close();
-            logger.info(String.valueOf(LocalDateTime.now()));
             return roleIds;
         } catch (SQLException e) {
             handleSQLException(e);
@@ -2009,6 +2005,22 @@ public class DatabaseAction {
             } else {
                 return isGuildWarnRoleSet;
             }
+            connection.close();
+            return value;
+        } catch (SQLException e) {
+            handleSQLException(e);
+            return ErrorCodes.SQL_EXCEPTION.getId();
+        }
+    }
+
+    public long disableWarnRole(long guildId) {
+        try {
+            Connection connection = DatabaseSource.connection();
+            PreparedStatement preparedStatement = connection.prepareStatement("""
+                    UPDATE guilddata."tblRole" SET "rolIsWarn" = false WHERE "fk_rolGuildId" = ?;
+                    """);
+            preparedStatement.setLong(1, guildId);
+            long value = preparedStatement.executeUpdate();
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2042,6 +2054,22 @@ public class DatabaseAction {
             } else {
                 return isGuildMuteRoleSet;
             }
+            connection.close();
+            return value;
+        } catch (SQLException e) {
+            handleSQLException(e);
+            return ErrorCodes.SQL_EXCEPTION.getId();
+        }
+    }
+
+    public long disableMuteRole(long guildId) {
+        try {
+            Connection connection = DatabaseSource.connection();
+            PreparedStatement preparedStatement = connection.prepareStatement("""
+                    UPDATE guilddata."tblRole" SET "rolIsMute" = false WHERE "fk_rolGuildId" = ?;
+                    """);
+            preparedStatement.setLong(1, guildId);
+            long value = preparedStatement.executeUpdate();
             connection.close();
             return value;
         } catch (SQLException e) {

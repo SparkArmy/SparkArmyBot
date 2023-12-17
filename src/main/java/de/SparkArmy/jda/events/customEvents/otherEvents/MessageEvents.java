@@ -1,8 +1,11 @@
 package de.SparkArmy.jda.events.customEvents.otherEvents;
 
+import club.minnced.discord.webhook.WebhookClient;
 import de.SparkArmy.db.DatabaseAction;
+import de.SparkArmy.jda.WebhookApi;
 import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
 import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Member;
@@ -29,8 +32,10 @@ public class MessageEvents {
     private final DatabaseAction db;
 
     private final List<Long> modRoleIds;
+    private final WebhookApi webhookApi;
 
-    public MessageEvents(@NotNull EventDispatcher ignoredDispatcher) {
+    public MessageEvents(@NotNull EventDispatcher dispatcher) {
+        this.webhookApi = dispatcher.getApi().getWebhookApi();
         this.db = new DatabaseAction();
         this.modRoleIds = db.getModerationRolesByGuildId();
     }
@@ -148,7 +153,9 @@ public class MessageEvents {
         if (phrases.keySet().stream().map(phrases::getString).anyMatch(messageContent::contains)) {
             event.getMessage().delete().reason("Blacklist phrase")
                     .map(x -> {
-                        // TODO Send violations in ModLog
+                        WebhookClient client = webhookApi.getSpecificWebhookClient(event.getGuild(), LogChannelType.MOD);
+                        if (client != null)
+                            client.send(String.format("Blacklist Entry (%s) used from %s", messageContent, event.getAuthor().getAsMention()));
                         return null;
                     })
                     .queue(null,
@@ -168,7 +175,9 @@ public class MessageEvents {
         }).anyMatch(messageContent::matches)) {
             event.getMessage().delete().reason("Regex Phrase")
                     .map(x -> {
-                        // TODO Send violations in ModLog
+                        WebhookClient client = webhookApi.getSpecificWebhookClient(event.getGuild(), LogChannelType.MOD);
+                        if (client != null)
+                            client.send(String.format("Regex Entry (%s) used from %s", messageContent, event.getAuthor().getAsMention()));
                         return null;
                     })
                     .queue(null,

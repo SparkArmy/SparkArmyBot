@@ -162,12 +162,20 @@ public class ConfigController {
         return new DatabaseAction().setWarnRole(warnRole.getGuild().getIdLong(), warnRole.getIdLong());
     }
 
+    public long disableGuildWarnRole(@NotNull Guild guild) {
+        return new DatabaseAction().disableWarnRole(guild.getIdLong());
+    }
+
     public long getGuildWarnRole(@NotNull Guild guild) {
         return new DatabaseAction().getWarnRoleByGuildId(guild.getIdLong());
     }
 
     public long setGuildMuteRole(@NotNull Role muteRole) {
         return new DatabaseAction().setMuteRole(muteRole.getGuild().getIdLong(), muteRole.getIdLong());
+    }
+
+    public long disableGuildMuteRole(@NotNull Guild guild) {
+        return new DatabaseAction().disableMuteRole(guild.getIdLong());
     }
 
     public long getGuildMuteRole(@NotNull Guild guild) {

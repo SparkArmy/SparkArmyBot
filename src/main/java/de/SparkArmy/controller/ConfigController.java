@@ -98,7 +98,7 @@ public class ConfigController {
     }
 
     public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild, String url) {
-        return new DatabaseAction().writeInLogchannelTable(guild.getIdLong(), logChannelType, channel.getIdLong(), url);
+        return new DatabaseAction().writeInLogChannelTable(guild.getIdLong(), logChannelType, channel.getIdLong(), url);
     }
 
     public long removeGuildLoggingChannel(LogChannelType logChannelType, @NotNull Channel channel) {
@@ -235,62 +235,62 @@ public class ConfigController {
     }
 
     public List<Long> getGuildModMailBlacklistedUsers(@NotNull Guild guild) {
-        return new DatabaseAction().getUserIdsFromModmailBlacklistTableByGuildId(guild.getIdLong());
+        return new DatabaseAction().getUserIdsFromModMailBlacklistTableByGuildId(guild.getIdLong());
     }
 
     public long isUserOnGuildModMailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return new DatabaseAction().isUserOnModmailBlacklist(guild.getIdLong(), user.getIdLong());
+        return new DatabaseAction().isUserOnModMailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
     public long removeUserFromGuildModMailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return new DatabaseAction().removeUserFromModmailBlacklist(guild.getIdLong(), user.getIdLong());
+        return new DatabaseAction().removeUserFromModMailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
     public long addUserToGuildModMailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return new DatabaseAction().addUserToModmailBlacklist(guild.getIdLong(), user.getIdLong());
+        return new DatabaseAction().addUserToModMailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
     public long setGuildModMailCategory(@NotNull Category category) {
-        return new DatabaseAction().writeCategoryInModmailChannelTable(category.getIdLong(), category.getGuild().getIdLong());
+        return new DatabaseAction().writeCategoryInModMailChannelTable(category.getIdLong(), category.getGuild().getIdLong());
     }
 
     public long getGuildModMailCategory(@NotNull Guild guild) {
-        return new DatabaseAction().getCategoryIdByGuildIdFromModmailChannelTable(guild.getIdLong());
+        return new DatabaseAction().getCategoryIdByGuildIdFromModMailChannelTable(guild.getIdLong());
     }
 
     public long disableGuildModMail(@NotNull Guild guild) {
-        return new DatabaseAction().removeDataFromModmailChannelTable(guild.getIdLong());
+        return new DatabaseAction().removeDataFromModMailChannelTable(guild.getIdLong());
     }
 
     public long setGuildModMailArchiveChannel(@NotNull Guild guild, TextChannel channel) {
-        return new DatabaseAction().setModmailArchiveChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+        return new DatabaseAction().setModMailArchiveChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
     }
 
     public long getGuildModMailArchiveChannel(@NotNull Guild guild) {
-        return new DatabaseAction().getModmailArchiveChannelByGuildId(guild.getIdLong());
+        return new DatabaseAction().getModMailArchiveChannelByGuildId(guild.getIdLong());
     }
 
     public long setGuildModMailLogChannel(@NotNull Guild guild, TextChannel channel) {
-        return new DatabaseAction().setModmailLogChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+        return new DatabaseAction().setModMailLogChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
     }
 
     public long getGuildModMailLogChannel(@NotNull Guild guild) {
-        return new DatabaseAction().getModmailLogChannelByGuildId(guild.getIdLong());
+        return new DatabaseAction().getModMailLogChannelByGuildId(guild.getIdLong());
     }
 
     public long isRoleGuildModMailPingRole(@NotNull Role role) {
-        return new DatabaseAction().isRoleModmailPingRole(role.getIdLong(), role.getGuild().getIdLong());
+        return new DatabaseAction().isRoleModMailPingRole(role.getIdLong(), role.getGuild().getIdLong());
     }
 
     public long addGuildModMailPingRole(@NotNull Role role) {
-        return new DatabaseAction().addModmailPingRole(role.getGuild().getIdLong(), role.getIdLong());
+        return new DatabaseAction().addModMailPingRole(role.getGuild().getIdLong(), role.getIdLong());
     }
 
     public long removeGuildModMailPingRole(@NotNull Role role) {
-        return new DatabaseAction().removeModmailPingRole(role.getGuild().getIdLong(), role.getIdLong());
+        return new DatabaseAction().removeModMailPingRole(role.getGuild().getIdLong(), role.getIdLong());
     }
 
     public List<Long> getGuildModMailPingRoles(@NotNull Guild guild) {
-        return new DatabaseAction().getModmailPingRoleIdsByGuildId(guild.getIdLong());
+        return new DatabaseAction().getModMailPingRoleIdsByGuildId(guild.getIdLong());
     }
 }

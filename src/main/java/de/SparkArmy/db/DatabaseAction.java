@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static de.SparkArmy.utils.Util.logger;
 
@@ -40,12 +41,12 @@ public class DatabaseAction {
      */
 
     private long putChannelIdInChannelTable(@NotNull Connection conn, long channelId, long guildId) throws SQLException {
-        // Check if channel exist
+        // Check if the channel exists
         long isIdInChannelTable = isIdInChannelTable(conn, channelId);
         if (isIdInChannelTable > 0) return 0;
         if (isIdInChannelTable < 0) return isIdInChannelTable;
 
-        // Put Guild in database
+        // Put Guild in a database
         long putIdInGuildTable = putGuildIdInGuildTable(conn, guildId);
         if (putIdInGuildTable < 0) return putIdInGuildTable;
 
@@ -58,12 +59,12 @@ public class DatabaseAction {
     }
 
     private long putCategoryIdInCategoryTable(@NotNull Connection conn, long categoryId, long guildId) throws SQLException {
-        // Check if channel exist
+        // Check if a channel exists
         long isIdInChannelTable = isIdInChannelTable(conn, categoryId);
         if (isIdInChannelTable > 0) return 0;
         if (isIdInChannelTable < 0) return isIdInChannelTable;
 
-        // Put Guild in database
+        // Put Guild in a database
         long putIdInGuildTable = putGuildIdInGuildTable(conn, guildId);
         if (putIdInGuildTable < 0) return putIdInGuildTable;
 
@@ -321,7 +322,6 @@ public class DatabaseAction {
         long messageId = message.getIdLong();
         long isMessageInDatabase = isMessageInDatabase(conn, messageId);
         if (isMessageInDatabase == 0) {
-            putMessageContentInDatabase(conn, message);
             putMessageAttachmentDataInDatabase(conn, message);
             return;
         }
@@ -335,6 +335,7 @@ public class DatabaseAction {
         prepStmt.setString(1, content);
         prepStmt.setLong(2, messageId);
         prepStmt.executeUpdate();
+        conn.close();
     }
 
     private long isMessageInDatabase(@NotNull Connection conn, long messageId) throws SQLException {
@@ -355,36 +356,54 @@ public class DatabaseAction {
 
     private void putMessageAttachmentDataInDatabase(Connection conn, @NotNull Message message) throws SQLException {
         long putMessageContentInDatabase = putMessageContentInDatabase(conn, message);
-        if (putMessageContentInDatabase < 0) return;
+        if (putMessageContentInDatabase < 0) {
+            conn.close();
+            return;
+        }
 
         List<Message.Attachment> attachments = message.getAttachments();
-        if (attachments.isEmpty()) return;
+        if (attachments.isEmpty()) {
+            conn.close();
+            return;
+        }
 
-        PreparedStatement prepStmt = conn.prepareStatement("""
+        final PreparedStatement prepStmt = conn.prepareStatement("""
                 INSERT INTO guilddata."tblMessageAttachment" ("fk_msaMessageId", "msaData") VALUES (?,?);
                 """);
 
         long messageId = message.getIdLong();
+        prepStmt.setLong(1, messageId);
 
+        List<CompletableFuture<File>> attachmentFiles = new ArrayList<>();
         for (Message.Attachment attachment : attachments) {
             File directory = FileHandler.getDirectoryInUserDirectory("attachments");
             File attachmentFile = FileHandler.getFileInDirectory(directory, attachment.getFileName());
-            attachment.getProxy().downloadToFile(attachmentFile).handleAsync((x, e) -> {
-                try {
-                    byte[] fileData = Files.readAllBytes(Path.of(x.getAbsolutePath()));
-                    prepStmt.setLong(1, messageId);
-                    prepStmt.setBytes(2, fileData);
-                    prepStmt.executeUpdate();
-                } catch (IOException | SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-
-                if (x.delete()) {
-                    return null;
-                } else throw new RuntimeException("Attachment File was not deleted");
-            });
+            attachmentFiles.add(attachment.getProxy().downloadToFile(attachmentFile)
+                    .thenApply(file -> {
+                        try {
+                            prepStmt.setBytes(2, Files.readAllBytes(Path.of(file.getAbsolutePath())));
+                            prepStmt.execute();
+                        } catch (SQLException e) {
+                            handleSQLException(e);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        if (attachmentFile.delete()) {
+                            return null;
+                        } else {
+                            throw new RuntimeException("Attachment File was not deleted");
+                        }
+                    }));
         }
+        CompletableFuture.allOf(attachmentFiles.toArray(new CompletableFuture[0])).thenAccept(x -> {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                handleSQLException(e);
+            }
+        });
     }
+
 
     private void removeMessageAttachmentDataFromDatabase(@NotNull Connection conn, long messageId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
@@ -441,7 +460,7 @@ public class DatabaseAction {
         return prepStmt.executeUpdate();
     }
 
-    private long setIsModmailPingRoleState(Connection conn, long roleId, long guildId, boolean state) throws SQLException {
+    private long setIsModMailPingRoleState(Connection conn, long roleId, long guildId, boolean state) throws SQLException {
         long putRoleInRoleTable = putRoleInRoleTable(conn, roleId, guildId);
         if (putRoleInRoleTable < 0) return putRoleInRoleTable;
 
@@ -487,7 +506,7 @@ public class DatabaseAction {
         return getRoleState(prepStmt);
     }
 
-    private long getModmailPingRoleStateFromRole(Connection conn, long roleId, long guildId) throws SQLException {
+    private long getModMailPingRoleStateFromRole(Connection conn, long roleId, long guildId) throws SQLException {
         long putRoleInRoleTable = putRoleInRoleTable(conn, roleId, guildId);
         if (putRoleInRoleTable < 0) return putRoleInRoleTable;
 
@@ -1153,10 +1172,10 @@ public class DatabaseAction {
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private long putDataInModmailBlacklistTable(Connection conn, long userId, long guildId) throws SQLException {
-        long isDataInModmialBlacklistTable = isDataInModmailBlacklistTable(conn, userId, guildId);
-        if (isDataInModmialBlacklistTable > 0) return 0;
-        if (isDataInModmialBlacklistTable < 0) return isDataInModmialBlacklistTable;
+    private long putDataInModMailBlacklistTable(Connection conn, long userId, long guildId) throws SQLException {
+        long isDataInModMailBlacklistTable = isDataInModMailBlacklistTable(conn, userId, guildId);
+        if (isDataInModMailBlacklistTable > 0) return 0;
+        if (isDataInModMailBlacklistTable < 0) return isDataInModMailBlacklistTable;
         long putUserIdInUserTable = putUserIdInUserTable(conn, userId);
         if (putUserIdInUserTable < 0) return putUserIdInUserTable;
         long putGuildIdInGuildTable = putGuildIdInGuildTable(conn, guildId);
@@ -1170,7 +1189,7 @@ public class DatabaseAction {
         return prepStmt.executeUpdate();
     }
 
-    private long isDataInModmailBlacklistTable(@NotNull Connection conn, long userId, long guildId) throws SQLException {
+    private long isDataInModMailBlacklistTable(@NotNull Connection conn, long userId, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 SELECT COUNT(*) FROM guidconfigs."tblModmailBlacklist" WHERE "fk_mblUserId" = ? AND "fk_mblGuildId" = ?;
                 """);
@@ -1179,7 +1198,7 @@ public class DatabaseAction {
         return getSelectCountValue(prepStmt);
     }
 
-    private long removeDataFromModmailBlacklistTable(@NotNull Connection conn, long userId, long guildId) throws SQLException {
+    private long removeDataFromModMailBlacklistTable(@NotNull Connection conn, long userId, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 DELETE FROM guidconfigs."tblModmailBlacklist" WHERE "fk_mblUserId" = ? AND "fk_mblGuildId" = ?;
                 """);
@@ -1188,27 +1207,27 @@ public class DatabaseAction {
         return prepStmt.executeUpdate();
     }
 
-    private long putDataInModmailChannelTable(Connection conn, long guildId, long modmailCategoryId) throws SQLException {
-        long isDataInModmailChannelTable = isDataInModmailChannelTable(conn, guildId);
-        if (isDataInModmailChannelTable > 0) return 0;
-        if (isDataInModmailChannelTable < 0) return isDataInModmailChannelTable;
+    private long putDataInModMailChannelTable(Connection conn, long guildId, long modMailCategoryId) throws SQLException {
+        long isDataInModMailChannelTable = isDataInModMailChannelTable(conn, guildId);
+        if (isDataInModMailChannelTable > 0) return 0;
+        if (isDataInModMailChannelTable < 0) return isDataInModMailChannelTable;
         long putGuildINGuildTable = putGuildIdInGuildTable(conn, guildId);
         if (putGuildINGuildTable < 0) return putGuildINGuildTable;
-        long putChanelIdInChannelTable = putCategoryIdInCategoryTable(conn, modmailCategoryId, guildId);
+        long putChanelIdInChannelTable = putCategoryIdInCategoryTable(conn, modMailCategoryId, guildId);
         if (putChanelIdInChannelTable < 0) return putChanelIdInChannelTable;
-        long isCategory = isCategory(conn, modmailCategoryId, guildId);
+        long isCategory = isCategory(conn, modMailCategoryId, guildId);
         if (isCategory == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
         if (isCategory < 0) return isCategory;
 
         PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO guidconfigs."tblModmailChannel" ("fk_mmcGuildId","fk_mmcModmailCategory") VALUES (?,?);
+                INSERT INTO guidconfigs."tblModmailChannel" ("fk_mmcGuildId","fk_mmcModMailCategory") VALUES (?,?);
                 """);
         prepStmt.setLong(1, guildId);
-        prepStmt.setLong(2, modmailCategoryId);
+        prepStmt.setLong(2, modMailCategoryId);
         return prepStmt.executeUpdate();
     }
 
-    private long isDataInModmailChannelTable(@NotNull Connection conn, long guildId) throws SQLException {
+    private long isDataInModMailChannelTable(@NotNull Connection conn, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 SELECT COUNT(*) FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
                 """);
@@ -1216,21 +1235,21 @@ public class DatabaseAction {
         return getSelectCountValue(prepStmt);
     }
 
-    private long updateCategoryInModmailChannelTable(Connection conn, long guildId, long categoryId) throws SQLException {
+    private long updateCategoryInModMailChannelTable(Connection conn, long guildId, long categoryId) throws SQLException {
         long putChanelIdInChannelTable = putCategoryIdInCategoryTable(conn, categoryId, guildId);
         if (putChanelIdInChannelTable < 0) return putChanelIdInChannelTable;
         long isCategory = isCategory(conn, categoryId, guildId);
         if (isCategory == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
         if (isCategory < 0) return isCategory;
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE guidconfigs."tblModmailChannel" SET "fk_mmcModmailCategory" = ? WHERE "fk_mmcGuildId" = ?
+                UPDATE guidconfigs."tblModmailChannel" SET "fk_mmcModMailCategory" = ? WHERE "fk_mmcGuildId" = ?
                 """);
         prepStmt.setLong(1, categoryId);
         prepStmt.setLong(2, guildId);
         return prepStmt.executeUpdate();
     }
 
-    private long removeDataFromModmailChannelTable(@NotNull Connection conn, long guildId) throws SQLException {
+    private long removeDataFromModMailChannelTable(@NotNull Connection conn, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 DELETE FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
                 """);
@@ -1239,11 +1258,11 @@ public class DatabaseAction {
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private long setArchiveChannelInModmailChannelTable(@NotNull Connection conn, long guildId, Long archiveChannelId) throws SQLException {
+    private long setArchiveChannelInModMailChannelTable(@NotNull Connection conn, long guildId, Long archiveChannelId) throws SQLException {
         long putChannelIdInChannelTable = putChannelIdInChannelTable(conn, archiveChannelId, guildId);
         if (putChannelIdInChannelTable < 0) return putChannelIdInChannelTable;
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE guidconfigs."tblModmailChannel" SET "fk_mmcModmailArchive" = ? WHERE "fk_mmcGuildId" = ?;
+                UPDATE guidconfigs."tblModmailChannel" SET "fk_mmcModMailArchive" = ? WHERE "fk_mmcGuildId" = ?;
                 """);
         prepStmt.setLong(1, archiveChannelId);
         prepStmt.setLong(2, guildId);
@@ -1251,45 +1270,45 @@ public class DatabaseAction {
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private long setLogChannelInModmailChannelTable(@NotNull Connection conn, long guildId, Long logChannelId) throws SQLException {
+    private long setLogChannelInModMailChannelTable(@NotNull Connection conn, long guildId, Long logChannelId) throws SQLException {
         long putChannelIdInChannelTable = putChannelIdInChannelTable(conn, logChannelId, guildId);
         if (putChannelIdInChannelTable < 0) return putChannelIdInChannelTable;
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE guidconfigs."tblModmailChannel" SET "fk_mmcModmailLog" = ? WHERE "fk_mmcGuildId" = ?;
+                UPDATE guidconfigs."tblModmailChannel" SET "fk_mmcModMailLog" = ? WHERE "fk_mmcGuildId" = ?;
                 """);
         prepStmt.setLong(1, logChannelId);
         prepStmt.setLong(2, guildId);
         return prepStmt.executeUpdate();
     }
 
-    private long getModmailCategoryId(@NotNull Connection conn, long guildId) throws SQLException {
+    private long getModMailCategoryId(@NotNull Connection conn, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT "fk_mmcModmailCategory" FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
+                SELECT "fk_mmcModMailCategory" FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
                 """);
         prepStmt.setLong(1, guildId);
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) return ErrorCodes.SQL_QUERY_SELECT_HAS_NO_ROW.getId();
-        return rs.getLong("fk_mmcModmailCategory");
+        return rs.getLong("fk_mmcModMailCategory");
     }
 
-    private Long getModmailArchiveId(@NotNull Connection conn, long guildId) throws SQLException {
+    private Long getModMailArchiveId(@NotNull Connection conn, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT "fk_mmcModmailArchive" FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
+                SELECT "fk_mmcModMailArchive" FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
                 """);
         prepStmt.setLong(1, guildId);
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) return (long) ErrorCodes.SQL_QUERY_SELECT_HAS_NO_ROW.getId();
-        return rs.getLong("fk_mmcModmailArchive");
+        return rs.getLong("fk_mmcModMailArchive");
     }
 
-    private Long getModmailLogId(@NotNull Connection conn, long guildId) throws SQLException {
+    private Long getModMailLogId(@NotNull Connection conn, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT "fk_mmcModmailLog" FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
+                SELECT "fk_mmcModMailLog" FROM guidconfigs."tblModmailChannel" WHERE "fk_mmcGuildId" = ?;
                 """);
         prepStmt.setLong(1, guildId);
         ResultSet rs = prepStmt.executeQuery();
         if (!rs.next()) return (long) ErrorCodes.SQL_QUERY_SELECT_HAS_NO_ROW.getId();
-        return rs.getLong("fk_mmcModmailLog");
+        return rs.getLong("fk_mmcModMailLog");
     }
 
     private long putDataInRegexTable(Connection conn, long guildId, String regexString, String regexName) throws SQLException {
@@ -1576,11 +1595,11 @@ public class DatabaseAction {
     }
 
     private synchronized void handleSQLException(SQLException e) {
-        logger.error("Error in DatabasAction", e);
+        logger.error("Error in DatabaseAction", e);
     }
 
-    // Public Methods to interact with database
-    public long writeInLogchannelTable(long guildId, LogChannelType logChannelType, long channelId, String webhookUrl) {
+    // Public Methods to interact with the database
+    public long writeInLogChannelTable(long guildId, LogChannelType logChannelType, long channelId, String webhookUrl) {
         try {
             Connection connection = DatabaseSource.connection();
             long putChannelIdInChannelTable = putChannelIdInChannelTable(connection, channelId, guildId);
@@ -1973,7 +1992,7 @@ public class DatabaseAction {
         }
     }
 
-    public List<Long> getModerationRolesByGuildId() {
+    public List<Long> getModerationRoles() {
         List<Long> roleIds = new ArrayList<>();
         try {
             Connection connection = DatabaseSource.connection();
@@ -2282,7 +2301,7 @@ public class DatabaseAction {
         }
     }
 
-    public List<Long> getUserIdsFromModmailBlacklistTableByGuildId(long guildId) {
+    public List<Long> getUserIdsFromModMailBlacklistTableByGuildId(long guildId) {
         List<Long> userIds = new ArrayList<>();
         try {
             Connection connection = DatabaseSource.connection();
@@ -2302,10 +2321,10 @@ public class DatabaseAction {
         }
     }
 
-    public long isUserOnModmailBlacklist(long guildId, long userId) {
+    public long isUserOnModMailBlacklist(long guildId, long userId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = isDataInModmailBlacklistTable(connection, userId, guildId);
+            long value = isDataInModMailBlacklistTable(connection, userId, guildId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2314,10 +2333,10 @@ public class DatabaseAction {
         }
     }
 
-    public long removeUserFromModmailBlacklist(long guildId, long userId) {
+    public long removeUserFromModMailBlacklist(long guildId, long userId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = removeDataFromModmailBlacklistTable(connection, userId, guildId);
+            long value = removeDataFromModMailBlacklistTable(connection, userId, guildId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2326,10 +2345,10 @@ public class DatabaseAction {
         }
     }
 
-    public long addUserToModmailBlacklist(long guildId, long userId) {
+    public long addUserToModMailBlacklist(long guildId, long userId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = putDataInModmailBlacklistTable(connection, userId, guildId);
+            long value = putDataInModMailBlacklistTable(connection, userId, guildId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2338,17 +2357,17 @@ public class DatabaseAction {
         }
     }
 
-    public long writeCategegoryInModmailChannelTable(long categoryId, long guildId) {
+    public long writeCategoryInModMailChannelTable(long categoryId, long guildId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long isDataInModmailChannelTable = isDataInModmailChannelTable(connection, guildId);
+            long isDataInModMailChannelTable = isDataInModMailChannelTable(connection, guildId);
             long value;
-            if (isDataInModmailChannelTable == 0) {
-                value = putDataInModmailChannelTable(connection, guildId, categoryId);
-            } else if (isDataInModmailChannelTable > 0) {
-                value = updateCategoryInModmailChannelTable(connection, guildId, categoryId);
+            if (isDataInModMailChannelTable == 0) {
+                value = putDataInModMailChannelTable(connection, guildId, categoryId);
+            } else if (isDataInModMailChannelTable > 0) {
+                value = updateCategoryInModMailChannelTable(connection, guildId, categoryId);
             } else {
-                return isDataInModmailChannelTable;
+                return isDataInModMailChannelTable;
             }
             connection.close();
             return value;
@@ -2358,10 +2377,10 @@ public class DatabaseAction {
         }
     }
 
-    public long removeDataFromModmailChannelTable(long guildId) {
+    public long getCategoryIdByGuildIdFromModMailChannelTable(long guildId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = removeDataFromModmailChannelTable(connection, guildId);
+            long value = getModMailCategoryId(connection, guildId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2370,10 +2389,10 @@ public class DatabaseAction {
         }
     }
 
-    public long setModmailArchiveChannel(long guildId, Long channelId) {
+    public long removeDataFromModMailChannelTable(long guildId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = setArchiveChannelInModmailChannelTable(connection, guildId, channelId);
+            long value = removeDataFromModMailChannelTable(connection, guildId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2382,10 +2401,10 @@ public class DatabaseAction {
         }
     }
 
-    public long setModmailLogChannel(long guildId, Long channelId) {
+    public long setModMailArchiveChannel(long guildId, Long channelId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = setLogChannelInModmailChannelTable(connection, guildId, channelId);
+            long value = setArchiveChannelInModMailChannelTable(connection, guildId, channelId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2394,10 +2413,10 @@ public class DatabaseAction {
         }
     }
 
-    public long isRoleModmailPingRole(long guildId, long roleId) {
+    public long getModMailArchiveChannelByGuildId(long guildId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = getModmailPingRoleStateFromRole(connection, roleId, guildId);
+            long value = getModMailArchiveId(connection, guildId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2406,10 +2425,10 @@ public class DatabaseAction {
         }
     }
 
-    public long addModmailPingRole(long guildId, long roleId) {
+    public long setModMailLogChannel(long guildId, Long channelId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = setIsModmailPingRoleState(connection, roleId, guildId, true);
+            long value = setLogChannelInModMailChannelTable(connection, guildId, channelId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2418,10 +2437,10 @@ public class DatabaseAction {
         }
     }
 
-    public long removeModmailPingRole(long guildId, long roleId) {
+    public long getModMailLogChannelByGuildId(long guildId) {
         try {
             Connection connection = DatabaseSource.connection();
-            long value = setIsModmailPingRoleState(connection, roleId, guildId, false);
+            long value = getModMailLogId(connection, guildId);
             connection.close();
             return value;
         } catch (SQLException e) {
@@ -2430,7 +2449,43 @@ public class DatabaseAction {
         }
     }
 
-    public List<Long> getModmailPingRoleIdsByGuildId(long guildId) {
+    public long isRoleModMailPingRole(long guildId, long roleId) {
+        try {
+            Connection connection = DatabaseSource.connection();
+            long value = getModMailPingRoleStateFromRole(connection, roleId, guildId);
+            connection.close();
+            return value;
+        } catch (SQLException e) {
+            handleSQLException(e);
+            return ErrorCodes.SQL_EXCEPTION.getId();
+        }
+    }
+
+    public long addModMailPingRole(long guildId, long roleId) {
+        try {
+            Connection connection = DatabaseSource.connection();
+            long value = setIsModMailPingRoleState(connection, roleId, guildId, true);
+            connection.close();
+            return value;
+        } catch (SQLException e) {
+            handleSQLException(e);
+            return ErrorCodes.SQL_EXCEPTION.getId();
+        }
+    }
+
+    public long removeModMailPingRole(long guildId, long roleId) {
+        try {
+            Connection connection = DatabaseSource.connection();
+            long value = setIsModMailPingRoleState(connection, roleId, guildId, false);
+            connection.close();
+            return value;
+        } catch (SQLException e) {
+            handleSQLException(e);
+            return ErrorCodes.SQL_EXCEPTION.getId();
+        }
+    }
+
+    public List<Long> getModMailPingRoleIdsByGuildId(long guildId) {
         List<Long> roleIds = new ArrayList<>();
         try {
             Connection connection = DatabaseSource.connection();
@@ -2783,7 +2838,6 @@ public class DatabaseAction {
         try {
             Connection connection = DatabaseSource.connection();
             updateMessageContentInDatabase(connection, message);
-            connection.close();
         } catch (SQLException e) {
             handleSQLException(e);
         }
@@ -2798,6 +2852,26 @@ public class DatabaseAction {
             connection.close();
         } catch (SQLException e) {
             handleSQLException(e);
+        }
+    }
+
+    public List<byte[]> getMessageAttachmentDataByMessageId(long messageId) {
+        List<byte[]> results = new ArrayList<>();
+        try {
+            Connection connection = DatabaseSource.connection();
+            PreparedStatement preparedStatement = connection.prepareStatement("""
+                    SELECT "msaData" FROM guilddata."tblMessageAttachment" WHERE "fk_msaMessageId" = ?;
+                    """);
+            preparedStatement.setLong(1, messageId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                results.add(resultSet.getBytes("msaData"));
+            }
+            connection.close();
+            return results;
+        } catch (SQLException e) {
+            handleSQLException(e);
+            return results;
         }
     }
 }

@@ -162,7 +162,7 @@ public class ConfigureSlashCommandEvents {
         if (messageMapping == null) return;
         String message = messageMapping.getAsString();
 
-        Button ticketCreateButton = Button.of(ButtonStyle.SUCCESS, "modmailCreateTicket", "Ticket");
+        Button ticketCreateButton = Button.of(ButtonStyle.SUCCESS, "modMailCreateTicket", "Ticket");
 
         event.getChannel()
                 .sendMessage(message)
@@ -179,7 +179,7 @@ public class ConfigureSlashCommandEvents {
             EmbedBuilder showPingedRolesEmbed = new EmbedBuilder();
             showPingedRolesEmbed.setTitle(bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.showPingedRolesEmbed.title"));
 
-            List<Long> roleIds = controller.getGuildModmailPingRoles(guild);
+            List<Long> roleIds = controller.getGuildModMailPingRoles(guild);
 
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -200,15 +200,15 @@ public class ConfigureSlashCommandEvents {
 
         long returnValue;
         String responseString;
-        if (controller.isRoleGuildModmailPingRole(targetRole) == 0) {
-            returnValue = controller.addGuildModmailPingRole(targetRole);
+        if (controller.isRoleGuildModMailPingRole(targetRole) == 0) {
+            returnValue = controller.addGuildModMailPingRole(targetRole);
             if (returnValue == 0) {
                 responseString = bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.roleAdded");
             } else {
                 responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), returnValue);
             }
         } else {
-            returnValue = controller.removeGuildModmailPingRole(targetRole);
+            returnValue = controller.removeGuildModMailPingRole(targetRole);
             if (returnValue == 0) {
                 responseString = bundle.getString("configureEvents.modmail.pingRoles.modmailPingRolesConfigureSubcommand.roleRemoved");
             } else {
@@ -227,7 +227,7 @@ public class ConfigureSlashCommandEvents {
             showBlacklistedModmailUsersEmbed.setTitle(bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.showBlacklistedModmailUsersEmbed.title"));
             showBlacklistedModmailUsersEmbed.setDescription(bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.showBlacklistedModmailUsersEmbed.description"));
 
-            List<Long> userIds = controller.getGuildModmailBlacklistedUsers(guild);
+            List<Long> userIds = controller.getGuildModMailBlacklistedUsers(guild);
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("\n");
             if (!userIds.isEmpty()) {
@@ -248,15 +248,15 @@ public class ConfigureSlashCommandEvents {
 
         long returnValue;
         String responseString;
-        if (controller.isUserOnGuildModmailBlacklist(guild, blacklistUser) == 0) {
-            returnValue = controller.addUserToGuildModmailBlacklist(guild, blacklistUser);
+        if (controller.isUserOnGuildModMailBlacklist(guild, blacklistUser) == 0) {
+            returnValue = controller.addUserToGuildModMailBlacklist(guild, blacklistUser);
             if (returnValue == 0) {
                 responseString = bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.userAdded");
             } else {
                 responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), returnValue);
             }
         } else {
-            returnValue = controller.removeUserFromGuildModmailBlacklist(guild, blacklistUser);
+            returnValue = controller.removeUserFromGuildModMailBlacklist(guild, blacklistUser);
             if (returnValue == 0) {
                 responseString = bundle.getString("configureEvents.modmail.blacklist.modmailBlacklistConfigureSubcommand.userRemoved");
             } else {
@@ -339,7 +339,7 @@ public class ConfigureSlashCommandEvents {
     private void modmailCategoryClearLogButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        long responseCode = controller.setGuildModmailArchiveChannel(guild, null);
+        long responseCode = controller.setGuildModMailArchiveChannel(guild, null);
         String responseString;
         if (responseCode == -15) {
             responseString = bundle.getString("configureEvents.modmail.category.noCategorySet");
@@ -385,7 +385,7 @@ public class ConfigureSlashCommandEvents {
     private void modmailCategoryClearArchiveButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        long responseCode = controller.setGuildModmailArchiveChannel(guild, null);
+        long responseCode = controller.setGuildModMailArchiveChannel(guild, null);
         String responseString;
         if (responseCode == -15) {
             responseString = bundle.getString("configureEvents.modmail.category.noCategorySet");
@@ -431,7 +431,7 @@ public class ConfigureSlashCommandEvents {
     private void modmailCategoryDisableModmailButtonEvent(@NotNull ButtonInteractionEvent event, ResourceBundle bundle, Guild guild, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
 
-        long responseCode = controller.disableGuildModmail(guild);
+        long responseCode = controller.disableGuildModMail(guild);
         String responseString;
         if (responseCode != 0) {
             responseString = String.format(standardPhrases.getString("replies.dbErrorReply"), responseCode);
@@ -502,7 +502,7 @@ public class ConfigureSlashCommandEvents {
         TextChannel textChannel = (TextChannel) event.getMentions().getChannels().getFirst();
         if (textChannel == null) return;
 
-        long responseCode = controller.setGuildModmailLogChannel(guild, textChannel);
+        long responseCode = controller.setGuildModMailLogChannel(guild, textChannel);
         String responseString;
 
         if (responseCode == -15) {
@@ -527,7 +527,7 @@ public class ConfigureSlashCommandEvents {
         TextChannel textChannel = (TextChannel) event.getMentions().getChannels().getFirst();
         if (textChannel == null) return;
 
-        long responseCode = controller.setGuildModmailArchiveChannel(guild, textChannel);
+        long responseCode = controller.setGuildModMailArchiveChannel(guild, textChannel);
         String responseString;
 
         if (responseCode == -15) {
@@ -552,7 +552,7 @@ public class ConfigureSlashCommandEvents {
         Category category = (Category) event.getMentions().getChannels().getFirst();
         if (category == null) return;
 
-        long responseCode = controller.setGuildModmailCategory(category);
+        long responseCode = controller.setGuildModMailCategory(category);
         String responseString;
 
         if (responseCode < 0) {

@@ -270,9 +270,9 @@ public class CommandRegisterer {
                                         new SubcommandData("blacklist", "Manage the blacklist"),
                                         new SubcommandData("manage", "Manage the regex settings")
                                 ),
-                        new SubcommandGroupData("modmail", "Manage the modmail settings")
+                        new SubcommandGroupData("ticket", "Manage the ModMail settings")
                                 .addSubcommands(
-                                        new SubcommandData("category", "Manage the category and channel for modmail channels"),
+                                        new SubcommandData("category", "Manage the category and channel for ModMail channels"),
                                         new SubcommandData("blacklist", "The blacklist for users")
                                                 .addOptions(
                                                         new OptionData(OptionType.USER, "user", "The user for the blacklist")

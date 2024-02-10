@@ -57,8 +57,15 @@ public class ModMailEvents {
         User user = event.getUser();
         if (guild == null) return;
 
+        ResourceBundle guildBundle = modMailBundle(guild.getLocale());
+        ResourceBundle userBundle = modMailBundle(event.getUserLocale());
+        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
+
         List<Long> blacklistUserIds = controller.getGuildModMailBlacklistedUsers(guild);
-        if (blacklistUserIds.contains(user.getIdLong())) return; // TODO Reply rejection message
+        if (blacklistUserIds.contains(user.getIdLong())) {
+            event.getHook().editOriginal(userBundle.getString("modMailTicketCreation.userIsOnBlacklist")).queue();
+            return;
+        }
 
         long categoryId = controller.getGuildModMailCategory(guild);
 
@@ -70,9 +77,6 @@ public class ModMailEvents {
         EnumSet<Permission> modRoleAllowed = EnumSet.of(Permission.VIEW_CHANNEL);
         EnumSet<Permission> modRoleDenied = EnumSet.of(Permission.MANAGE_CHANNEL, Permission.MESSAGE_SEND, Permission.MANAGE_PERMISSIONS, Permission.CREATE_PRIVATE_THREADS, Permission.CREATE_PUBLIC_THREADS);
 
-        ResourceBundle guildBundle = modMailBundle(guild.getLocale());
-        ResourceBundle userBundle = modMailBundle(event.getUserLocale());
-        ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
 
         ChannelAction<TextChannel> channelAction = category.createTextChannel(user.getName())
                 .addMemberPermissionOverride(user.getIdLong(), userAllowed, null)

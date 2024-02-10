@@ -10,6 +10,7 @@ import de.SparkArmy.jda.events.annotations.events.userEvents.*;
 import de.SparkArmy.jda.events.annotations.interactions.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
 import de.SparkArmy.jda.events.customEvents.otherEvents.MessageEvents;
+import de.SparkArmy.jda.events.customEvents.otherEvents.ModMailEvents;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -134,6 +135,7 @@ public class EventDispatcher {
         registerEvent(new MessageEvents(this));
         registerEvent(new ConfigureSlashCommandEvents(this));
         registerEvent(new FeedbackSlashCommandEvents(this));
+        registerEvent(new ModMailEvents(this));
     }
 
     private void registerEvent(Object o) {

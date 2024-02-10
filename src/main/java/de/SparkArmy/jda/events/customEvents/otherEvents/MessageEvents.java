@@ -1,6 +1,7 @@
 package de.SparkArmy.jda.events.customEvents.otherEvents;
 
 import club.minnced.discord.webhook.WebhookClient;
+import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.WebhookApi;
 import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
@@ -33,11 +34,13 @@ public class MessageEvents {
 
     private final List<Long> modRoleIds;
     private final WebhookApi webhookApi;
+    private final ConfigController controller;
 
     public MessageEvents(@NotNull EventDispatcher dispatcher) {
+        this.controller = dispatcher.getController();
         this.webhookApi = dispatcher.getApi().getWebhookApi();
         this.db = new DatabaseAction();
-        this.modRoleIds = db.getModerationRolesByGuildId();
+        this.modRoleIds = db.getModerationRoles();
     }
 
     private ResourceBundle bundle(DiscordLocale locale) {
@@ -93,7 +96,7 @@ public class MessageEvents {
 
         if (checkMemberPermissions(event)) return;
 
-        JSONObject channelPermissions = db.getMediaOnlyChannelDataByChannelId(event.getChannel().getIdLong());
+        JSONObject channelPermissions = controller.getGuildMediaOnlyChannelPermissions(event.getChannel().getIdLong());
         if (channelPermissions.isEmpty()) return;
 
         boolean textPerms = channelPermissions.getBoolean("permText");
@@ -148,7 +151,7 @@ public class MessageEvents {
         if (messageContent.isBlank()) return;
         if (checkMemberPermissions(event)) return;
 
-        JSONObject phrases = db.getPhrasesFromBlacklistTableByGuildId(event.getGuild().getIdLong());
+        JSONObject phrases = controller.getGuildBlacklistPhrases(event.getGuild());
 
         if (phrases.keySet().stream().map(phrases::getString).anyMatch(messageContent::contains)) {
             event.getMessage().delete().reason("Blacklist phrase")
@@ -168,7 +171,8 @@ public class MessageEvents {
         if (messageContent.isBlank()) return;
         if (checkMemberPermissions(event)) return;
 
-        JSONObject regexEntries = db.getRegexEntriesByGuildId(event.getGuild().getIdLong());
+
+        JSONObject regexEntries = controller.getGuildRegexEntries(event.getGuild());
         if (regexEntries.keySet().stream().map(x -> {
             JSONObject jObj = regexEntries.getJSONObject(x);
             return jObj.getString("regex");
@@ -190,7 +194,6 @@ public class MessageEvents {
         if (member == null) return false;
         return modRoleIds.stream().anyMatch(x -> member.getRoles().stream().map(ISnowflake::getIdLong).toList().contains(x));
     }
-
 }
 
 

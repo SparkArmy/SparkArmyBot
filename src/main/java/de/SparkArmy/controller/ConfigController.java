@@ -40,37 +40,10 @@ public class ConfigController {
     public JSONObject getMainConfigFile(){
         if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
             this.logger.warn("The main-config.json-file not exist, we will created a new");
-            JSONObject blankConfig = new JSONObject();
-            JSONObject discord = new JSONObject(){{
-                put("discord-token","Write here your Discord-Bot-Token");
-                put("discord-client-id","Write here your Discord-Bot-ClientId");
-            }};
-            blankConfig.put("discord",discord);
-            JSONObject twitch = new JSONObject(){{
-                put("twitch-client-secret","[Optional] Write here your Twitch-Client-Secret");
-                put("twitch-client-id","[Optional] Write here your Twitch-Client-Id");
-            }};
-            blankConfig.put("twitch",twitch);
-            JSONObject youtube = new JSONObject(){{
-                put("youtube-api-key","[Optional] Write here your API-Key from YouTube");
-                put("spring-callback-url","[Optional] Your callback domain");
-            }};
-            blankConfig.put("youtube",youtube);
-            JSONObject postgres = new JSONObject(){{
-                put("url","The url for the database");
-                put("user","Database-User");
-                put("password", "User-Password");
-            }};
-            blankConfig.put("postgres", postgres);
-            JSONObject otherKeys = new JSONObject() {{
-                put("virustotal-api-key", "[Optional] Write here your API-Key from VirusTotal");
-                put("storage-server", "Please setup a new server, delete all included channels and put the id in this field");
-                put("twitter_bearer", "Please copy the twitter bearer in this field");
-            }};
-            blankConfig.put("otherKeys", otherKeys);
+            JSONObject blankConfig = getBlankConfig();
 
             if (FileHandler.writeValuesInFile(this.configFolder, "main-config.json", blankConfig)) {
-                this.logger.info("main-config.json was successful created");
+                this.logger.debug("main-config.json was successful created");
                 this.logger.warn("Please finish your configuration");
                 try {
                     Desktop.getDesktop().open(FileHandler.getFileInDirectory(this.configFolder, "main-config.json"));
@@ -88,13 +61,44 @@ public class ConfigController {
         if (mainConfigAsString == null) {
             this.logger.error(ErrorCodes.GENERAL_CONFIG_IS_NULL.getDescription());
             this.main.systemExit(ErrorCodes.GENERAL_CONFIG_IS_NULL.getId());
+            return new JSONObject();
         }
-        assert mainConfigAsString != null;
         return new JSONObject(mainConfigAsString);
     }
 
+    @NotNull
+    private static JSONObject getBlankConfig() {
+        JSONObject blankConfig = new JSONObject();
+        JSONObject discord = new JSONObject() {{
+            put("discord-token", "Write here your Discord-Bot-Token");
+            put("discord-client-id", "Write here your Discord-Bot-ClientId");
+        }};
+        blankConfig.put("discord", discord);
+        JSONObject twitch = new JSONObject() {{
+            put("twitch-client-secret", "[Optional] Write here your Twitch-Client-Secret");
+            put("twitch-client-id", "[Optional] Write here your Twitch-Client-Id");
+        }};
+        blankConfig.put("twitch", twitch);
+        JSONObject youtube = new JSONObject() {{
+            put("youtube-api-key", "[Optional] Write here your API-Key from YouTube");
+            put("spring-callback-url", "[Optional] Your callback domain");
+        }};
+        blankConfig.put("youtube", youtube);
+        JSONObject postgres = new JSONObject() {{
+            put("url", "The url for the database");
+            put("user", "Database-User");
+            put("password", "User-Password");
+        }};
+        blankConfig.put("postgres", postgres);
+        JSONObject otherKeys = new JSONObject() {{
+            put("virusTotal-api-key", "[Optional] Write here your API-Key from VirusTotal");
+        }};
+        blankConfig.put("otherKeys", otherKeys);
+        return blankConfig;
+    }
+
     public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild, String url) {
-        return new DatabaseAction().writeInLogchannelTable(guild.getIdLong(), logChannelType, channel.getIdLong(), url);
+        return new DatabaseAction().writeInLogChannelTable(guild.getIdLong(), logChannelType, channel.getIdLong(), url);
     }
 
     public long removeGuildLoggingChannel(LogChannelType logChannelType, @NotNull Channel channel) {
@@ -230,51 +234,63 @@ public class ConfigController {
         return new DatabaseAction().getGuildFeedbackChannelByGuildId(guild.getIdLong());
     }
 
-    public List<Long> getGuildModmailBlacklistedUsers(@NotNull Guild guild) {
-        return new DatabaseAction().getUserIdsFromModmailBlacklistTableByGuildId(guild.getIdLong());
+    public List<Long> getGuildModMailBlacklistedUsers(@NotNull Guild guild) {
+        return new DatabaseAction().getUserIdsFromModMailBlacklistTableByGuildId(guild.getIdLong());
     }
 
-    public long isUserOnGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return new DatabaseAction().isUserOnModmailBlacklist(guild.getIdLong(), user.getIdLong());
+    public long isUserOnGuildModMailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return new DatabaseAction().isUserOnModMailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
-    public long removeUserFromGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return new DatabaseAction().removeUserFromModmailBlacklist(guild.getIdLong(), user.getIdLong());
+    public long removeUserFromGuildModMailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return new DatabaseAction().removeUserFromModMailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
-    public long addUserToGuildModmailBlacklist(@NotNull Guild guild, @NotNull User user) {
-        return new DatabaseAction().addUserToModmailBlacklist(guild.getIdLong(), user.getIdLong());
+    public long addUserToGuildModMailBlacklist(@NotNull Guild guild, @NotNull User user) {
+        return new DatabaseAction().addUserToModMailBlacklist(guild.getIdLong(), user.getIdLong());
     }
 
-    public long setGuildModmailCategory(@NotNull Category category) {
-        return new DatabaseAction().writeCategegoryInModmailChannelTable(category.getIdLong(), category.getGuild().getIdLong());
+    public long setGuildModMailCategory(@NotNull Category category) {
+        return new DatabaseAction().writeCategoryInModMailChannelTable(category.getIdLong(), category.getGuild().getIdLong());
     }
 
-    public long disableGuildModmail(@NotNull Guild guild) {
-        return new DatabaseAction().removeDataFromModmailChannelTable(guild.getIdLong());
+    public long getGuildModMailCategory(@NotNull Guild guild) {
+        return new DatabaseAction().getCategoryIdByGuildIdFromModMailChannelTable(guild.getIdLong());
     }
 
-    public long setGuildModmailArchiveChannel(@NotNull Guild guild, TextChannel channel) {
-        return new DatabaseAction().setModmailArchiveChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+    public long disableGuildModMail(@NotNull Guild guild) {
+        return new DatabaseAction().removeDataFromModMailChannelTable(guild.getIdLong());
     }
 
-    public long setGuildModmailLogChannel(@NotNull Guild guild, TextChannel channel) {
-        return new DatabaseAction().setModmailLogChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
+    public long setGuildModMailArchiveChannel(@NotNull Guild guild, TextChannel channel) {
+        return new DatabaseAction().setModMailArchiveChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
     }
 
-    public long isRoleGuildModmailPingRole(@NotNull Role role) {
-        return new DatabaseAction().isRoleModmailPingRole(role.getIdLong(), role.getGuild().getIdLong());
+    public long getGuildModMailArchiveChannel(@NotNull Guild guild) {
+        return new DatabaseAction().getModMailArchiveChannelByGuildId(guild.getIdLong());
     }
 
-    public long addGuildModmailPingRole(@NotNull Role role) {
-        return new DatabaseAction().addModmailPingRole(role.getGuild().getIdLong(), role.getIdLong());
+    public long setGuildModMailLogChannel(@NotNull Guild guild, TextChannel channel) {
+        return new DatabaseAction().setModMailLogChannel(guild.getIdLong(), channel != null ? channel.getIdLong() : null);
     }
 
-    public long removeGuildModmailPingRole(@NotNull Role role) {
-        return new DatabaseAction().removeModmailPingRole(role.getGuild().getIdLong(), role.getIdLong());
+    public long getGuildModMailLogChannel(@NotNull Guild guild) {
+        return new DatabaseAction().getModMailLogChannelByGuildId(guild.getIdLong());
     }
 
-    public List<Long> getGuildModmailPingRoles(@NotNull Guild guild) {
-        return new DatabaseAction().getModmailPingRoleIdsByGuildId(guild.getIdLong());
+    public long isRoleGuildModMailPingRole(@NotNull Role role) {
+        return new DatabaseAction().isRoleModMailPingRole(role.getIdLong(), role.getGuild().getIdLong());
+    }
+
+    public long addGuildModMailPingRole(@NotNull Role role) {
+        return new DatabaseAction().addModMailPingRole(role.getGuild().getIdLong(), role.getIdLong());
+    }
+
+    public long removeGuildModMailPingRole(@NotNull Role role) {
+        return new DatabaseAction().removeModMailPingRole(role.getGuild().getIdLong(), role.getIdLong());
+    }
+
+    public List<Long> getGuildModMailPingRoles(@NotNull Guild guild) {
+        return new DatabaseAction().getModMailPingRoleIdsByGuildId(guild.getIdLong());
     }
 }

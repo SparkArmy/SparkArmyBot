@@ -1,7 +1,7 @@
 package de.SparkArmy.jda.utils;
 
 import de.SparkArmy.jda.JdaApi;
-import de.SparkArmy.jda.events.annotations.interactions.JDACommandData;
+import de.SparkArmy.jda.annotations.internal.JDACommandData;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.ChannelType;

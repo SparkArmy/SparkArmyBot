@@ -1,11 +1,12 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.db.DatabaseAction;
-import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
-import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
-import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
-import de.SparkArmy.jda.events.annotations.interactions.JDAStringMenu;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.JDAButtonInteractionEvent;
+import de.SparkArmy.jda.annotations.events.JDAModalInteractionEvent;
+import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.events.JDAStringSelectInteractionEvent;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -34,9 +35,10 @@ import java.util.ResourceBundle;
 
 import static de.SparkArmy.utils.Util.logger;
 
-public class NoteSlashCommandEvents {
+public class NoteSlashCommandEvents implements IJDAEvent {
     private final DatabaseAction db;
-    public NoteSlashCommandEvents(@NotNull EventDispatcher ignoredDispatcher) {
+
+    public NoteSlashCommandEvents(EventManager ignoredManager) {
         this.db = new DatabaseAction();
     }
 
@@ -66,7 +68,7 @@ public class NoteSlashCommandEvents {
                 bundle.getString("buttons.close"));
     }
 
-    @JDAButton(startWith = "noteCommand")
+    @JDAButtonInteractionEvent(startWith = "noteCommand")
     public void noteButtonsEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -201,7 +203,7 @@ public class NoteSlashCommandEvents {
 
     }
 
-    @JDAStringMenu(startWith = "noteCommand_showNoteEmbed_editMenu")
+    @JDAStringSelectInteractionEvent(startWith = "noteCommand_showNoteEmbed_editMenu")
     public void noteEditSelectEvent(@NotNull StringSelectInteractionEvent event) {
         if (event.getGuild() == null) return;
         String[] splitId = event.getComponentId().split(";");
@@ -222,7 +224,7 @@ public class NoteSlashCommandEvents {
         event.replyModal(noteEditModal.build()).queue();
     }
 
-    @JDAStringMenu(startWith = "noteCommand_showNoteEmbed_removeMenu")
+    @JDAStringSelectInteractionEvent(startWith = "noteCommand_showNoteEmbed_removeMenu")
     public void noteRemoveSelectEvent(@NotNull StringSelectInteractionEvent event) {
         if (event.getGuild() == null) return;
         event.deferEdit().queue();
@@ -252,7 +254,7 @@ public class NoteSlashCommandEvents {
         }
     }
 
-    @JDAModal(startWith = "noteCommand_editNoteModal")
+    @JDAModalInteractionEvent(startWith = "noteCommand_editNoteModal")
     public void noteModalEvent(@NotNull ModalInteractionEvent event) {
         if (event.getGuild() == null) return;
         event.deferReply(true).queue();
@@ -285,7 +287,7 @@ public class NoteSlashCommandEvents {
         }
     }
 
-    @JDASlashCommand(name = "note")
+    @JDASlashCommandInteractionEvent(name = "note")
     public void initialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = bundle(event.getUserLocale());
         ResourceBundle standardPhrases = standardPhrases(event.getUserLocale());
@@ -413,6 +415,11 @@ public class NoteSlashCommandEvents {
                 if (i == 25) break;
             }
         }
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 
     private enum ClickType {

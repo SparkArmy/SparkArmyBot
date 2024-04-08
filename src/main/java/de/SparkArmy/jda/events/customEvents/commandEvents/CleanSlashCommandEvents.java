@@ -1,11 +1,12 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.db.DatabaseAction;
-import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
-import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
-import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
-import de.SparkArmy.jda.events.annotations.interactions.JDAStringMenu;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.JDAButtonInteractionEvent;
+import de.SparkArmy.jda.annotations.events.JDAModalInteractionEvent;
+import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.events.JDAStringSelectInteractionEvent;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -37,11 +38,11 @@ import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.ResourceBundle;
 
-public class CleanSlashCommandEvents {
+public class CleanSlashCommandEvents implements IJDAEvent {
 
     private final DatabaseAction postgres;
 
-    public CleanSlashCommandEvents(@NotNull EventDispatcher ignoredDispatcher) {
+    public CleanSlashCommandEvents(@NotNull EventManager ignoredManager) {
         this.postgres = new DatabaseAction();
     }
 
@@ -53,7 +54,7 @@ public class CleanSlashCommandEvents {
         return Util.getResourceBundle("standardPhrases", locale);
     }
 
-    @JDASlashCommand(name = "clean")
+    @JDASlashCommandInteractionEvent(name = "clean")
     public void initialCleanSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) return;
         String subcommandName = event.getSubcommandName();
@@ -196,7 +197,7 @@ public class CleanSlashCommandEvents {
                 bundle.getString("cleanCommandEvents.buttons.before"));
     }
 
-    @JDAButton(startWith = "cleanCommand_PeriodicCleanSubcommandActions_")
+    @JDAButtonInteractionEvent(startWith = "cleanCommand_PeriodicCleanSubcommandActions_")
     public void buttonPeriodicSubcommandAction(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -308,7 +309,7 @@ public class CleanSlashCommandEvents {
                 .queue();
     }
 
-    @JDAStringMenu(startWith = "cleanCommand_ButtonActionStringMenu_")
+    @JDAStringSelectInteractionEvent(startWith = "cleanCommand_ButtonActionStringMenu_")
     public void stringMenuButtonActions(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -356,7 +357,7 @@ public class CleanSlashCommandEvents {
         event.replyModal(editActionModal.build()).queue();
     }
 
-    @JDAModal(startWith = "cleanCommand_editPeriodicActionModal")
+    @JDAModalInteractionEvent(startWith = "cleanCommand_editPeriodicActionModal")
     public void editPeriodicActionModalEvent(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -456,5 +457,10 @@ public class CleanSlashCommandEvents {
                 if (i == 25) break;
             }
         }
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 }

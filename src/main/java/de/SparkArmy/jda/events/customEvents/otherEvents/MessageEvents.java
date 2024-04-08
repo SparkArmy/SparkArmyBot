@@ -4,8 +4,9 @@ import club.minnced.discord.webhook.WebhookClient;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.WebhookApi;
-import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.*;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.ISnowflake;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
-public class MessageEvents {
+public class MessageEvents implements IJDAEvent {
 
     private final DatabaseAction db;
 
@@ -36,7 +37,7 @@ public class MessageEvents {
     private final WebhookApi webhookApi;
     private final ConfigController controller;
 
-    public MessageEvents(@NotNull EventDispatcher dispatcher) {
+    public MessageEvents(EventManager dispatcher) {
         this.controller = dispatcher.getController();
         this.webhookApi = dispatcher.getApi().getWebhookApi();
         this.db = new DatabaseAction();
@@ -193,6 +194,11 @@ public class MessageEvents {
         Member member = event.getMember();
         if (member == null) return false;
         return modRoleIds.stream().anyMatch(x -> member.getRoles().stream().map(ISnowflake::getIdLong).toList().contains(x));
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 }
 

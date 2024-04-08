@@ -3,8 +3,9 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 import com.github.twitch4j.helix.domain.User;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
-import de.SparkArmy.jda.events.annotations.interactions.*;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.*;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.twitch.TwitchApi;
 import de.SparkArmy.utils.NotificationService;
 import de.SparkArmy.utils.Util;
@@ -42,13 +43,13 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 
-public class NotificationSlashCommandEvents {
+public class NotificationSlashCommandEvents implements IJDAEvent {
     private final ConfigController controller;
     private final DatabaseAction db;
 
     private final Color notificationEmbedColor = new Color(0x941D9E);
 
-    public NotificationSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
+    public NotificationSlashCommandEvents(EventManager dispatcher) {
         this.controller = dispatcher.getController();
         this.db = new DatabaseAction();
     }
@@ -65,14 +66,14 @@ public class NotificationSlashCommandEvents {
     private final List<String> values = Arrays.stream(NotificationService.values()).toList().stream().map(NotificationService::getServiceName).toList();
 
     // Auto Complete for the Notification Service
-    @JDAAutoComplete(commandName = "notification")
+    @JDACommandAutoCompleteInteractionEvent(name = "notification")
     public void notificationPlatformAutocomplete(@NotNull CommandAutoCompleteInteractionEvent event) {
         event.replyChoiceStrings(values).queue();
     }
 
 
     // Initial Slash Command Event
-    @JDASlashCommand(name = "notification")
+    @JDASlashCommandInteractionEvent(name = "notification")
     public void notificationInitialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = bundle(event.getUserLocale());
         ResourceBundle standardPhrases = standardPhrase(event.getUserLocale());
@@ -137,7 +138,7 @@ public class NotificationSlashCommandEvents {
                 bundle.getString("buttons.before"));
     }
 
-    @JDAButton(startWith = "notification_")
+    @JDAButtonInteractionEvent(startWith = "notification_")
     public void dispatchNotificationButtonEvents(@NotNull ButtonInteractionEvent event) {
         // Get component-ID and split
         String componentId = event.getComponentId();
@@ -341,7 +342,7 @@ public class NotificationSlashCommandEvents {
 
 
     // Modal related Events
-    @JDAModal(startWith = "notification_")
+    @JDAModalInteractionEvent(startWith = "notification_")
     public void dispatchNotificationModalEvents(@NotNull ModalInteractionEvent event) {
         // Get component-ID and split
         String componentId = event.getModalId();
@@ -637,7 +638,7 @@ public class NotificationSlashCommandEvents {
         event.getHook().editOriginalEmbeds(modifiedEmbed.build()).queue();
     }
 
-    @JDAStringMenu(startWith = "notification_showAnnouncementEmbed_removeMenu")
+    @JDAStringSelectInteractionEvent(startWith = "notification_showAnnouncementEmbed_removeMenu")
     public void notificationChannelRemoveMenuEvent(@NotNull StringSelectInteractionEvent event) {
         String componentId = event.getComponentId();
         String[] splitComponentId = componentId.split(";");
@@ -673,7 +674,7 @@ public class NotificationSlashCommandEvents {
 
     }
 
-    @JDAStringMenu(startWith = "notification_showAnnouncementEmbed_editMenu")
+    @JDAStringSelectInteractionEvent(startWith = "notification_showAnnouncementEmbed_editMenu")
     public void notificationChannelEditMenuEvent(@NotNull StringSelectInteractionEvent event) {
         String componentId = event.getComponentId();
         String[] splitComponentId = componentId.split(";");
@@ -717,7 +718,7 @@ public class NotificationSlashCommandEvents {
         event.replyModal(messageModificationModal.build()).queue();
     }
 
-    @JDAEntityMenu(startWith = "notification_channelSelect")
+    @JDAEntitySelectInteractionEvent(startWith = "notification_channelSelect")
     public void notificationChannelEntitySelectEvent(@NotNull EntitySelectInteractionEvent event) {
         event.deferEdit().queue();
         InteractionHook hook = event.getHook();
@@ -802,6 +803,11 @@ public class NotificationSlashCommandEvents {
                 }
             }
         }
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 
     private enum ClickType {

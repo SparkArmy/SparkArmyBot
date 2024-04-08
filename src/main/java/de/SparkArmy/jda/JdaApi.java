@@ -2,10 +2,10 @@ package de.SparkArmy.jda;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.utils.CommandRegisterer;
 import de.SparkArmy.jda.utils.ConfigureUtils;
-import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
-public class JdaApi {
+public class JdaApi extends ListenerAdapter {
 
 
     private final ShardManager shardManager;
@@ -48,12 +48,13 @@ public class JdaApi {
                 GatewayIntent.SCHEDULED_EVENTS);
         builder.setMemberCachePolicy(MemberCachePolicy.NONE);
         builder.setBulkDeleteSplittingEnabled(false);
-        builder.setEventManagerProvider(value -> new AnnotatedEventManager());
+//        builder.setEventManagerProvider(value -> new AnnotatedEventManager());
+        builder.setEventPassthrough(true);
         logger.info("Shard-Builder was successful initialized");
 
         this.shardManager = builder.build();
 
-        shardManager.addEventListener(new EventDispatcher(this));
+        this.shardManager.addEventListener(/*new EventDispatcher(this),*/new EventManager(this));
 
         this.commandRegisterer = new CommandRegisterer(this);
 

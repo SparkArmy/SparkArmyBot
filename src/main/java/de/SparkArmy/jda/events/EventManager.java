@@ -39,9 +39,9 @@ public class EventManager extends ListenerAdapter {
         this.shardManager = api.getShardManager();
         this.controller = api.getController();
         this.logger = api.getLogger();
+        loadEventClasses();
         loadAnnotations();
         awaitJdaLoading();
-        loadEventClasses();
     }
 
     private void awaitJdaLoading() {
@@ -82,73 +82,69 @@ public class EventManager extends ListenerAdapter {
     }
 
     private void loadAnnotations() {
-        String packageName = "de.SparkArmy.jda.annotations.events";
-        InputStream stream = ClassLoader.getSystemClassLoader()
-                .getResourceAsStream(packageName.replaceAll("[.]", "/"));
-        if (stream == null) return;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        reader.lines()
-                .filter(line -> line.endsWith(".class"))
-                .forEach(line -> {
-                    try {
-                        Connection connection = DatabaseSource.connection();
-                        PreparedStatement prepStmt = connection.prepareStatement("""
-                                INSERT INTO botdata."tblJdaEventAnnotations" ("jeaJDAClass", "jeaAnnotation")
-                                VALUES (?,?) on conflict ("jeaJDAClass","jeaAnnotation") do nothing
-                                """);
-                        prepStmt.setString(1, line.replace("JDA", ""));
-                        prepStmt.setString(2, line);
-                        prepStmt.executeUpdate();
-                        connection.close();
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                    try {
-                        Class<?> clazz = Class.forName(packageName + "." + line.substring(0, line.lastIndexOf('.')), true, ClassLoader.getSystemClassLoader());
-                        @SuppressWarnings("unchecked")
-                        Class<? extends Annotation> aClass = (Class<? extends Annotation>) clazz;
-                        loadEvents(aClass);
-                    } catch (ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
-
-    private void loadEvents(@NotNull Class<? extends Annotation> a) {
-        String aName = a.getSimpleName();
         try {
             Connection connection = DatabaseSource.connection();
-            PreparedStatement prepStmt = connection.prepareStatement("""
-                    DELETE FROM botdata.tbljdaevents;
-                    """);
-            prepStmt.executeUpdate();
+            connection.prepareStatement("""
+                    DELETE FROM botdata.tbljdaevents WHERE "jevupdated" = false;
+                    """).execute();
 
+            String packageName = "de.SparkArmy.jda.annotations.events";
+            InputStream stream = ClassLoader.getSystemClassLoader()
+                    .getResourceAsStream(packageName.replaceAll("[.]", "/"));
+            if (stream == null) return;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+            reader.lines()
+                    .filter(line -> line.endsWith(".class"))
+                    .forEach(line -> {
+                        try {
+                            PreparedStatement prepStmt = connection.prepareStatement("""
+                                    INSERT INTO botdata."tblJdaEventAnnotations" ("jeaJDAClass", "jeaAnnotation")
+                                    VALUES (?,?) on conflict ("jeaJDAClass","jeaAnnotation") do nothing
+                                    """);
+                            prepStmt.setString(1, line.replace("JDA", ""));
+                            prepStmt.setString(2, line);
+                            prepStmt.executeUpdate();
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                        try {
+                            Class<?> clazz = Class.forName(packageName + "." + line.substring(0, line.lastIndexOf('.')), true, ClassLoader.getSystemClassLoader());
+                            @SuppressWarnings("unchecked")
+                            Class<? extends Annotation> aClass = (Class<? extends Annotation>) clazz;
+                            loadEvents(aClass, connection);
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+            connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void loadEvents(@NotNull Class<? extends Annotation> a, @NotNull Connection connection) {
+        String aName = a.getSimpleName();
+        try {
             connection.setAutoCommit(false);
             PreparedStatement registerEvent = connection.prepareStatement("""
-                    INSERT INTO botdata.tbljdaevents (fk_jevjdaclass, jevmethodname, jevuserclassname) VALUES (?,?,?);
+                    INSERT INTO botdata."tbljdaevents" ("fk_jevjdaclass", "jevmethodname", "jevuserclassname", "jevupdated")
+                     VALUES (?,?,?,?) on conflict ("jevmethodname", "jevuserclassname") do
+                     UPDATE SET
+                     "fk_jevjdaclass" = EXCLUDED."fk_jevjdaclass",
+                     "jevmethodname" = EXCLUDED."jevmethodname",
+                     "jevuserclassname" = EXCLUDED."jevuserclassname",
+                     "jevupdated" = EXCLUDED."jevupdated";
                     """);
             for (IJDAEvent c : eventClasses) {
                 for (Method m : c.getMethods(a)) {
                     registerEvent.setString(1, aName.replace("JDA", ""));
                     registerEvent.setString(2, m.getName());
                     registerEvent.setString(3, c.getEventClass().getSimpleName());
-                    registerEvent.execute();
-
-//                    String name = String.valueOf(AnnotationUtils.getValue(m.getAnnotation(a),"name"));
-//                    String startWith = String.valueOf(AnnotationUtils.getValue(m.getAnnotation(a),"startWith"));
-//                    if (!Objects.equals(name, "null")) {
-//                        registerInteractionEventMethod(name,c,m);
-//                    } else if (!Objects.equals(startWith,"null")){
-//                        registerInteractionEventMethod(startWith,c,m);
-//                    }
-//                    else {
-//                        String clazzName = aName.replace("JDA","");
-//                        registerEventMethod(clazzName,c,m);
-//                    }
+                    registerEvent.setBoolean(4, true);
+                    registerEvent.executeUpdate();
                 }
             }
             connection.commit();
-            connection.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

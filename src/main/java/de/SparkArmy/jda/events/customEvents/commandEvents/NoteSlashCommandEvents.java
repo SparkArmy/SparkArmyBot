@@ -5,6 +5,7 @@ import de.SparkArmy.jda.annotations.events.JDAButtonInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDAModalInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDAStringSelectInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.Util;
@@ -68,6 +69,7 @@ public class NoteSlashCommandEvents implements IJDAEvent {
                 bundle.getString("buttons.close"));
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "noteCommand")
     public void noteButtonsEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -203,6 +205,7 @@ public class NoteSlashCommandEvents implements IJDAEvent {
 
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "noteCommand_showNoteEmbed_editMenu")
     public void noteEditSelectEvent(@NotNull StringSelectInteractionEvent event) {
         if (event.getGuild() == null) return;
@@ -224,6 +227,7 @@ public class NoteSlashCommandEvents implements IJDAEvent {
         event.replyModal(noteEditModal.build()).queue();
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "noteCommand_showNoteEmbed_removeMenu")
     public void noteRemoveSelectEvent(@NotNull StringSelectInteractionEvent event) {
         if (event.getGuild() == null) return;
@@ -254,6 +258,7 @@ public class NoteSlashCommandEvents implements IJDAEvent {
         }
     }
 
+    @JDAEvent
     @JDAModalInteractionEvent(startWith = "noteCommand_editNoteModal")
     public void noteModalEvent(@NotNull ModalInteractionEvent event) {
         if (event.getGuild() == null) return;
@@ -287,6 +292,7 @@ public class NoteSlashCommandEvents implements IJDAEvent {
         }
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "note")
     public void initialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = bundle(event.getUserLocale());

@@ -2,6 +2,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.Util;
@@ -25,6 +26,7 @@ public class ArchiveSlashCommandEvents implements IJDAEvent {
         this.controller = manager.getController();
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "archive")
     public void initialSlashEvent(@NotNull SlashCommandInteractionEvent event) {
         GuildChannel targetChannel = event.getOption("channel", event.getGuildChannel(), OptionMapping::getAsChannel);

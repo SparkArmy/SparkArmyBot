@@ -4,6 +4,7 @@ import com.github.twitch4j.helix.domain.User;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.annotations.events.*;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.twitch.TwitchApi;
@@ -66,6 +67,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
     private final List<String> values = Arrays.stream(NotificationService.values()).toList().stream().map(NotificationService::getServiceName).toList();
 
     // Auto Complete for the Notification Service
+    @JDAEvent
     @JDACommandAutoCompleteInteractionEvent(name = "notification")
     public void notificationPlatformAutocomplete(@NotNull CommandAutoCompleteInteractionEvent event) {
         event.replyChoiceStrings(values).queue();
@@ -73,6 +75,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
 
 
     // Initial Slash Command Event
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "notification")
     public void notificationInitialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = bundle(event.getUserLocale());
@@ -139,6 +142,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
     }
 
     @JDAButtonInteractionEvent(startWith = "notification_")
+    @JDAEvent
     public void dispatchNotificationButtonEvents(@NotNull ButtonInteractionEvent event) {
         // Get component-ID and split
         String componentId = event.getComponentId();
@@ -342,6 +346,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
 
 
     // Modal related Events
+    @JDAEvent
     @JDAModalInteractionEvent(startWith = "notification_")
     public void dispatchNotificationModalEvents(@NotNull ModalInteractionEvent event) {
         // Get component-ID and split
@@ -638,6 +643,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         event.getHook().editOriginalEmbeds(modifiedEmbed.build()).queue();
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "notification_showAnnouncementEmbed_removeMenu")
     public void notificationChannelRemoveMenuEvent(@NotNull StringSelectInteractionEvent event) {
         String componentId = event.getComponentId();
@@ -674,6 +680,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
 
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "notification_showAnnouncementEmbed_editMenu")
     public void notificationChannelEditMenuEvent(@NotNull StringSelectInteractionEvent event) {
         String componentId = event.getComponentId();
@@ -718,6 +725,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         event.replyModal(messageModificationModal.build()).queue();
     }
 
+    @JDAEvent
     @JDAEntitySelectInteractionEvent(startWith = "notification_channelSelect")
     public void notificationChannelEntitySelectEvent(@NotNull EntitySelectInteractionEvent event) {
         event.deferEdit().queue();

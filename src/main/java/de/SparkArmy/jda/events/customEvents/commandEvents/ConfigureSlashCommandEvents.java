@@ -2,6 +2,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.annotations.events.*;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.ConfigureUtils;
@@ -65,6 +66,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         return Util.getResourceBundle("standardPhrases", locale);
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "configure")
     public void configureInitialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -114,6 +116,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         }
     }
 
+    @JDAEvent
     @JDACommandAutoCompleteInteractionEvent(name = "configure")
     public void configureSlashCommandAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -145,6 +148,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         event.replyModal(messageModal.build()).queue();
     }
 
+    @JDAEvent
     @JDAModalInteractionEvent(startWith = "modMailMessageConfigureModal")
     public void modMailMessageConfigureModalEvent(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -309,6 +313,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "modMailCategoryButtonEvents_")
     public void modMailCategoryButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -475,6 +480,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAEntitySelectInteractionEvent(startWith = "modMailCategoryEntitySelectAction_")
     public void modMailCategoryEntitySelectAction(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -611,6 +617,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "regexManageConfigureButtonEvents_")
     public void regexManageConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -1001,6 +1008,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         event.replyModal(addRegexModal.build()).queue();
     }
 
+    @JDAEvent
     @JDAModalInteractionEvent(startWith = "regexManageModalEvents_")
     public void regexManageModalEvents(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -1137,6 +1145,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         }
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "regexManageConfigureStringMenuEvents_")
     public void regexManageConfigureStringMenuEvents(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -1267,6 +1276,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "regexBlacklistConfigureButtonEvents_")
     public void regexBlacklistConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -1513,6 +1523,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         }
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "regexBlacklistConfigureStringMenuEvents_")
     public void regexBlacklistConfigureStringMenuEvents(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -1580,6 +1591,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         event.replyModal(phraseAddModal.build()).queue();
     }
 
+    @JDAEvent
     @JDAModalInteractionEvent(startWith = "regexBlacklistConfigureModalEvents_")
     public void regexBlacklistConfigureModalEvents(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -1793,6 +1805,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "rolesModRolesConfigureButtonEvents_")
     public void rolesModRolesConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -1880,6 +1893,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAEntitySelectInteractionEvent(startWith = "rolesModRolesConfigureEntityMenus_")
     public void rolesModRolesConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         event.deferEdit().queue();
@@ -1936,6 +1950,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
 
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "channelArchiveCategoryConfigureButtons_")
     public void channelArchiveCategoryConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -2022,6 +2037,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAEntitySelectInteractionEvent(startWith = "channelArchiveConfigureMenus_")
     public void channelArchiveConfigureMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -2199,6 +2215,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "channelMediaOnlyConfigureButtons_")
     public void channelMediaOnlyChannelConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -2547,6 +2564,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         }
     }
 
+    @JDAEvent
     @JDAEntitySelectInteractionEvent(startWith = "channelMediaOnlyConfigureEntityMenus_")
     public void channelMediaOnlyChannelConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -2573,6 +2591,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
         sendSpecificMediaOnlyChannelEmbed(event.getHook(), channelId, bundle, new ArrayList<>(), guild, standardPhrases);
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "channelMediaOnlyConfigureStringMenus_")
     public void channelMediaOnlyChannelConfigureStringMenuEvents(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -2750,6 +2769,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "channelFeedbackCategoryConfigureButtonEvents_")
     public void channelFeedbackChannelConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -2807,6 +2827,7 @@ public class ConfigureSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAEntitySelectInteractionEvent(startWith = "channelFeedbackCategoryConfigureEntityMenuEvents_")
     public void channelFeedbackChannelConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();

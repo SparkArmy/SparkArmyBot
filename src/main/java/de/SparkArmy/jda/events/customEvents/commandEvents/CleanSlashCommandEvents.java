@@ -5,6 +5,7 @@ import de.SparkArmy.jda.annotations.events.JDAButtonInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDAModalInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDAStringSelectInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.Util;
@@ -54,6 +55,7 @@ public class CleanSlashCommandEvents implements IJDAEvent {
         return Util.getResourceBundle("standardPhrases", locale);
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "clean")
     public void initialCleanSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) return;
@@ -197,6 +199,7 @@ public class CleanSlashCommandEvents implements IJDAEvent {
                 bundle.getString("cleanCommandEvents.buttons.before"));
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "cleanCommand_PeriodicCleanSubcommandActions_")
     public void buttonPeriodicSubcommandAction(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -309,6 +312,7 @@ public class CleanSlashCommandEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAStringSelectInteractionEvent(startWith = "cleanCommand_ButtonActionStringMenu_")
     public void stringMenuButtonActions(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -357,6 +361,7 @@ public class CleanSlashCommandEvents implements IJDAEvent {
         event.replyModal(editActionModal.build()).queue();
     }
 
+    @JDAEvent
     @JDAModalInteractionEvent(startWith = "cleanCommand_editPeriodicActionModal")
     public void editPeriodicActionModalEvent(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();

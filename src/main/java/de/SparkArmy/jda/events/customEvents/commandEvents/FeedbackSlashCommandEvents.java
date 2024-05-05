@@ -4,6 +4,7 @@ import club.minnced.discord.webhook.WebhookClient;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.annotations.events.JDAModalInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.LogChannelType;
@@ -36,6 +37,7 @@ public class FeedbackSlashCommandEvents implements IJDAEvent {
         this.controller = manager.getController();
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "feedback")
     public void feedbackInitialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
@@ -75,6 +77,7 @@ public class FeedbackSlashCommandEvents implements IJDAEvent {
         event.replyModal(feedbackModal.build()).queue();
     }
 
+    @JDAEvent
     @JDAModalInteractionEvent(startWith = "feedbackModalEvents_SendFeedbackModal")
     public void feedbackSendModalEvent(@NotNull ModalInteractionEvent event) {
         event.deferReply(true).queue();

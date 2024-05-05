@@ -1,31 +1,34 @@
 package de.SparkArmy.jda.events;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.db.DatabaseSource;
 import de.SparkArmy.jda.JdaApi;
+import de.SparkArmy.jda.annotations.events.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
 import de.SparkArmy.jda.events.customEvents.otherEvents.MessageEvents;
 import de.SparkArmy.jda.events.customEvents.otherEvents.ModMailEvents;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.sharding.ShardManager;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
+import org.springframework.core.annotation.AnnotationUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Set;
+import java.lang.reflect.Parameter;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class EventManager extends ListenerAdapter {
 
@@ -40,7 +43,7 @@ public class EventManager extends ListenerAdapter {
         this.controller = api.getController();
         this.logger = api.getLogger();
         loadEventClasses();
-        loadAnnotations();
+        loadEventsAndAnnotations();
         awaitJdaLoading();
     }
 
@@ -63,6 +66,8 @@ public class EventManager extends ListenerAdapter {
     }
 
     private final Set<IJDAEvent> eventClasses = ConcurrentHashMap.newKeySet();
+    private final ConcurrentMap<String, ArrayList<Map<Method, IJDAEvent>>> methods = new ConcurrentHashMap<>();
+    private final Set<Class<? extends Annotation>> annotationClasses = ConcurrentHashMap.newKeySet();
 
     private void loadEventClasses() {
         registerEventClass(new ArchiveSlashCommandEvents(this));
@@ -81,80 +86,32 @@ public class EventManager extends ListenerAdapter {
         eventClasses.add(clazz);
     }
 
-    private void loadAnnotations() {
-        try {
-            Connection connection = DatabaseSource.connection();
-            connection.prepareStatement("""
-                    DELETE FROM botdata.tbljdaevents WHERE "jevupdated" = false;
-                    """).execute();
-
-            String packageName = "de.SparkArmy.jda.annotations.events";
-            InputStream stream = ClassLoader.getSystemClassLoader()
-                    .getResourceAsStream(packageName.replaceAll("[.]", "/"));
-            if (stream == null) return;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-            reader.lines()
-                    .filter(line -> line.endsWith(".class"))
-                    .forEach(line -> {
-                        try {
-                            PreparedStatement prepStmt = connection.prepareStatement("""
-                                    INSERT INTO botdata."tblJdaEventAnnotations" ("jeaJDAClass", "jeaAnnotation")
-                                    VALUES (?,?) on conflict ("jeaJDAClass","jeaAnnotation") do nothing
-                                    """);
-                            prepStmt.setString(1, line.replace("JDA", ""));
-                            prepStmt.setString(2, line);
-                            prepStmt.executeUpdate();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            Class<?> clazz = Class.forName(packageName + "." + line.substring(0, line.lastIndexOf('.')), true, ClassLoader.getSystemClassLoader());
-                            @SuppressWarnings("unchecked")
-                            Class<? extends Annotation> aClass = (Class<? extends Annotation>) clazz;
-                            loadEvents(aClass, connection);
-                        } catch (ClassNotFoundException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-            connection.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void loadEvents(@NotNull Class<? extends Annotation> a, @NotNull Connection connection) {
-        String aName = a.getSimpleName();
-        try {
-            connection.setAutoCommit(false);
-            PreparedStatement registerEvent = connection.prepareStatement("""
-                    INSERT INTO botdata."tbljdaevents" ("fk_jevjdaclass", "jevmethodname", "jevuserclassname", "jevupdated")
-                     VALUES (?,?,?,?) on conflict ("jevmethodname", "jevuserclassname") do
-                     UPDATE SET
-                     "fk_jevjdaclass" = EXCLUDED."fk_jevjdaclass",
-                     "jevmethodname" = EXCLUDED."jevmethodname",
-                     "jevuserclassname" = EXCLUDED."jevuserclassname",
-                     "jevupdated" = EXCLUDED."jevupdated";
-                    """);
-            for (IJDAEvent c : eventClasses) {
-                for (Method m : c.getMethods(a)) {
-                    registerEvent.setString(1, aName.replace("JDA", ""));
-                    registerEvent.setString(2, m.getName());
-                    registerEvent.setString(3, c.getEventClass().getSimpleName());
-                    registerEvent.setBoolean(4, true);
-                    registerEvent.executeUpdate();
-                }
+    private void loadEventsAndAnnotations() {
+        for (IJDAEvent c : eventClasses) {
+            for (Method m : c.getMethods()) {
+                List<Parameter> parameterList = Arrays.stream(MethodUtils.getAccessibleMethod(m).getParameters()).toList();
+                String jdaClassName = parameterList.getFirst().getType().getSimpleName();
+                ArrayList<Map<Method, IJDAEvent>> partTwo = new ArrayList<>();
+                if (methods.containsKey(jdaClassName)) partTwo = methods.get(jdaClassName);
+                partTwo.add(Map.of(m, c));
+                methods.put(jdaClassName, partTwo);
             }
-            connection.commit();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
+        annotationClasses.add(JDAButtonInteractionEvent.class);
+        annotationClasses.add(JDACommandAutoCompleteInteractionEvent.class);
+        annotationClasses.add(JDAEntitySelectInteractionEvent.class);
+        annotationClasses.add(JDAMessageContextInteractionEvent.class);
+        annotationClasses.add(JDAModalInteractionEvent.class);
+        annotationClasses.add(JDASlashCommandInteractionEvent.class);
+        annotationClasses.add(JDAStringSelectInteractionEvent.class);
+        annotationClasses.add(JDAUserContextInteractionEvent.class);
+
     }
 
-    @SuppressWarnings("unused")
-    private void invokeMethod(@NotNull Method method, @NotNull IJDAEvent eventClass, Object... params) {
+    private void invokeMethod(@NotNull Method method, @NotNull IJDAEvent eventClass, GenericEvent event) {
         try {
             Constructor<?> constructor = eventClass.getEventClass().getConstructor(this.getClass());
-            method.invoke(constructor.newInstance(this), params);
+            method.invoke(constructor.newInstance(this), event);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
                  InstantiationException e) {
             throw new RuntimeException(e);
@@ -163,6 +120,57 @@ public class EventManager extends ListenerAdapter {
 
     @Override
     public void onGenericEvent(@NotNull GenericEvent event) {
+        // Get related Methods
+        String jdaClassName = event.getClass().getSimpleName();
+        ArrayList<Map<Method, IJDAEvent>> methodList = methods.get(jdaClassName);
+        if (methodList == null) return; // Return is no method registered
+
+        if (event instanceof GenericInteractionCreateEvent iEvent) {
+            Class<? extends Annotation> aClass = null;
+
+            for (Class<? extends Annotation> annotationClass : annotationClasses) {
+                if (annotationClass.getSimpleName().endsWith(jdaClassName)) aClass = annotationClass;
+            }
+
+            if (aClass == null) {
+                throw new RuntimeException("Annotation is null");
+            }
+            for (Map<Method, IJDAEvent> map : methodList) {
+                Method m = map.keySet().stream().toList().getFirst();
+                Annotation a = m.getAnnotation(aClass);
+
+                Object aNameObject = AnnotationUtils.getValue(a, "name");
+                Object aStartWithObject = AnnotationUtils.getValue(a, "startWith");
+
+                String objectValueAsString = String.valueOf(Objects.requireNonNullElse(aStartWithObject, aNameObject));
+
+                switch (iEvent) {
+                    case GenericComponentInteractionCreateEvent cEvent -> {
+                        if (!cEvent.getComponentId().startsWith(objectValueAsString)) continue;
+                        invokeMethod(m, map.get(m), cEvent);
+                    }
+                    case GenericCommandInteractionEvent cEvent -> {
+                        if (!cEvent.getName().startsWith(objectValueAsString)) continue;
+                        invokeMethod(m, map.get(m), cEvent);
+                    }
+                    case CommandAutoCompleteInteractionEvent aEvent -> {
+                        if (!aEvent.getName().startsWith(objectValueAsString)) continue;
+                        invokeMethod(m, map.get(m), aEvent);
+                    }
+                    case ModalInteractionEvent mEvent -> {
+                        if (!mEvent.getModalId().startsWith(objectValueAsString)) continue;
+                        invokeMethod(m, map.get(m), mEvent);
+                    }
+                    default -> {
+                    }
+                }
+            }
+        } else {
+            for (Map<Method, IJDAEvent> map : methodList) {
+                Method m = map.keySet().stream().toList().getFirst();
+                invokeMethod(m, map.get(m), event);
+            }
+        }
 
     }
 

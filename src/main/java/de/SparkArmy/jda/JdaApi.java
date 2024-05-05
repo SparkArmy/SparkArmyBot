@@ -48,13 +48,12 @@ public class JdaApi extends ListenerAdapter {
                 GatewayIntent.SCHEDULED_EVENTS);
         builder.setMemberCachePolicy(MemberCachePolicy.NONE);
         builder.setBulkDeleteSplittingEnabled(false);
-//        builder.setEventManagerProvider(value -> new AnnotatedEventManager());
         builder.setEventPassthrough(true);
         logger.info("Shard-Builder was successful initialized");
 
         this.shardManager = builder.build();
 
-        this.shardManager.addEventListener(/*new EventDispatcher(this),*/new EventManager(this));
+        this.shardManager.addEventListener(new EventManager(this));
 
         this.commandRegisterer = new CommandRegisterer(this);
 

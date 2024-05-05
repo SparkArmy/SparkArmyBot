@@ -2,6 +2,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.Util;
@@ -18,11 +19,13 @@ public class GeneralCommandEvents implements IJDAEvent {
         this.controller = manager.getController();
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "ping")
     public void pingSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         event.reply("Pong!").setEphemeral(true).queue();
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "update-commands")
     public void updateCommandsSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = Util.getResourceBundle("update-commands", event.getUserLocale());

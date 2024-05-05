@@ -4,7 +4,7 @@ import club.minnced.discord.webhook.WebhookClient;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.WebhookApi;
-import de.SparkArmy.jda.annotations.events.*;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.LogChannelType;
@@ -37,7 +37,7 @@ public class MessageEvents implements IJDAEvent {
     private final WebhookApi webhookApi;
     private final ConfigController controller;
 
-    public MessageEvents(EventManager dispatcher) {
+    public MessageEvents(@NotNull EventManager dispatcher) {
         this.controller = dispatcher.getController();
         this.webhookApi = dispatcher.getApi().getWebhookApi();
         this.db = new DatabaseAction();
@@ -48,31 +48,31 @@ public class MessageEvents implements IJDAEvent {
         return Util.getResourceBundle("messageEvents", locale);
     }
 
-    @JDAMessageBulkDeleteEvent
+    @JDAEvent
     public void messageBulkDeleteEvent(@NotNull MessageBulkDeleteEvent event) {
         removeDataFromDatabase(event.getMessageIds().stream().map(Long::parseLong).toList());
     }
 
-    @JDAMessageDeleteEvent
+    @JDAEvent
     public void messageDeleteEvent(@NotNull MessageDeleteEvent event) {
         removeDataFromDatabase(Collections.singletonList(event.getMessageIdLong()));
     }
 
-    @JDAMessageReactionRemoveAllEvent
+    @JDAEvent
     public void messageReactionReactionRemoveAllEvent(MessageReactionRemoveAllEvent event) {
     }
 
-    @JDAMessageReactionRemoveEmojiEvent
+    @JDAEvent
     public void messageReactionRemoveEmojiEvent(MessageReactionRemoveEmojiEvent event) {
     }
 
-    @JDAMessageUpdateEvent
+    @JDAEvent
     public void messageUpdateEvent(@NotNull MessageUpdateEvent event) {
         putDataInDatabase(event.getMessage());
 
     }
 
-    @JDAMessageReceivedEvent
+    @JDAEvent
     public void messageReceivedEvent(@NotNull MessageReceivedEvent event) {
         putDataInDatabase(event.getMessage());
         mediaOnlyFunction(event);

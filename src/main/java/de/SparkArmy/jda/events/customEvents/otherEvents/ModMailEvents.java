@@ -2,7 +2,7 @@ package de.SparkArmy.jda.events.customEvents.otherEvents;
 
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.jda.annotations.events.JDAButtonInteractionEvent;
-import de.SparkArmy.jda.annotations.events.JDAMessageReceivedEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.FileHandler;
@@ -51,6 +51,7 @@ public class ModMailEvents implements IJDAEvent {
         return Util.getResourceBundle("standardPhrases", locale);
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "modMailCreateTicket")
     public void modMailTicketCreation(@NotNull ButtonInteractionEvent event) {
         event.deferReply(true).queue();
@@ -114,6 +115,7 @@ public class ModMailEvents implements IJDAEvent {
                 .queue();
     }
 
+    @JDAEvent
     @JDAButtonInteractionEvent(startWith = "modMailChannelClose")
     public void modMailChannelCloseButtonAction(@NotNull ButtonInteractionEvent event) {
         event.deferReply(true).queue();
@@ -238,7 +240,7 @@ public class ModMailEvents implements IJDAEvent {
         }
     }
 
-    @JDAMessageReceivedEvent
+    @JDAEvent
     public void modMailMessageHandler(@NotNull MessageReceivedEvent event) {
         Guild guild = event.getGuild();
         User user = event.getAuthor();

@@ -6,6 +6,7 @@ import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.LogChannelType;
@@ -34,31 +35,37 @@ public class PunishmentCommandEvents implements IJDAEvent {
         this.controller = manager.getController();
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "ban")
     public void banSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
         new Punishment(event, PunishmentType.BAN, controller);
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "kick")
     public void kickSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
         new Punishment(event, PunishmentType.KICK, controller);
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "mute")
     public void muteSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
         new Punishment(event, PunishmentType.MUTE, controller);
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "softban")
     public void softbanSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
         new Punishment(event, PunishmentType.SOFTBAN, controller);
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "warn")
     public void warnSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
         new Punishment(event, PunishmentType.WARN, controller);
     }
 
+    @JDAEvent
     @JDASlashCommandInteractionEvent(name = "unban")
     public void unbanSlashCommand(@NotNull SlashCommandInteractionEvent event, Guild guild) {
         event.deferReply(true).queue();

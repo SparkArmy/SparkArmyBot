@@ -2,9 +2,11 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import club.minnced.discord.webhook.WebhookClient;
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.annotations.interactions.JDAModal;
-import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.JDAModalInteractionEvent;
+import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -23,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ResourceBundle;
 
-public class FeedbackSlashCommandEvents {
+public class FeedbackSlashCommandEvents implements IJDAEvent {
 
     private final ConfigController controller;
 
@@ -31,11 +33,12 @@ public class FeedbackSlashCommandEvents {
         return Util.getResourceBundle("feedback", locale);
     }
 
-    public FeedbackSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
-        this.controller = dispatcher.getController();
+    public FeedbackSlashCommandEvents(EventManager manager) {
+        this.controller = manager.getController();
     }
 
-    @JDASlashCommand(name = "feedback")
+    @JDAEvent
+    @JDASlashCommandInteractionEvent(name = "feedback")
     public void feedbackInitialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -74,7 +77,8 @@ public class FeedbackSlashCommandEvents {
         event.replyModal(feedbackModal.build()).queue();
     }
 
-    @JDAModal(startWith = "feedbackModalEvents_SendFeedbackModal")
+    @JDAEvent
+    @JDAModalInteractionEvent(startWith = "feedbackModalEvents_SendFeedbackModal")
     public void feedbackSendModalEvent(@NotNull ModalInteractionEvent event) {
         event.deferReply(true).queue();
         ModalMapping themaMapping = event.getValue("feedbackThema");
@@ -118,5 +122,10 @@ public class FeedbackSlashCommandEvents {
             client.send("No feedback channel set");
         }
         return guild.getGuildChannelById(channelId);
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 }

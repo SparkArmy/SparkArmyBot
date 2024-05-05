@@ -1,8 +1,10 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.annotations.interactions.*;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.*;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.ConfigureUtils;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.jda.utils.MediaOnlyPermissions;
@@ -46,14 +48,14 @@ import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.PatternSyntaxException;
 
-public class ConfigureSlashCommandEvents {
+public class ConfigureSlashCommandEvents implements IJDAEvent {
 
     private final ConfigController controller;
     private final ConfigureUtils configureUtils;
 
-    public ConfigureSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
-        this.controller = dispatcher.getController();
-        this.configureUtils = dispatcher.getApi().getConfigureUtils();
+    public ConfigureSlashCommandEvents(@NotNull EventManager manager) {
+        this.controller = manager.getController();
+        this.configureUtils = manager.getApi().getConfigureUtils();
     }
 
     private ResourceBundle bundle(DiscordLocale locale) {
@@ -64,7 +66,8 @@ public class ConfigureSlashCommandEvents {
         return Util.getResourceBundle("standardPhrases", locale);
     }
 
-    @JDASlashCommand(name = "configure")
+    @JDAEvent
+    @JDASlashCommandInteractionEvent(name = "configure")
     public void configureInitialSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -113,7 +116,8 @@ public class ConfigureSlashCommandEvents {
         }
     }
 
-    @JDAAutoComplete(commandName = "configure")
+    @JDAEvent
+    @JDACommandAutoCompleteInteractionEvent(name = "configure")
     public void configureSlashCommandAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -144,7 +148,8 @@ public class ConfigureSlashCommandEvents {
         event.replyModal(messageModal.build()).queue();
     }
 
-    @JDAModal(startWith = "modMailMessageConfigureModal")
+    @JDAEvent
+    @JDAModalInteractionEvent(startWith = "modMailMessageConfigureModal")
     public void modMailMessageConfigureModalEvent(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -308,7 +313,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAButton(startWith = "modMailCategoryButtonEvents_")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "modMailCategoryButtonEvents_")
     public void modMailCategoryButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -474,7 +480,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAEntityMenu(startWith = "modMailCategoryEntitySelectAction_")
+    @JDAEvent
+    @JDAEntitySelectInteractionEvent(startWith = "modMailCategoryEntitySelectAction_")
     public void modMailCategoryEntitySelectAction(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -610,7 +617,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAButton(startWith = "regexManageConfigureButtonEvents_")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "regexManageConfigureButtonEvents_")
     public void regexManageConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -1000,7 +1008,8 @@ public class ConfigureSlashCommandEvents {
         event.replyModal(addRegexModal.build()).queue();
     }
 
-    @JDAModal(startWith = "regexManageModalEvents_")
+    @JDAEvent
+    @JDAModalInteractionEvent(startWith = "regexManageModalEvents_")
     public void regexManageModalEvents(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -1136,7 +1145,8 @@ public class ConfigureSlashCommandEvents {
         }
     }
 
-    @JDAStringMenu(startWith = "regexManageConfigureStringMenuEvents_")
+    @JDAEvent
+    @JDAStringSelectInteractionEvent(startWith = "regexManageConfigureStringMenuEvents_")
     public void regexManageConfigureStringMenuEvents(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -1266,7 +1276,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAButton(startWith = "regexBlacklistConfigureButtonEvents_")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "regexBlacklistConfigureButtonEvents_")
     public void regexBlacklistConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -1512,7 +1523,8 @@ public class ConfigureSlashCommandEvents {
         }
     }
 
-    @JDAStringMenu(startWith = "regexBlacklistConfigureStringMenuEvents_")
+    @JDAEvent
+    @JDAStringSelectInteractionEvent(startWith = "regexBlacklistConfigureStringMenuEvents_")
     public void regexBlacklistConfigureStringMenuEvents(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -1579,7 +1591,8 @@ public class ConfigureSlashCommandEvents {
         event.replyModal(phraseAddModal.build()).queue();
     }
 
-    @JDAModal(startWith = "regexBlacklistConfigureModalEvents_")
+    @JDAEvent
+    @JDAModalInteractionEvent(startWith = "regexBlacklistConfigureModalEvents_")
     public void regexBlacklistConfigureModalEvents(@NotNull ModalInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -1792,7 +1805,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAButton(startWith = "rolesModRolesConfigureButtonEvents_")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "rolesModRolesConfigureButtonEvents_")
     public void rolesModRolesConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -1879,7 +1893,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAEntityMenu(startWith = "rolesModRolesConfigureEntityMenus_")
+    @JDAEvent
+    @JDAEntitySelectInteractionEvent(startWith = "rolesModRolesConfigureEntityMenus_")
     public void rolesModRolesConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         event.deferEdit().queue();
         Guild guild = event.getGuild();
@@ -1935,7 +1950,8 @@ public class ConfigureSlashCommandEvents {
 
     }
 
-    @JDAButton(startWith = "channelArchiveCategoryConfigureButtons_")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "channelArchiveCategoryConfigureButtons_")
     public void channelArchiveCategoryConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -2021,7 +2037,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAEntityMenu(startWith = "channelArchiveConfigureMenus_")
+    @JDAEvent
+    @JDAEntitySelectInteractionEvent(startWith = "channelArchiveConfigureMenus_")
     public void channelArchiveConfigureMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -2198,7 +2215,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAButton(startWith = "channelMediaOnlyConfigureButtons_")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "channelMediaOnlyConfigureButtons_")
     public void channelMediaOnlyChannelConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -2546,7 +2564,8 @@ public class ConfigureSlashCommandEvents {
         }
     }
 
-    @JDAEntityMenu(startWith = "channelMediaOnlyConfigureEntityMenus_")
+    @JDAEvent
+    @JDAEntitySelectInteractionEvent(startWith = "channelMediaOnlyConfigureEntityMenus_")
     public void channelMediaOnlyChannelConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -2572,7 +2591,8 @@ public class ConfigureSlashCommandEvents {
         sendSpecificMediaOnlyChannelEmbed(event.getHook(), channelId, bundle, new ArrayList<>(), guild, standardPhrases);
     }
 
-    @JDAStringMenu(startWith = "channelMediaOnlyConfigureStringMenus_")
+    @JDAEvent
+    @JDAStringSelectInteractionEvent(startWith = "channelMediaOnlyConfigureStringMenus_")
     public void channelMediaOnlyChannelConfigureStringMenuEvents(@NotNull StringSelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -2749,7 +2769,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAButton(startWith = "channelFeedbackCategoryConfigureButtonEvents_")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "channelFeedbackCategoryConfigureButtonEvents_")
     public void channelFeedbackChannelConfigureButtonEvents(@NotNull ButtonInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -2806,7 +2827,8 @@ public class ConfigureSlashCommandEvents {
                 .queue();
     }
 
-    @JDAEntityMenu(startWith = "channelFeedbackCategoryConfigureEntityMenuEvents_")
+    @JDAEvent
+    @JDAEntitySelectInteractionEvent(startWith = "channelFeedbackCategoryConfigureEntityMenuEvents_")
     public void channelFeedbackChannelConfigureEntityMenuEvents(@NotNull EntitySelectInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -2842,5 +2864,10 @@ public class ConfigureSlashCommandEvents {
                 .setComponents()
                 .setContent(replyString)
                 .queue();
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 }

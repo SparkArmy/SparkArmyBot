@@ -4,8 +4,9 @@ import club.minnced.discord.webhook.WebhookClient;
 import de.SparkArmy.controller.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.WebhookApi;
-import de.SparkArmy.jda.events.annotations.events.messageEvents.*;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.ISnowflake;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
-public class MessageEvents {
+public class MessageEvents implements IJDAEvent {
 
     private final DatabaseAction db;
 
@@ -36,7 +37,7 @@ public class MessageEvents {
     private final WebhookApi webhookApi;
     private final ConfigController controller;
 
-    public MessageEvents(@NotNull EventDispatcher dispatcher) {
+    public MessageEvents(@NotNull EventManager dispatcher) {
         this.controller = dispatcher.getController();
         this.webhookApi = dispatcher.getApi().getWebhookApi();
         this.db = new DatabaseAction();
@@ -47,31 +48,31 @@ public class MessageEvents {
         return Util.getResourceBundle("messageEvents", locale);
     }
 
-    @JDAMessageBulkDeleteEvent
+    @JDAEvent
     public void messageBulkDeleteEvent(@NotNull MessageBulkDeleteEvent event) {
         removeDataFromDatabase(event.getMessageIds().stream().map(Long::parseLong).toList());
     }
 
-    @JDAMessageDeleteEvent
+    @JDAEvent
     public void messageDeleteEvent(@NotNull MessageDeleteEvent event) {
         removeDataFromDatabase(Collections.singletonList(event.getMessageIdLong()));
     }
 
-    @JDAMessageReactionRemoveAllEvent
+    @JDAEvent
     public void messageReactionReactionRemoveAllEvent(MessageReactionRemoveAllEvent event) {
     }
 
-    @JDAMessageReactionRemoveEmojiEvent
+    @JDAEvent
     public void messageReactionRemoveEmojiEvent(MessageReactionRemoveEmojiEvent event) {
     }
 
-    @JDAMessageUpdateEvent
+    @JDAEvent
     public void messageUpdateEvent(@NotNull MessageUpdateEvent event) {
         putDataInDatabase(event.getMessage());
 
     }
 
-    @JDAMessageReceivedEvent
+    @JDAEvent
     public void messageReceivedEvent(@NotNull MessageReceivedEvent event) {
         putDataInDatabase(event.getMessage());
         mediaOnlyFunction(event);
@@ -193,6 +194,11 @@ public class MessageEvents {
         Member member = event.getMember();
         if (member == null) return false;
         return modRoleIds.stream().anyMatch(x -> member.getRoles().stream().map(ISnowflake::getIdLong).toList().contains(x));
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 }
 

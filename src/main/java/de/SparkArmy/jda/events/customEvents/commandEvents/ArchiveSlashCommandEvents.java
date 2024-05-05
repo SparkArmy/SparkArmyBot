@@ -1,8 +1,10 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.annotations.interactions.JDASlashCommand;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
@@ -15,16 +17,17 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ResourceBundle;
 
-public class ArchiveSlashCommandEvents {
+public class ArchiveSlashCommandEvents implements IJDAEvent {
 
 
     private final ConfigController controller;
 
-    public ArchiveSlashCommandEvents(@NotNull EventDispatcher dispatcher) {
-        this.controller = dispatcher.getController();
+    public ArchiveSlashCommandEvents(@NotNull EventManager manager) {
+        this.controller = manager.getController();
     }
 
-    @JDASlashCommand(name = "archive")
+    @JDAEvent
+    @JDASlashCommandInteractionEvent(name = "archive")
     public void initialSlashEvent(@NotNull SlashCommandInteractionEvent event) {
         GuildChannel targetChannel = event.getOption("channel", event.getGuildChannel(), OptionMapping::getAsChannel);
 
@@ -73,5 +76,10 @@ public class ArchiveSlashCommandEvents {
                             .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("archiveEvents.error.noAccess")).setEphemeral(true).queue())
                             .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("archiveEvents.error.unknownChannel")).setEphemeral(true).queue()));
         }
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 }

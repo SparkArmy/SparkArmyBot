@@ -1444,7 +1444,7 @@ public class DatabaseAction {
         if (isDataInNoteTable > 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
         if (isDataInNoteTable < 0) return isDataInNoteTable;
         PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO botfunctiondata."tblNote" ("fk_notMemberId", "notContent", "fk_notModeratorId", "notTimestamp") VALUES (?,?,?,?);
+                INSERT INTO globaldata."tblNote" ("fk_notMemberId", "notContent", "fk_notModeratorId", "notTimestamp") VALUES (?,?,?,?);
                 """);
         prepStmt.setLong(1, getDatabaseIdFromTargetMemberId);
         prepStmt.setString(2, content);
@@ -1455,7 +1455,7 @@ public class DatabaseAction {
 
     private long isDataInNoteTable(@NotNull Connection conn, long databaseMemberId, LocalDateTime timestamp) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT COUNT(*) FROM botfunctiondata."tblNote" WHERE "fk_notMemberId" = ? AND "notTimestamp" = ?;
+                SELECT COUNT(*) FROM globaldata."tblNote" WHERE "fk_notMemberId" = ? AND "notTimestamp" = ?;
                 """);
         prepStmt.setLong(1, databaseMemberId);
         prepStmt.setTimestamp(2, Timestamp.valueOf(timestamp));
@@ -1471,7 +1471,7 @@ public class DatabaseAction {
         if (isDataInNoteTable == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
         if (isDataInNoteTable < 0) return isDataInNoteTable;
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE botfunctiondata."tblNote" SET "notContent" = ? WHERE "fk_notMemberId" = ? AND "notTimestamp" = ?;
+                UPDATE globaldata."tblNote" SET "notContent" = ? WHERE "fk_notMemberId" = ? AND "notTimestamp" = ?;
                 """);
         prepStmt.setString(1, content);
         prepStmt.setLong(2, getDatabaseIdFromTargetMemberId);
@@ -1484,7 +1484,7 @@ public class DatabaseAction {
         if (getDatabaseIdFromTargetMemberId == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
         if (getDatabaseIdFromTargetMemberId < 0) return getDatabaseIdFromTargetMemberId;
         PreparedStatement prepStmt = conn.prepareStatement("""
-                DELETE FROM botfunctiondata."tblNote" WHERE "fk_notMemberId" = ? AND "notTimestamp" = ?;
+                DELETE FROM globaldata."tblNote" WHERE "fk_notMemberId" = ? AND "notTimestamp" = ?;
                 """);
 
         Timestamp timestamp1 = Timestamp.valueOf(timestamp);
@@ -1503,7 +1503,7 @@ public class DatabaseAction {
         if (databaseMemberId == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
         if (databaseMemberId < 0) return databaseMemberId;
         PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO botfunctiondata."tblPeriodicCleanData" ("fk_pcdChannelId","pcdNextExecution","fk_pcdMemberId","pcdDays") VALUES (?,?,?,?);
+                INSERT INTO globaldata."tblPeriodicCleanData" ("fk_pcdChannelId","pcdNextExecution","fk_pcdMemberId","pcdDays") VALUES (?,?,?,?);
                 """);
         LocalDateTime nextExecution = LocalDateTime.now().plusDays(interval);
         prepStmt.setLong(1, channelId);
@@ -1515,7 +1515,7 @@ public class DatabaseAction {
 
     private long setActiveStateInPeriodicCleanTable(@NotNull Connection conn, long databaseId, boolean state) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE botfunctiondata."tblPeriodicCleanData" SET "pcdActive" = ? WHERE "pcdId" = ?;
+                UPDATE globaldata."tblPeriodicCleanData" SET "pcdActive" = ? WHERE "pcdId" = ?;
                 """);
         prepStmt.setBoolean(1, state);
         prepStmt.setLong(2, databaseId);
@@ -1524,7 +1524,7 @@ public class DatabaseAction {
 
     private long updateIntervalInPeriodicCleanTable(@NotNull Connection conn, long databaseId, long interval) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE botfunctiondata."tblPeriodicCleanData" SET "pcdNextExecution" = ?,"pcdDays" = ? WHERE "pcdId" = ?;
+                UPDATE globaldata."tblPeriodicCleanData" SET "pcdNextExecution" = ?,"pcdDays" = ? WHERE "pcdId" = ?;
                 """);
         LocalDateTime timestamp = LocalDateTime.now().plusDays(interval);
         prepStmt.setTimestamp(1, Timestamp.valueOf(timestamp));
@@ -1535,7 +1535,7 @@ public class DatabaseAction {
 
     private long setLastExecutionTimestampInPeriodicCleanTable(@NotNull Connection conn, long databaseId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE botfunctiondata."tblPeriodicCleanData" SET "pcdLastExecution" = now() WHERE "pcdId" = ?;
+                UPDATE globaldata."tblPeriodicCleanData" SET "pcdLastExecution" = now() WHERE "pcdId" = ?;
                 """);
         prepStmt.setLong(1, databaseId);
         return prepStmt.executeUpdate();
@@ -1543,7 +1543,7 @@ public class DatabaseAction {
 
     private long removeDataFromPeriodicCleanTable(@NotNull Connection conn, long databaseId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                DELETE FROM botfunctiondata."tblPeriodicCleanData" WHERE "pcdId" = ?;
+                DELETE FROM globaldata."tblPeriodicCleanData" WHERE "pcdId" = ?;
                 """);
         prepStmt.setLong(1, databaseId);
         return prepStmt.executeUpdate();
@@ -1561,7 +1561,7 @@ public class DatabaseAction {
         if (setModeratorState < 0) return setModeratorState;
 
         PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO botfunctiondata."tblPunishment" ("fk_psmMemberId", "fk_psmModeratorId", "fk_psmPunishmentTypeId", "psmReason", "psmTimestamp","fk_psmGuildId") VALUES (?,?,?,?,now(),?);
+                INSERT INTO globaldata."tblPunishment" ("fk_psmMemberId", "fk_psmModeratorId", "fk_psmPunishmentTypeId", "psmReason", "psmTimestamp","fk_psmGuildId") VALUES (?,?,?,?,now(),?);
                 """);
         prepStmt.setLong(1, getTargetUserDatabaseMemberId);
         prepStmt.setLong(2, getModeratorDatabaseMemberId);
@@ -1573,7 +1573,7 @@ public class DatabaseAction {
 
     private long setPunishmentWithdrawn(@NotNull Connection conn, long punishmentId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE botfunctiondata."tblPunishment" SET "psmIsWithdrawn" = true WHERE "psmId" = ?;
+                UPDATE globaldata."tblPunishment" SET "psmIsWithdrawn" = true WHERE "psmId" = ?;
                 """);
         prepStmt.setLong(1, punishmentId);
         return prepStmt.executeUpdate();
@@ -1581,7 +1581,7 @@ public class DatabaseAction {
 
     private long updatePunishmentReason(@NotNull Connection conn, long punishmentId, String reason) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE botfunctiondata."tblPunishment" SET "psmReason" = ? WHERE "psmId" = ?;
+                UPDATE globaldata."tblPunishment" SET "psmReason" = ? WHERE "psmId" = ?;
                 """);
         prepStmt.setString(1, reason);
         prepStmt.setLong(2, punishmentId);
@@ -2523,7 +2523,7 @@ public class DatabaseAction {
             Connection connection = DatabaseSource.connection();
             PreparedStatement preparedStatement = connection.prepareStatement("""
                     SELECT "pcdId","fk_pcdChannelId","pcdLastExecution","pcdNextExecution","pcdActive","fk_mbrUserId","pcdDays"
-                    FROM botfunctiondata."tblPeriodicCleanData"
+                    FROM globaldata."tblPeriodicCleanData"
                     INNER JOIN guilddata."tblMember" tM ON "tblPeriodicCleanData"."fk_pcdMemberId" = tM."mbrId"
                     WHERE tM."fk_mbrGuildId" = ?;
                     """);
@@ -2647,7 +2647,7 @@ public class DatabaseAction {
             Connection connection = DatabaseSource.connection();
             PreparedStatement preparedStatement = connection.prepareStatement("""
                     SELECT "notTimestamp",tMod."fk_mbrUserId","notContent"
-                    FROM botfunctiondata."tblNote"
+                    FROM globaldata."tblNote"
                     INNER JOIN guilddata."tblMember" tTM ON "tblNote"."fk_notMemberId" = tTM."mbrId"
                     INNER JOIN guilddata."tblMember" tMod ON "tblNote"."fk_notModeratorId" = tMod."mbrId"
                     WHERE tTM."fk_mbrUserId" = ? AND tTm."fk_mbrGuildId" = ?;
@@ -2803,7 +2803,7 @@ public class DatabaseAction {
         try {
             Connection connection = DatabaseSource.connection();
             PreparedStatement preparedStatement = connection.prepareStatement("""
-                    SELECT COUNT(*) FROM botfunctiondata."tblPunishment"
+                    SELECT COUNT(*) FROM globaldata."tblPunishment"
                     INNER JOIN guilddata."tblMember" tM ON "tblPunishment"."fk_psmMemberId" = tM."mbrId"
                     WHERE tM."fk_mbrGuildId" = ?;
                     """);

@@ -1,9 +1,10 @@
 package de.SparkArmy.jda.events.customEvents.otherEvents;
 
 import de.SparkArmy.controller.ConfigController;
-import de.SparkArmy.jda.events.annotations.events.messageEvents.JDAMessageReceivedEvent;
-import de.SparkArmy.jda.events.annotations.interactions.JDAButton;
-import de.SparkArmy.jda.events.customEvents.EventDispatcher;
+import de.SparkArmy.jda.annotations.events.JDAButtonInteractionEvent;
+import de.SparkArmy.jda.annotations.internal.JDAEvent;
+import de.SparkArmy.jda.events.EventManager;
+import de.SparkArmy.jda.events.iEvent.IJDAEvent;
 import de.SparkArmy.utils.FileHandler;
 import de.SparkArmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -35,10 +36,10 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class ModMailEvents {
+public class ModMailEvents implements IJDAEvent {
     private final ConfigController controller;
 
-    public ModMailEvents(@NotNull EventDispatcher dispatcher) {
+    public ModMailEvents(EventManager dispatcher) {
         this.controller = dispatcher.getController();
     }
 
@@ -50,7 +51,8 @@ public class ModMailEvents {
         return Util.getResourceBundle("standardPhrases", locale);
     }
 
-    @JDAButton(startWith = "modMailCreateTicket")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "modMailCreateTicket")
     public void modMailTicketCreation(@NotNull ButtonInteractionEvent event) {
         event.deferReply(true).queue();
         Guild guild = event.getGuild();
@@ -113,7 +115,8 @@ public class ModMailEvents {
                 .queue();
     }
 
-    @JDAButton(startWith = "modMailChannelClose")
+    @JDAEvent
+    @JDAButtonInteractionEvent(startWith = "modMailChannelClose")
     public void modMailChannelCloseButtonAction(@NotNull ButtonInteractionEvent event) {
         event.deferReply(true).queue();
         Guild guild = event.getGuild();
@@ -237,7 +240,7 @@ public class ModMailEvents {
         }
     }
 
-    @JDAMessageReceivedEvent
+    @JDAEvent
     public void modMailMessageHandler(@NotNull MessageReceivedEvent event) {
         Guild guild = event.getGuild();
         User user = event.getAuthor();
@@ -318,5 +321,10 @@ public class ModMailEvents {
                         }
                     });
         }
+    }
+
+    @Override
+    public Class<?> getEventClass() {
+        return this.getClass();
     }
 }

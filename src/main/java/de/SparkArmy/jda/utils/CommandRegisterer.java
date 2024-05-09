@@ -70,12 +70,25 @@ public class CommandRegisterer {
         }};
     }
 
+    @Contract(" -> new")
+    final @NotNull Collection<ChannelType> guildChannelTypes() {
+        return new ArrayList<>() {{
+            add(ChannelType.FORUM);
+            add(ChannelType.MEDIA);
+            add(ChannelType.NEWS);
+            add(ChannelType.STAGE);
+            add(ChannelType.TEXT);
+            add(ChannelType.VOICE);
+        }};
+    }
+
     @JDACommandData
     final @NotNull CommandData archiveSlashCommand() {
         return Commands.slash("archive", "Move the Channel in archive-category")
                 .addOptions(
                         new OptionData(OptionType.CHANNEL, "channel", "The channel you want to archive")
                                 .setRequired(true)
+                                .setChannelTypes(guildChannelTypes())
                 )
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                 .setGuildOnly(true);

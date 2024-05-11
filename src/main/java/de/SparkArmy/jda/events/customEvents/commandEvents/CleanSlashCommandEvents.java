@@ -126,7 +126,7 @@ public class CleanSlashCommandEvents implements IJDAEvent {
         // Check if Guild null
         Guild guild = event.getGuild();
         if (guild == null) return;
-        // Reply to event and get  event-hook
+        // Reply to event and get the event-hook
         event.deferReply().setEphemeral(true).queue();
         InteractionHook hook = event.getHook();
         // Check if Member null
@@ -376,7 +376,9 @@ public class CleanSlashCommandEvents implements IJDAEvent {
         long days = Long.parseLong(daysMapping.getAsString());
 
         ModalMapping activeMapping = event.getValues().stream().filter(x -> x.getId().startsWith("active")).toList().getFirst();
-        boolean active = Boolean.getBoolean(activeMapping.getAsString());
+        Util.logger.info(activeMapping.getAsString());
+        boolean active = activeMapping.getAsString().equalsIgnoreCase("true");
+        Util.logger.info(String.valueOf(active));
 
         ResourceBundle standardBundle = standardBundle(event.getUserLocale());
         long edited = postgres.editDataInPeriodicCleanTable(databaseId, active, days);

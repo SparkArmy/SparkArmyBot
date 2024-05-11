@@ -37,12 +37,13 @@ public class ArchiveSlashCommandEvents implements IJDAEvent {
         long categoryId = controller.getGuildArchiveCategory(guild);
 
         ResourceBundle bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
+        ResourceBundle standardPhrases = Util.getResourceBundle("standardPhrases", event.getUserLocale());
 
         if (categoryId == 0) {
             event.reply(bundle.getString("archiveEvents.initialSlashCommand.categoryIdReturn0")).setEphemeral(true).queue();
         } else if (categoryId < 0) {
             event.reply(
-                    String.format(bundle.getString("archiveEvents.initialSlashCommand.categoryIdReturnLower0"),
+                    String.format(standardPhrases.getString("replies.dbErrorReply"),
                             categoryId)).setEphemeral(true).queue();
         } else {
             Category category = guild.getCategoryById(categoryId);
@@ -58,6 +59,7 @@ public class ArchiveSlashCommandEvents implements IJDAEvent {
 
     private void moveChannel(@NotNull SlashCommandInteractionEvent event, Guild guild, @NotNull Category archiveCategory, @NotNull GuildChannel targetChannel) {
         ResourceBundle bundle = Util.getResourceBundle(event.getName(), event.getUserLocale());
+        ResourceBundle standardPhrases = Util.getResourceBundle("standardPhrases", event.getUserLocale());
         if (archiveCategory.getChannels().contains(targetChannel)) {
             event.reply(bundle.getString("archiveEvents.error.channelIsInCategory")).setEphemeral(true).queue();
             return;
@@ -67,13 +69,13 @@ public class ArchiveSlashCommandEvents implements IJDAEvent {
                     .selectPosition(targetChannel)
                     .setCategory(archiveCategory, true)
                     .queue(x -> event.reply(bundle.getString("archiveEvents.successful.move")).setEphemeral(true).queue(), new ErrorHandler()
-                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("archiveEvents.error.noAccess")).setEphemeral(true).queue())
+                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(standardPhrases.getString("replies.noAccess")).setEphemeral(true).queue())
                             .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("archiveEvents.error.unknownChannel")).setEphemeral(true).queue()));
             case VOICE, STAGE -> guild.modifyVoiceChannelPositions()
                     .selectPosition(targetChannel)
                     .setCategory(archiveCategory, true)
                     .queue(x -> event.reply(bundle.getString("archiveEvents.successful.move")).setEphemeral(true).queue(), new ErrorHandler()
-                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(bundle.getString("archiveEvents.error.noAccess")).setEphemeral(true).queue())
+                            .handle(ErrorResponse.MISSING_ACCESS, e -> event.reply(standardPhrases.getString("replies.noAccess")).setEphemeral(true).queue())
                             .handle(ErrorResponse.UNKNOWN_CHANNEL, e -> event.reply(bundle.getString("archiveEvents.error.unknownChannel")).setEphemeral(true).queue()));
         }
     }

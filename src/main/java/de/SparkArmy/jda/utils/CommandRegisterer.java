@@ -236,7 +236,8 @@ public class CommandRegisterer {
                                 .addSubcommands(
                                         new SubcommandData("add", "Adds a new periodic clean action")
                                                 .addOptions(
-                                                        new OptionData(OptionType.CHANNEL, "channel", "The channel"),
+                                                        new OptionData(OptionType.CHANNEL, "channel", "The channel")
+                                                                .setChannelTypes(ChannelType.TEXT),
                                                         new OptionData(OptionType.INTEGER, "period", "The period in days")),
                                         new SubcommandData("show", "Show all periodic clean actions for the guild")
                                 ))

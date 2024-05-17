@@ -123,7 +123,7 @@ public class EventManager extends ListenerAdapter {
         // Get related Methods
         String jdaClassName = event.getClass().getSimpleName();
         ArrayList<Map<Method, IJDAEvent>> methodList = methods.get(jdaClassName);
-        if (methodList == null) return; // Return if no method registered
+        if (methodList == null) return; // Return is no method registered
 
         if (event instanceof GenericInteractionCreateEvent iEvent) {
             Class<? extends Annotation> aClass = null;

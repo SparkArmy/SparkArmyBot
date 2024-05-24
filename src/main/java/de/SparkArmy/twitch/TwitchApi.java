@@ -5,9 +5,9 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.helix.domain.User;
 import de.SparkArmy.Main;
+import de.SparkArmy.config.Twitch;
 import de.SparkArmy.twitch.events.ChannelNotifications;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.util.Collections;
@@ -24,11 +24,11 @@ public class TwitchApi {
     public TwitchApi(@NotNull Main main) {
         this.main = main;
         Logger logger = main.getLogger();
-        JSONObject mainConfig = main.getController().getMainConfigFile();
+        Twitch twitch = main.getController().getConfig().twitch();
         this.twitchClient = TwitchClientBuilder.builder()
                 .withEnableHelix(true)
-                .withClientId(mainConfig.getJSONObject("twitch").getString("twitch-client-id"))
-                .withClientSecret(mainConfig.getJSONObject("twitch").getString("twitch-client-secret"))
+                .withClientId(twitch.clientId())
+                .withClientSecret(twitch.secret())
                 .withDefaultEventHandler(ReactorEventHandler.class)
                 .withTimeout(30000)
                 .withHelperThreadDelay(30_000)

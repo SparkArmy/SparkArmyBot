@@ -6,7 +6,7 @@ import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeRequestInitializer;
 import com.google.api.services.youtube.model.ChannelListResponse;
 import de.SparkArmy.Main;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class YouTubeApi {
 
     public YouTubeApi(@NotNull Main main) {
         ConfigController controller = main.getController();
-        this.apiKey = controller.getMainConfigFile().getJSONObject("youtube").getString("youtube-api-key");
+        this.apiKey = controller.getConfig().youtube().apiKey();
     }
 
     private @NotNull YouTube getYouTubeService() throws GeneralSecurityException, IOException {
@@ -40,7 +40,7 @@ public class YouTubeApi {
             YouTube.Channels.List request = service.channels().list(parts);
             ChannelListResponse response = request.setForUsername(channelName).execute();
             if (response.getPageInfo().getTotalResults() == 0) return "";
-            return response.getItems().get(0).getId();
+            return response.getItems().getFirst().getId();
         } catch (GeneralSecurityException | IOException e) {
             return "";
         }

@@ -1,7 +1,7 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import club.minnced.discord.webhook.WebhookClient;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.jda.annotations.events.JDAModalInteractionEvent;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.SparkArmy.jda.annotations.internal.JDAEvent;
@@ -117,7 +117,7 @@ public class FeedbackSlashCommandEvents implements IJDAEvent {
         if (channelId == 0) {
             return null;
         }
-        WebhookClient client = controller.getMain().getJdaApi().getWebhookApi().getSpecificWebhookClient(guild, LogChannelType.SERVER);
+        WebhookClient client = controller.main().getJdaApi().getWebhookApi().getSpecificWebhookClient(guild, LogChannelType.SERVER);
         if (client != null) {
             client.send("No feedback channel set");
         }

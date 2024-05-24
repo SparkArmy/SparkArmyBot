@@ -60,7 +60,7 @@ public class YouTubePubSubMapping {
 
         for (Object o : tableData) {
             JSONObject object = (JSONObject) o;
-            MessageChannel messageChannel = (MessageChannel) Util.controller.getMain().getJdaApi().getShardManager().getGuildChannelById(object.getLong("messageChannelId"));
+            MessageChannel messageChannel = (MessageChannel) Util.controller.main().getJdaApi().getShardManager().getGuildChannelById(object.getLong("messageChannelId"));
             MessageCreateBuilder messageData = new MessageCreateBuilder();
             messageData.addContent(
                     object.getString("messageText") +

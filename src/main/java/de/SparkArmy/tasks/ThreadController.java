@@ -1,6 +1,6 @@
 package de.SparkArmy.tasks;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.tasks.runnables.DeleteOldMessageAttachments;
 import de.SparkArmy.tasks.runnables.YouTubePubSubSubscriber;
 import de.SparkArmy.utils.Util;

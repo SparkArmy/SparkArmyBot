@@ -3,7 +3,7 @@ package de.SparkArmy.jda;
 import club.minnced.discord.webhook.LibraryInfo;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookCluster;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.jda.utils.LogChannelType;
 import net.dv8tion.jda.api.JDAInfo;
 import net.dv8tion.jda.api.entities.Guild;
@@ -24,7 +24,7 @@ public class WebhookApi {
         this.controller = jdaApi.getController();
 
         this.webhookCluster = new WebhookCluster();
-        this.logger = controller.getMain().getLogger();
+        this.logger = controller.main().getLogger();
         getWebhookUrlsFromDatabase();
     }
 

@@ -1,6 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;
@@ -30,7 +30,7 @@ public class GeneralCommandEvents implements IJDAEvent {
     public void updateCommandsSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         ResourceBundle bundle = Util.getResourceBundle("update-commands", event.getUserLocale());
 
-        if (controller.getMain().getJdaApi().getCommandRegisterer().registerCommands()) {
+        if (controller.main().getJdaApi().getCommandRegisterer().registerCommands()) {
             event.reply(bundle.getString("command.answer.successfully")).setEphemeral(true).queue();
         } else {
             event.reply(bundle.getString("command.answer.failed")).setEphemeral(true).queue();

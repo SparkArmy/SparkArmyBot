@@ -1,11 +1,9 @@
-package de.SparkArmy.controller;
+package de.SparkArmy.config;
 
 import de.SparkArmy.Main;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.jda.utils.MediaOnlyPermissions;
-import de.SparkArmy.utils.ErrorCodes;
-import de.SparkArmy.utils.FileHandler;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
@@ -15,87 +13,16 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
-import org.slf4j.Logger;
 
-import java.awt.*;
-import java.io.File;
 import java.util.List;
 
 
-public class ConfigController {
-    private final Main main;
-    private final Logger logger;
-    private final File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
+public record ConfigController(Main main) {
 
-    public Main getMain() {
-        return this.main;
+    public Config getConfig() {
+        return this.main.getConfig();
     }
 
-
-    public ConfigController(@NotNull Main main) {
-        this.main = main;
-        this.logger = main.getLogger();
-    }
-
-    public JSONObject getMainConfigFile(){
-        if (!FileHandler.getFileInDirectory(this.configFolder,"main-config.json").exists()){
-            this.logger.warn("The main-config.json-file not exist, we will created a new");
-            JSONObject blankConfig = getBlankConfig();
-
-            if (FileHandler.writeValuesInFile(this.configFolder, "main-config.json", blankConfig)) {
-                this.logger.debug("main-config.json was successful created");
-                this.logger.warn("Please finish your configuration");
-                try {
-                    Desktop.getDesktop().open(FileHandler.getFileInDirectory(this.configFolder, "main-config.json"));
-                } catch (Exception ignored) {
-                    this.main.systemExit(ErrorCodes.GENERAL_CONFIG_ERROR.getId());
-                }
-            } else {
-                this.logger.error(ErrorCodes.GENERAL_CONFIG_CANT_CREATE_MAIN_CONFIG.getDescription());
-                this.main.systemExit(ErrorCodes.GENERAL_CONFIG_CANT_CREATE_MAIN_CONFIG.getId());
-            }
-
-            this.main.systemExit(0);
-        }
-        String mainConfigAsString = FileHandler.getFileContent(this.configFolder, "main-config.json");
-        if (mainConfigAsString == null) {
-            this.logger.error(ErrorCodes.GENERAL_CONFIG_IS_NULL.getDescription());
-            this.main.systemExit(ErrorCodes.GENERAL_CONFIG_IS_NULL.getId());
-            return new JSONObject();
-        }
-        return new JSONObject(mainConfigAsString);
-    }
-
-    @NotNull
-    private static JSONObject getBlankConfig() {
-        JSONObject blankConfig = new JSONObject();
-        JSONObject discord = new JSONObject() {{
-            put("discord-token", "Write here your Discord-Bot-Token");
-            put("discord-client-id", "Write here your Discord-Bot-ClientId");
-        }};
-        blankConfig.put("discord", discord);
-        JSONObject twitch = new JSONObject() {{
-            put("twitch-client-secret", "[Optional] Write here your Twitch-Client-Secret");
-            put("twitch-client-id", "[Optional] Write here your Twitch-Client-Id");
-        }};
-        blankConfig.put("twitch", twitch);
-        JSONObject youtube = new JSONObject() {{
-            put("youtube-api-key", "[Optional] Write here your API-Key from YouTube");
-            put("spring-callback-url", "[Optional] Your callback domain");
-        }};
-        blankConfig.put("youtube", youtube);
-        JSONObject postgres = new JSONObject() {{
-            put("url", "The url for the database");
-            put("user", "Database-User");
-            put("password", "User-Password");
-        }};
-        blankConfig.put("postgres", postgres);
-        JSONObject otherKeys = new JSONObject() {{
-            put("virusTotal-api-key", "[Optional] Write here your API-Key from VirusTotal");
-        }};
-        blankConfig.put("otherKeys", otherKeys);
-        return blankConfig;
-    }
 
     public long setGuildLoggingChannel(@NotNull LogChannelType logChannelType, @NotNull Channel channel, @NotNull Guild guild, String url) {
         return new DatabaseAction().writeInLogChannelTable(guild.getIdLong(), logChannelType, channel.getIdLong(), url);

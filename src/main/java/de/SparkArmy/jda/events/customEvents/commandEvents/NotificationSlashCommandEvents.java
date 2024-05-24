@@ -1,7 +1,7 @@
 package de.SparkArmy.jda.events.customEvents.commandEvents;
 
 import com.github.twitch4j.helix.domain.User;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.annotations.events.*;
 import de.SparkArmy.jda.annotations.internal.JDAEvent;
@@ -406,7 +406,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
             switch (notificationService) {
 
                 case YOUTUBE -> {
-                    YouTubeApi youTubeApi = controller.getMain().getYouTubeApi();
+                    YouTubeApi youTubeApi = controller.main().getYouTubeApi();
                     String userId = youTubeApi.getUserId(userName);
                     showAddResultEmbed.addField(userName,
                             """
@@ -416,7 +416,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
                             false);
                 }
                 case TWITCH -> {
-                    TwitchApi twitchApi = controller.getMain().getTwitchApi();
+                    TwitchApi twitchApi = controller.main().getTwitchApi();
                     List<User> users = twitchApi.getUserInformation(userName);
                     users.forEach(user -> showAddResultEmbed.addField(
                             user.getDisplayName(),
@@ -436,8 +436,8 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
 
         String userId;
         switch (notificationService) {
-            case TWITCH -> userId = controller.getMain().getTwitchApi().getUserInformation(userName).getFirst().getId();
-            case YOUTUBE -> userId = controller.getMain().getYouTubeApi().getUserId(userName);
+            case TWITCH -> userId = controller.main().getTwitchApi().getUserInformation(userName).getFirst().getId();
+            case YOUTUBE -> userId = controller.main().getYouTubeApi().getUserId(userName);
             default -> userId = "";
         }
 
@@ -515,7 +515,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         long addValue = db.putDataInSubscribedChannelTable(guildChannels, userChannelId, notificationMessage.getValue());
 
         if (addValue > 0) {
-            controller.getMain().getTwitchApi().getChannelNotifications().updateListenedChannels();
+            controller.main().getTwitchApi().getChannelNotifications().updateListenedChannels();
             hook.editOriginalEmbeds()
                     .setComponents()
                     .setContent(bundle.getString("notificationEvents.notificationChannelSelectOkClickEvent.successReply"))

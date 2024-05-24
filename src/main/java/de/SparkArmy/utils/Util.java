@@ -1,6 +1,6 @@
 package de.SparkArmy.utils;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

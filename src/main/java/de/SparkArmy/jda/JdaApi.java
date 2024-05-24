@@ -1,7 +1,8 @@
 package de.SparkArmy.jda;
 
 import de.SparkArmy.Main;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
+import de.SparkArmy.config.Discord;
 import de.SparkArmy.jda.events.EventManager;
 import de.SparkArmy.jda.utils.CommandRegisterer;
 import de.SparkArmy.jda.utils.ConfigureUtils;
@@ -11,7 +12,6 @@ import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 
 public class JdaApi extends ListenerAdapter {
@@ -29,9 +29,9 @@ public class JdaApi extends ListenerAdapter {
         this.controller = main.getController();
         this.logger = main.getLogger();
 
-        JSONObject mainConfig = controller.getMainConfigFile();
+        Discord discord = controller.getConfig().discord();
 
-        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createLight(mainConfig.getJSONObject("discord").getString("discord-token"));
+        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createLight(discord.token());
         builder.enableIntents(
                 GatewayIntent.GUILD_MEMBERS,
                 GatewayIntent.GUILD_MODERATION,

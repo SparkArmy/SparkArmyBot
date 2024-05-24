@@ -5,7 +5,7 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientHelper;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.helix.domain.User;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.utils.NotificationService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -63,7 +63,7 @@ public class ChannelNotifications {
 
         for (Object o : tableData) {
             JSONObject object = (JSONObject) o;
-            MessageChannel messageChannel = (MessageChannel) controller.getMain().getJdaApi().getShardManager().getGuildChannelById(object.getLong("messageChannelId"));
+            MessageChannel messageChannel = (MessageChannel) controller.main().getJdaApi().getShardManager().getGuildChannelById(object.getLong("messageChannelId"));
             MessageCreateBuilder messageData = new MessageCreateBuilder();
             messageData.addContent(object.getString("messageText"));
             messageData.addEmbeds(twitchNotificationPattern(event));

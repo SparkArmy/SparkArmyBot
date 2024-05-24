@@ -1,6 +1,6 @@
 package de.SparkArmy.jda.events;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.jda.JdaApi;
 import de.SparkArmy.jda.annotations.events.*;
 import de.SparkArmy.jda.events.customEvents.commandEvents.*;
@@ -53,14 +53,14 @@ public class EventManager extends ListenerAdapter {
                 JDA jda = shardManager.getShardById(i);
                 if (jda == null) {
                     logger.error("Shard %d is null".formatted(i));
-                    controller.getMain().systemExit(1);
+                    controller.main().systemExit(1);
                     return;
                 }
                 jda.awaitReady();
                 logger.info("Shard %d is ready".formatted(i));
             } catch (InterruptedException e) {
                 logger.error("Error in shard loading", e);
-                controller.getMain().systemExit(1);
+                controller.main().systemExit(1);
             }
         }
     }

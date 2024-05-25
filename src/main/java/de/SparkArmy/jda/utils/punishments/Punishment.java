@@ -3,7 +3,7 @@ package de.SparkArmy.jda.utils.punishments;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.utils.LogChannelType;
 import de.SparkArmy.utils.Util;
@@ -140,7 +140,7 @@ public class Punishment {
         logEmbed.setColor(new Color(255, 0, 0).getRGB());
         logEmbed.setFooter(new WebhookEmbed.EmbedFooter(guild.getName(), guild.getIconUrl()));
 
-        WebhookClient client = controller.getMain().getJdaApi().getWebhookApi().getSpecificWebhookClient(guild, LogChannelType.MOD);
+        WebhookClient client = controller.main().getJdaApi().getWebhookApi().getSpecificWebhookClient(guild, LogChannelType.MOD);
         if (client != null) client.send(logEmbed.build());
 
 //        User Embed

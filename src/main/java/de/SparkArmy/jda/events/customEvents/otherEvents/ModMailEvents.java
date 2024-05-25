@@ -1,6 +1,6 @@
 package de.SparkArmy.jda.events.customEvents.otherEvents;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.jda.annotations.events.JDAButtonInteractionEvent;
 import de.SparkArmy.jda.annotations.internal.JDAEvent;
 import de.SparkArmy.jda.events.EventManager;

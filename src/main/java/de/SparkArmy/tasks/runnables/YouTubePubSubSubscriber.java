@@ -1,6 +1,6 @@
 package de.SparkArmy.tasks.runnables;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.utils.NotificationService;
 import okhttp3.*;
@@ -34,7 +34,7 @@ public class YouTubePubSubSubscriber implements Runnable {
 
         OkHttpClient client = new OkHttpClient();
 
-        String callbackUrl = controller.getMainConfigFile().getJSONObject("youtube").getString("spring-callback-url");
+        String callbackUrl = controller.getConfig().youtube().callbackUrl();
         for (String s : urls) {
             try {
                 RequestBody formBody = new MultipartBody.Builder().setType(MultipartBody.FORM)

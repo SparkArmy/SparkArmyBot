@@ -1,7 +1,9 @@
 package de.SparkArmy;
 
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.Config;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.jda.JdaApi;
+import de.SparkArmy.log.WebhookAppenderKt;
 import de.SparkArmy.twitch.TwitchApi;
 import de.SparkArmy.utils.Util;
 import de.SparkArmy.webserver.SpringApp;
@@ -12,7 +14,7 @@ import org.springframework.boot.SpringApplication;
 
 public class Main {
 
-    private final Logger logger;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final ConfigController controller;
 
     private final JdaApi jdaApi;
@@ -20,10 +22,13 @@ public class Main {
     private final TwitchApi twitchApi;
     private final YouTubeApi youTubeApi;
 
+    private final Config config = Config.getConfig();
 
-    public Main() {        // Initialize Logger variables
-        this.logger = LoggerFactory.getLogger(this.getClass());
+
+    public Main() {
+        // Initialize Logger variables
         Util.logger = this.logger;
+        WebhookAppenderKt.initWebhookLogger(config.discord().logWebhookUrl());
 
         // Initialize ConfigController
         this.controller = new ConfigController(this);
@@ -70,5 +75,9 @@ public class Main {
 
     public YouTubeApi getYouTubeApi() {
         return youTubeApi;
+    }
+
+    public Config getConfig() {
+        return config;
     }
 }

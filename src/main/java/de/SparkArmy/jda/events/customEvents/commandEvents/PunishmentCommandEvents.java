@@ -3,7 +3,7 @@ package de.SparkArmy.jda.events.customEvents.commandEvents;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.SparkArmy.jda.annotations.internal.JDAEvent;
@@ -120,7 +120,7 @@ public class PunishmentCommandEvents implements IJDAEvent {
                         logEmbed.setColor(new Color(255, 0, 0).getRGB());
                         logEmbed.setFooter(new WebhookEmbed.EmbedFooter(guild.getName(), guild.getIconUrl()));
 
-                        WebhookClient client = controller.getMain().getJdaApi().getWebhookApi().getSpecificWebhookClient(event.getGuild(), LogChannelType.MOD);
+                        WebhookClient client = controller.main().getJdaApi().getWebhookApi().getSpecificWebhookClient(event.getGuild(), LogChannelType.MOD);
                         if (client == null) return;
                         client.send(logEmbed.build());
                     },

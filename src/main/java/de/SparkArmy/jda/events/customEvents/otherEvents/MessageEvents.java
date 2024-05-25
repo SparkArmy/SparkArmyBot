@@ -1,7 +1,7 @@
 package de.SparkArmy.jda.events.customEvents.otherEvents;
 
 import club.minnced.discord.webhook.WebhookClient;
-import de.SparkArmy.controller.ConfigController;
+import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.db.DatabaseAction;
 import de.SparkArmy.jda.WebhookApi;
 import de.SparkArmy.jda.annotations.internal.JDAEvent;

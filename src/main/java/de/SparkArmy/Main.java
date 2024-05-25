@@ -3,7 +3,7 @@ package de.SparkArmy;
 import de.SparkArmy.config.Config;
 import de.SparkArmy.config.ConfigController;
 import de.SparkArmy.jda.JdaApi;
-import de.SparkArmy.log.WebhookAppender;
+import de.SparkArmy.log.WebhookAppenderKt;
 import de.SparkArmy.twitch.TwitchApi;
 import de.SparkArmy.utils.Util;
 import de.SparkArmy.webserver.SpringApp;
@@ -28,7 +28,7 @@ public class Main {
     public Main() {
         // Initialize Logger variables
         Util.logger = this.logger;
-        new WebhookAppender(config.discord());
+        WebhookAppenderKt.initWebhookLogger(config.discord().logWebhookUrl());
 
         // Initialize ConfigController
         this.controller = new ConfigController(this);

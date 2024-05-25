@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 fun initWebhookLogger(url: String) {
-    Util.logger.atInfo().log("Logger start")
     val lc = LoggerFactory.getILoggerFactory() as LoggerContext
     val encoder = PatternLayoutEncoder().apply {
         this.context = lc
@@ -58,7 +57,6 @@ open class WebhookAppender(
     }
 
     private fun flush() = synchronized(buffer) {
-        Util.logger.atInfo().log("flush")
         if (buffer.isEmpty()) return@synchronized
         val message = "```ansi\n${buffer}```"
         buffer.setLength(0)

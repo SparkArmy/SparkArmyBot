@@ -1,13 +1,13 @@
-package de.sparkarmy.jda.events.customEvents.commandEvents;
+package de.sparkarmy.jda.events.commands;
 
 import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.annotations.events.JDAButtonInteractionEvent;
 import de.sparkarmy.jda.annotations.events.JDAModalInteractionEvent;
 import de.sparkarmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.sparkarmy.jda.annotations.events.JDAStringSelectInteractionEvent;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
-import de.sparkarmy.jda.events.EventManager;
-import de.sparkarmy.jda.events.iEvent.IJDAEvent;
+import de.sparkarmy.jda.events.IJDAEvent;
 import de.sparkarmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;

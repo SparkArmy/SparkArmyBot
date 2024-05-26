@@ -1,6 +1,6 @@
 package de.sparkarmy.db;
 
-import de.sparkarmy.jda.utils.LogChannelType;
+import de.sparkarmy.jda.misc.LogChannelType;
 import de.sparkarmy.utils.ErrorCodes;
 import de.sparkarmy.utils.FileHandler;
 import de.sparkarmy.utils.NotificationService;

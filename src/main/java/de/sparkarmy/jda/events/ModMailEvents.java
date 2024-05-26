@@ -1,10 +1,9 @@
-package de.sparkarmy.jda.events.customEvents.otherEvents;
+package de.sparkarmy.jda.events;
 
 import de.sparkarmy.config.ConfigController;
+import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.annotations.events.JDAButtonInteractionEvent;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
-import de.sparkarmy.jda.events.EventManager;
-import de.sparkarmy.jda.events.iEvent.IJDAEvent;
 import de.sparkarmy.utils.FileHandler;
 import de.sparkarmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;

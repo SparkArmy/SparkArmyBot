@@ -1,4 +1,4 @@
-package de.sparkarmy.jda.utils.punishments;
+package de.sparkarmy.jda.misc.punishments;
 
 public enum PunishmentType {
     UNKNOWN(-1, "unknown"),

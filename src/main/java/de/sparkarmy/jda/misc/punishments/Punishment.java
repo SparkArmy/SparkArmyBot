@@ -1,11 +1,11 @@
-package de.sparkarmy.jda.utils.punishments;
+package de.sparkarmy.jda.misc.punishments;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.sparkarmy.config.ConfigController;
 import de.sparkarmy.db.DatabaseAction;
-import de.sparkarmy.jda.utils.LogChannelType;
+import de.sparkarmy.jda.misc.LogChannelType;
 import de.sparkarmy.utils.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;

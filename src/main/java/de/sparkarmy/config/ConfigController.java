@@ -2,8 +2,8 @@ package de.sparkarmy.config;
 
 import de.sparkarmy.Main;
 import de.sparkarmy.db.DatabaseAction;
-import de.sparkarmy.jda.utils.LogChannelType;
-import de.sparkarmy.jda.utils.MediaOnlyPermissions;
+import de.sparkarmy.jda.misc.LogChannelType;
+import de.sparkarmy.jda.misc.MediaOnlyPermissions;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;

@@ -6,3 +6,6 @@
 /SparkArmyBot.iml
 /attachments/
 /modMailAttachments/
+/.gradle/
+/.kotlin/
+/build/

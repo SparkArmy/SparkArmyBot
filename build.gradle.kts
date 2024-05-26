@@ -11,31 +11,37 @@ plugins {
     kotlin("jvm")
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
-    api(libs.net.dv8tion.jda)
-    api(libs.club.minnced.discord.webhooks)
-    api(libs.org.json.json)
-    api(libs.org.postgresql.postgresql)
-    api(libs.com.github.twitch4j.twitch4j)
-    api(libs.com.github.philippheuer.events4j.events4j.handler.reactor)
-    api(libs.com.google.apis.google.api.services.youtube)
-    api(libs.ch.qos.logback.logback.classic)
-    api(libs.org.slf4j.slf4j.api)
-    api(libs.com.zaxxer.hikaricp)
-    api(libs.org.springframework.boot.spring.boot)
-    api(libs.org.springframework.boot.spring.boot.autoconfigure)
-    api(libs.org.springframework.spring.web)
-    api(libs.org.springframework.boot.spring.boot.starter.tomcat)
-    api(libs.org.springframework.boot.spring.boot.actuator)
-    api(libs.org.springframework.boot.spring.boot.starter.data.rest)
-    api(libs.com.squareup.okhttp3.okhttp)
-    api(libs.org.jetbrains.annotations)
-    api(libs.org.jetbrains.kotlin.kotlin.stdlib.jdk8)
+    implementation(libs.jda)
+    implementation(libs.webhooks)
+    implementation(libs.json)
+    implementation(libs.postgres)
+    implementation("com.github.twitch4j:twitch4j:1.20.0")
+    implementation(libs.twitch4j.reactor)
+    implementation(libs.youtube)
+    implementation(libs.logback)
+    implementation(libs.slf4j)
+    implementation(libs.hikari)
+    implementation(libs.spring.web)
+    implementation(libs.spring.boot)
+    implementation(libs.spring.boot.autoconfigure)
+    implementation(libs.tomcat.starter)
+    implementation(libs.spring.actuator)
+    implementation(libs.spring.data.rest)
+    implementation(libs.okhttp)
+    implementation(libs.kotlin)
+
+    compileOnly(libs.jetbrains.annotations)
+
 
 }
 

@@ -27,4 +27,13 @@ public enum PunishmentType {
         return name;
     }
 
+    public static PunishmentType getById(int id) {
+        for (PunishmentType type : PunishmentType.values()) {
+            if (type.getId() == id) {
+                return type;
+            }
+        }
+        return UNKNOWN;
+    }
+
 }

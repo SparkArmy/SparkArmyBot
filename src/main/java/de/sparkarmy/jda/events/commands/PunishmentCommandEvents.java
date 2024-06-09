@@ -4,14 +4,13 @@ import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import de.sparkarmy.config.ConfigController;
-import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.db.DBPunishment;
 import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
 import de.sparkarmy.jda.events.IJDAEvent;
 import de.sparkarmy.jda.misc.LogChannelType;
-import de.sparkarmy.jda.misc.punishments.Punishment;
-import de.sparkarmy.jda.misc.punishments.PunishmentType;
+import de.sparkarmy.jda.misc.punishments.*;
 import de.sparkarmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -37,38 +36,39 @@ public class PunishmentCommandEvents implements IJDAEvent {
 
     @JDAEvent
     @JDASlashCommandInteractionEvent(name = "ban")
-    public void banSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
-        new Punishment(event, PunishmentType.BAN, controller);
+    public void banSlashCommand(SlashCommandInteractionEvent event) {
+        new Ban(event).createBan();
     }
 
     @JDAEvent
     @JDASlashCommandInteractionEvent(name = "kick")
-    public void kickSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
-        new Punishment(event, PunishmentType.KICK, controller);
+    public void kickSlashCommand(SlashCommandInteractionEvent event) {
+        new Kick(event).createKick();
     }
 
     @JDAEvent
     @JDASlashCommandInteractionEvent(name = "mute")
-    public void muteSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
-        new Punishment(event, PunishmentType.MUTE, controller);
+    public void muteSlashCommand(SlashCommandInteractionEvent event) {
+        new Mute(event).createMute();
     }
 
     @JDAEvent
     @JDASlashCommandInteractionEvent(name = "softban")
-    public void softbanSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
-        new Punishment(event, PunishmentType.SOFTBAN, controller);
+    public void softbanSlashCommand(SlashCommandInteractionEvent event) {
+        new Softban(event).createSoftban();
     }
 
     @JDAEvent
     @JDASlashCommandInteractionEvent(name = "warn")
-    public void warnSlashCommand(SlashCommandInteractionEvent event, Guild guild) {
-        new Punishment(event, PunishmentType.WARN, controller);
+    public void warnSlashCommand(SlashCommandInteractionEvent event) {
+        new Warn(event).createWarn();
     }
 
     @JDAEvent
     @JDASlashCommandInteractionEvent(name = "unban")
-    public void unbanSlashCommand(@NotNull SlashCommandInteractionEvent event, Guild guild) {
+    public void unbanSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
+        Guild guild = event.getGuild();
         ResourceBundle bundle = Util.getResourceBundle("unban", event.getUserLocale());
         ResourceBundle standardPhrases = Util.getResourceBundle("standardPhrases", event.getUserLocale());
         InteractionHook hook = event.getHook();
@@ -84,10 +84,9 @@ public class PunishmentCommandEvents implements IJDAEvent {
                 hook.editOriginal(bundle.getString("command.userIsNotInBanList")).queue();
                 return;
             }
-            DatabaseAction db = new DatabaseAction();
 
             guild.unban(target).reason(reason).queue(x -> {
-                        long value = db.putPunishmentDataInPunishmentTable(target.getIdLong(), moderator.getIdLong(), guild.getIdLong(), PunishmentType.UNBAN.getId(), reason);
+                        long value = new DBPunishment(guild, moderator.getUser(), target, PunishmentType.UNBAN, reason, null, false).createPunishmentEntry();
                         if (value < 0) {
                             hook.editOriginal(String.format(standardPhrases.getString("replies.dbErrorReply"), value)).queue();
                         } else if (value > 0) {
@@ -100,7 +99,7 @@ public class PunishmentCommandEvents implements IJDAEvent {
                         User selfUser = event.getJDA().getSelfUser();
 
                         // Get punishmentNumber from the Guild
-                        long punishmentCount = db.getPunishmentCountFromGuild(moderator.getGuild().getIdLong());
+                        long punishmentCount = DBPunishment.getPunishmentCountForGuild(guild);
                         if (punishmentCount == -1)
                             punishmentCount = 1; // Fallback if postgres disabled or another error occur
 

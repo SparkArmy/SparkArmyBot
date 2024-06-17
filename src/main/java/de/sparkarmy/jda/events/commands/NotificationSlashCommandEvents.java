@@ -1,12 +1,12 @@
-package de.sparkarmy.jda.events.customEvents.commandEvents;
+package de.sparkarmy.jda.events.commands;
 
 import com.github.twitch4j.helix.domain.User;
 import de.sparkarmy.config.ConfigController;
 import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.annotations.events.*;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
-import de.sparkarmy.jda.events.EventManager;
-import de.sparkarmy.jda.events.iEvent.IJDAEvent;
+import de.sparkarmy.jda.events.IJDAEvent;
 import de.sparkarmy.twitch.TwitchApi;
 import de.sparkarmy.utils.NotificationService;
 import de.sparkarmy.utils.Util;

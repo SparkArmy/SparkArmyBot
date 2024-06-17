@@ -1,4 +1,4 @@
-package de.sparkarmy.jda.utils;
+package de.sparkarmy.jda.misc;
 
 import de.sparkarmy.jda.JdaApi;
 import de.sparkarmy.jda.annotations.internal.JDACommandData;

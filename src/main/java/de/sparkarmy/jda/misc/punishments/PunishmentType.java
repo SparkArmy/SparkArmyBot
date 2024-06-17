@@ -1,4 +1,4 @@
-package de.sparkarmy.jda.utils.punishments;
+package de.sparkarmy.jda.misc.punishments;
 
 public enum PunishmentType {
     UNKNOWN(-1, "unknown"),
@@ -25,6 +25,15 @@ public enum PunishmentType {
 
     public String getName() {
         return name;
+    }
+
+    public static PunishmentType getById(int id) {
+        for (PunishmentType type : PunishmentType.values()) {
+            if (type.getId() == id) {
+                return type;
+            }
+        }
+        return UNKNOWN;
     }
 
 }

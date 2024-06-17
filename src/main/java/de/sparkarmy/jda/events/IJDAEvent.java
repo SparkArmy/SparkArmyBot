@@ -1,4 +1,4 @@
-package de.sparkarmy.jda.events.iEvent;
+package de.sparkarmy.jda.events;
 
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
 import org.jetbrains.annotations.NotNull;

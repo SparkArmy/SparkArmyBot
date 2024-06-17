@@ -1,12 +1,11 @@
-package de.sparkarmy.jda.events;
+package de.sparkarmy.jda;
 
 import de.sparkarmy.config.ConfigController;
-import de.sparkarmy.jda.JdaApi;
 import de.sparkarmy.jda.annotations.events.*;
-import de.sparkarmy.jda.events.customEvents.commandEvents.*;
-import de.sparkarmy.jda.events.customEvents.otherEvents.MessageEvents;
-import de.sparkarmy.jda.events.customEvents.otherEvents.ModMailEvents;
-import de.sparkarmy.jda.events.iEvent.IJDAEvent;
+import de.sparkarmy.jda.events.IJDAEvent;
+import de.sparkarmy.jda.events.MessageEvents;
+import de.sparkarmy.jda.events.ModMailEvents;
+import de.sparkarmy.jda.events.commands.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;

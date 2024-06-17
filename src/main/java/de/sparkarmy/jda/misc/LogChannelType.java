@@ -1,4 +1,4 @@
-package de.sparkarmy.jda.utils;
+package de.sparkarmy.jda.misc;
 
 import java.util.Arrays;
 import java.util.List;

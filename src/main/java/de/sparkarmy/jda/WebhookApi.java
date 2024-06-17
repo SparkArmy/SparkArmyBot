@@ -4,7 +4,7 @@ import club.minnced.discord.webhook.LibraryInfo;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookCluster;
 import de.sparkarmy.config.ConfigController;
-import de.sparkarmy.jda.utils.LogChannelType;
+import de.sparkarmy.jda.misc.LogChannelType;
 import net.dv8tion.jda.api.JDAInfo;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.NotNull;

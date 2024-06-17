@@ -1,13 +1,12 @@
-package de.sparkarmy.jda.events.customEvents.otherEvents;
+package de.sparkarmy.jda.events;
 
 import club.minnced.discord.webhook.WebhookClient;
 import de.sparkarmy.config.ConfigController;
 import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.WebhookApi;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
-import de.sparkarmy.jda.events.EventManager;
-import de.sparkarmy.jda.events.iEvent.IJDAEvent;
-import de.sparkarmy.jda.utils.LogChannelType;
+import de.sparkarmy.jda.misc.LogChannelType;
 import de.sparkarmy.utils.Util;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Member;

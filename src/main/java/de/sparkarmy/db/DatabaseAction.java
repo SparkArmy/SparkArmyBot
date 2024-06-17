@@ -1,6 +1,6 @@
 package de.sparkarmy.db;
 
-import de.sparkarmy.jda.utils.LogChannelType;
+import de.sparkarmy.jda.misc.LogChannelType;
 import de.sparkarmy.utils.ErrorCodes;
 import de.sparkarmy.utils.FileHandler;
 import de.sparkarmy.utils.NotificationService;
@@ -25,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static de.sparkarmy.utils.Util.logger;
 
-@SuppressWarnings("unused")
 public class DatabaseAction {
 
     public DatabaseAction() {
@@ -162,14 +161,6 @@ public class DatabaseAction {
         return prepStmt.executeUpdate();
     }
 
-    private long removeGuildIdFromGuildTable(@NotNull Connection conn, long guildId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                DELETE FROM guilddata."tblGuild" WHERE "gldId" = ?;
-                """);
-        prepStmt.setLong(1, guildId);
-        return prepStmt.executeUpdate();
-    }
-
     private long isGuildIdInGuildTable(@NotNull Connection conn, long guildId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 SELECT COUNT(*) FROM guilddata."tblGuild" WHERE "gldId" = ?;
@@ -240,43 +231,11 @@ public class DatabaseAction {
         return rs.getLong("mbrId");
     }
 
-    private long getUserIdByDatabaseMemberId(@NotNull Connection conn, long databaseId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT "fk_mbrUserId" FROM guilddata."tblMember" WHERE "mbrId" = ?;
-                """);
-        prepStmt.setLong(1, databaseId);
-        ResultSet rs = prepStmt.executeQuery();
-        if (!rs.next()) return 0;
-        return rs.getLong("fk_mbrUserId");
-    }
-
-    private long setOnServerStateFromMember(Connection conn, long userId, long guildId, boolean state) throws SQLException {
-        long databaseMemberId = getDatabaseMemberId(conn, userId, guildId);
-        if (databaseMemberId < 0) return databaseMemberId;
-
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE guilddata."tblMember" SET "mbrOnServer" = ? WHERE "mbrId" = ?;
-                """);
-        prepStmt.setBoolean(1, state);
-        prepStmt.setLong(2, databaseMemberId);
-        return prepStmt.executeUpdate();
-    }
-
     @SuppressWarnings("SameParameterValue")
     private long setIsModeratorStateForMember(Connection conn, long userId, long guildId, boolean state) throws SQLException {
         long databaseMemberId = getDatabaseMemberId(conn, userId, guildId);
         if (databaseMemberId < 0) return databaseMemberId;
 
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE guilddata."tblMember" SET "mbrIsModerator" = ? WHERE "mbrId" = ?;
-                """);
-        prepStmt.setBoolean(1, state);
-        prepStmt.setLong(2, databaseMemberId);
-        return prepStmt.executeUpdate();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private long setIsModeratorStateForMember(@NotNull Connection conn, long databaseMemberId, boolean state) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 UPDATE guilddata."tblMember" SET "mbrIsModerator" = ? WHERE "mbrId" = ?;
                 """);
@@ -484,45 +443,12 @@ public class DatabaseAction {
         return prepStmt.executeUpdate();
     }
 
-    private long getMuteRoleStateFromRole(Connection conn, long roleId, long guildId) throws SQLException {
-        long putRoleInRoleTable = putRoleInRoleTable(conn, roleId, guildId);
-        if (putRoleInRoleTable < 0) return putRoleInRoleTable;
-
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                 SELECT "rolIsMute" FROM guilddata."tblRole" WHERE "rolRoleId" = ?;
-                """);
-        prepStmt.setLong(1, roleId);
-        return getRoleState(prepStmt);
-    }
-
-    private long getWarnRoleStateFromRole(Connection conn, long roleId, long guildId) throws SQLException {
-        long putRoleInRoleTable = putRoleInRoleTable(conn, roleId, guildId);
-        if (putRoleInRoleTable < 0) return putRoleInRoleTable;
-
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT "rolIsWarn" FROM guilddata."tblRole" WHERE "rolRoleId" = ?;
-                """);
-        prepStmt.setLong(1, roleId);
-        return getRoleState(prepStmt);
-    }
-
     private long getModMailPingRoleStateFromRole(Connection conn, long roleId, long guildId) throws SQLException {
         long putRoleInRoleTable = putRoleInRoleTable(conn, roleId, guildId);
         if (putRoleInRoleTable < 0) return putRoleInRoleTable;
 
         PreparedStatement prepStmt = conn.prepareStatement("""
                  SELECT "rolIsModmailPingRole" FROM guilddata."tblRole" WHERE "rolRoleId" = ?;
-                """);
-        prepStmt.setLong(1, roleId);
-        return getRoleState(prepStmt);
-    }
-
-    private long getModRoleStateFromRole(Connection conn, long roleId, long guildId) throws SQLException {
-        long putRoleInRoleTable = putRoleInRoleTable(conn, roleId, guildId);
-        if (putRoleInRoleTable < 0) return putRoleInRoleTable;
-
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT "rolIsModRole" FROM guilddata."tblRole" WHERE "rolRoleId" = ?;
                 """);
         prepStmt.setLong(1, roleId);
         return getRoleState(prepStmt);
@@ -1139,38 +1065,6 @@ public class DatabaseAction {
         return prepStmt.executeUpdate();
     }
 
-    private long isTextAllowedStateSet(@NotNull Connection conn, long channelId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT COUNT(*) FROM guidconfigs."tblMediaOnlyChannel" WHERE "fk_mocChannelId" = ? AND "mocIsTextAllowed" = true;
-                """);
-        prepStmt.setLong(1, channelId);
-        return getSelectCountValue(prepStmt);
-    }
-
-    private long isLinkAllowedStateSet(@NotNull Connection conn, long channelId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT COUNT(*) FROM guidconfigs."tblMediaOnlyChannel" WHERE "fk_mocChannelId" = ? AND "mocIsLinkAllowed" = true;
-                """);
-        prepStmt.setLong(1, channelId);
-        return getSelectCountValue(prepStmt);
-    }
-
-    private long isFileAllowedStateSet(@NotNull Connection conn, long channelId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT COUNT(*) FROM guidconfigs."tblMediaOnlyChannel" WHERE "fk_mocChannelId" = ? AND "mocIsFileAllowed" = true;
-                """);
-        prepStmt.setLong(1, channelId);
-        return getSelectCountValue(prepStmt);
-    }
-
-    private long isAttachmentAllowedStateSet(@NotNull Connection conn, long channelId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT COUNT(*) FROM guidconfigs."tblMediaOnlyChannel" WHERE "fk_mocChannelId" = ? AND "mocIsAttachmentAllowed" = true;
-                """);
-        prepStmt.setLong(1, channelId);
-        return getSelectCountValue(prepStmt);
-    }
-
     @SuppressWarnings("DuplicatedCode")
     private long putDataInModMailBlacklistTable(Connection conn, long userId, long guildId) throws SQLException {
         long isDataInModMailBlacklistTable = isDataInModMailBlacklistTable(conn, userId, guildId);
@@ -1333,18 +1227,6 @@ public class DatabaseAction {
         prepStmt.setLong(1, guildId);
         prepStmt.setString(2, regexName);
         return getSelectCountValue(prepStmt);
-    }
-
-    private long updateRegexName(Connection conn, long guildId, String regexName, long databaseId) throws SQLException {
-        long existRegexNameInGuild = existRegexNameInGuild(conn, guildId, regexName);
-        if (existRegexNameInGuild == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
-        if (existRegexNameInGuild < 0) return existRegexNameInGuild;
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE guidconfigs."tblRegex" SET "rgxName" = ? WHERE "rgxId" = ?;
-                """);
-        prepStmt.setString(1, regexName);
-        prepStmt.setLong(2, databaseId);
-        return prepStmt.executeUpdate();
     }
 
     private long updateRegex(Connection conn, long guildId, String regexName, String regex) throws SQLException {
@@ -1533,58 +1415,11 @@ public class DatabaseAction {
         return prepStmt.executeUpdate();
     }
 
-    private long setLastExecutionTimestampInPeriodicCleanTable(@NotNull Connection conn, long databaseId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE globaldata."tblPeriodicCleanData" SET "pcdLastExecution" = now() WHERE "pcdId" = ?;
-                """);
-        prepStmt.setLong(1, databaseId);
-        return prepStmt.executeUpdate();
-    }
-
     private long removeDataFromPeriodicCleanTable(@NotNull Connection conn, long databaseId) throws SQLException {
         PreparedStatement prepStmt = conn.prepareStatement("""
                 DELETE FROM globaldata."tblPeriodicCleanData" WHERE "pcdId" = ?;
                 """);
         prepStmt.setLong(1, databaseId);
-        return prepStmt.executeUpdate();
-    }
-
-    @SuppressWarnings("DuplicatedCode")
-    private long putDataInPunishmentTable(Connection conn, long guildId, long targetUserId, long moderatorUserId, int punishmentType, String reason) throws SQLException {
-        long getTargetUserDatabaseMemberId = getDatabaseMemberId(conn, targetUserId, guildId);
-        if (getTargetUserDatabaseMemberId == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
-        if (getTargetUserDatabaseMemberId < 0) return getTargetUserDatabaseMemberId;
-        long getModeratorDatabaseMemberId = getDatabaseMemberId(conn, moderatorUserId, guildId);
-        if (getModeratorDatabaseMemberId == 0) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
-        if (getModeratorDatabaseMemberId < 0) return getModeratorDatabaseMemberId;
-        long setModeratorState = setIsModeratorStateForMember(conn, getModeratorDatabaseMemberId, true);
-        if (setModeratorState < 0) return setModeratorState;
-
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO globaldata."tblPunishment" ("fk_psmMemberId", "fk_psmModeratorId", "fk_psmPunishmentTypeId", "psmReason", "psmTimestamp","fk_psmGuildId") VALUES (?,?,?,?,now(),?);
-                """);
-        prepStmt.setLong(1, getTargetUserDatabaseMemberId);
-        prepStmt.setLong(2, getModeratorDatabaseMemberId);
-        prepStmt.setInt(3, punishmentType);
-        prepStmt.setString(4, reason);
-        prepStmt.setLong(5, guildId);
-        return prepStmt.executeUpdate();
-    }
-
-    private long setPunishmentWithdrawn(@NotNull Connection conn, long punishmentId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE globaldata."tblPunishment" SET "psmIsWithdrawn" = true WHERE "psmId" = ?;
-                """);
-        prepStmt.setLong(1, punishmentId);
-        return prepStmt.executeUpdate();
-    }
-
-    private long updatePunishmentReason(@NotNull Connection conn, long punishmentId, String reason) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE globaldata."tblPunishment" SET "psmReason" = ? WHERE "psmId" = ?;
-                """);
-        prepStmt.setString(1, reason);
-        prepStmt.setLong(2, punishmentId);
         return prepStmt.executeUpdate();
     }
 
@@ -2787,36 +2622,6 @@ public class DatabaseAction {
         }
     }
 
-    public long putPunishmentDataInPunishmentTable(long targetUserId, long moderatorUserId, long guildId, int punishmentType, String reason) {
-        try {
-            Connection connection = DatabaseSource.connection();
-            long value = putDataInPunishmentTable(connection, guildId, targetUserId, moderatorUserId, punishmentType, reason);
-            connection.close();
-            return value;
-        } catch (SQLException e) {
-            handleSQLException(e);
-            return ErrorCodes.SQL_EXCEPTION.getId();
-        }
-    }
-
-    public long getPunishmentCountFromGuild(long guildId) {
-        try {
-            Connection connection = DatabaseSource.connection();
-            PreparedStatement preparedStatement = connection.prepareStatement("""
-                    SELECT COUNT(*) FROM globaldata."tblPunishment"
-                    INNER JOIN guilddata."tblMember" tM ON "tblPunishment"."fk_psmMemberId" = tM."mbrId"
-                    WHERE tM."fk_mbrGuildId" = ?;
-                    """);
-            preparedStatement.setLong(1, guildId);
-            long count = getSelectCountValue(preparedStatement);
-            connection.close();
-            return count;
-        } catch (SQLException e) {
-            handleSQLException(e);
-            return ErrorCodes.SQL_EXCEPTION.getId();
-        }
-    }
-
     public void deleteMessageAttachmentsBeforeSpecificTimestamp(LocalDateTime timestamp) {
         try {
             Connection connection = DatabaseSource.connection();
@@ -2852,26 +2657,6 @@ public class DatabaseAction {
             connection.close();
         } catch (SQLException e) {
             handleSQLException(e);
-        }
-    }
-
-    public List<byte[]> getMessageAttachmentDataByMessageId(long messageId) {
-        List<byte[]> results = new ArrayList<>();
-        try {
-            Connection connection = DatabaseSource.connection();
-            PreparedStatement preparedStatement = connection.prepareStatement("""
-                    SELECT "msaData" FROM guilddata."tblMessageAttachment" WHERE "fk_msaMessageId" = ?;
-                    """);
-            preparedStatement.setLong(1, messageId);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                results.add(resultSet.getBytes("msaData"));
-            }
-            connection.close();
-            return results;
-        } catch (SQLException e) {
-            handleSQLException(e);
-            return results;
         }
     }
 }

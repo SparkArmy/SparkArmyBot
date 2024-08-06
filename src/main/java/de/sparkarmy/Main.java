@@ -2,6 +2,7 @@ package de.sparkarmy;
 
 import de.sparkarmy.config.Config;
 import de.sparkarmy.config.ConfigController;
+import de.sparkarmy.config.ConfigKt;
 import de.sparkarmy.jda.JdaApi;
 import de.sparkarmy.log.WebhookAppenderKt;
 import de.sparkarmy.twitch.TwitchApi;
@@ -22,13 +23,13 @@ public class Main {
     private final TwitchApi twitchApi;
     private final YouTubeApi youTubeApi;
 
-    private final Config config = Config.getConfig();
+    private final Config config = ConfigKt.readConfig(true);
 
 
     public Main() {
         // Initialize Logger variables
         Util.logger = this.logger;
-        WebhookAppenderKt.initWebhookLogger(config.discord().logWebhookUrl());
+        WebhookAppenderKt.initWebhookLogger(config.getDiscord().getLog());
 
         // Initialize ConfigController
         this.controller = new ConfigController(this);

@@ -34,7 +34,7 @@ public class YouTubePubSubSubscriber implements Runnable {
 
         OkHttpClient client = new OkHttpClient();
 
-        String callbackUrl = controller.getConfig().youtube().callbackUrl();
+        String callbackUrl = controller.getConfig().getYoutube().getSpringCallbackUrl();
         for (String s : urls) {
             try {
                 RequestBody formBody = new MultipartBody.Builder().setType(MultipartBody.FORM)

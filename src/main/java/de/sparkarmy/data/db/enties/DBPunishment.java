@@ -1,5 +1,6 @@
-package de.sparkarmy.db;
+package de.sparkarmy.data.db.enties;
 
+import de.sparkarmy.data.db.DatabaseSource;
 import de.sparkarmy.jda.misc.punishments.PunishmentType;
 import de.sparkarmy.utils.Util;
 import net.dv8tion.jda.api.entities.Guild;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public record DBPunishment(Guild guild, User moderator, User target, PunishmentType type, String reason,
-                           Timestamp timestamp, boolean isWithdrawn) {
+                           Timestamp timestamp) {
 
     private final static Logger logger = LoggerFactory.getLogger("DBPunishment");
 
@@ -30,33 +31,32 @@ public record DBPunishment(Guild guild, User moderator, User target, PunishmentT
         try {
             Connection conn = DatabaseSource.connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT * FROM globaldata."tblPunishment" tP
-                    INNER JOIN guilddata."tblMember" tM ON tP."fk_psmModeratorId" = tM."mbrId"
-                    INNER JOIN guilddata."tblGuild" tG ON tM."fk_mbrGuildId" = tG."gldId"
-                    WHERE tG."gldId" = ? AND tP."psmIsWithdrawn" = false;
+                    SELECT * FROM bot."table_punishment" tP
+                    INNER JOIN bot."table_member" tM ON tP."fk_psmtarget" = tM."pk_mbrid"
+                    INNER JOIN bot."table_guild" tG ON tM."fk_mbrguildid" = tG."pk_gldid"
+                    WHERE tG."pk_gldid" = ?;
                     """);
             prepStmt.setLong(1, guildId);
             ResultSet rs = prepStmt.executeQuery();
 
             while (rs.next()) {
 
-                DBMember dbMemberTarget = DBMember.getDBMemberByDatabaseId(rs.getLong("fk_psmMemberId"));
+                DBMember dbMemberTarget = DBMember.getDBMemberByDatabaseId(rs.getLong("fk_psmtarget"));
                 if (dbMemberTarget == null) continue;
                 User userTarget = manager.getUserById(dbMemberTarget.userId());
-                DBMember dbMemberModerator = DBMember.getDBMemberByDatabaseId(rs.getLong("fk_psmModeratorId"));
+                DBMember dbMemberModerator = DBMember.getDBMemberByDatabaseId(rs.getLong("fk_psmexecuter"));
                 if (dbMemberModerator == null) continue;
                 User userModerator = manager.getUserById(dbMemberModerator.userId());
                 Guild guild = manager.getGuildById(guildId);
-                PunishmentType type = PunishmentType.getById(rs.getInt("fk_psmPunishmentTypeId"));
+                PunishmentType type = PunishmentType.getById(rs.getInt("fk_psmtype"));
 
                 results.add(new DBPunishment(
                         guild,
                         userModerator,
                         userTarget,
                         type,
-                        rs.getString("psmReason"),
-                        rs.getTimestamp("psmTimestamp"),
-                        rs.getBoolean("psmIsWithdrawn")
+                        rs.getString("psmreason"),
+                        rs.getTimestamp("psmtimestamp")
                 ));
             }
             conn.close();
@@ -70,10 +70,10 @@ public record DBPunishment(Guild guild, User moderator, User target, PunishmentT
         try {
             Connection conn = DatabaseSource.connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT COUNT(*) FROM globaldata."tblPunishment" tP
-                    INNER JOIN guilddata."tblMember" tM ON tP."fk_psmModeratorId" = tM."mbrId"
-                    INNER JOIN guilddata."tblGuild" tG ON tM."fk_mbrGuildId" = tG."gldId"
-                    WHERE tG."gldId" = ?
+                    SELECT COUNT(*) FROM bot."table_punishment" tP
+                    INNER JOIN bot."table_member" tM ON tP."fk_psmexecuter" = tM."pk_mbrid"
+                    INNER JOIN bot."table_guild" tG ON tM."fk_mbrguildid" = tG."pk_gldid"
+                    WHERE tG."pk_gldid" = ?
                     """);
             prepStmt.setLong(1, guild.getIdLong());
             ResultSet rs = prepStmt.executeQuery();
@@ -95,12 +95,12 @@ public record DBPunishment(Guild guild, User moderator, User target, PunishmentT
         try {
             Connection conn = DatabaseSource.connection();
             PreparedStatement insertData = conn.prepareStatement("""
-                    INSERT INTO globaldata."tblPunishment"("fk_psmMemberId", "fk_psmModeratorId", "fk_psmPunishmentTypeId", "psmReason", "psmTimestamp")
+                    INSERT INTO bot."table_punishment" (fk_psmexecuter, fk_psmtarget, fk_psmtype, psmreason)
                     VALUES (?,?,?,?,now())
                     """);
             long guildId = this.guild.getIdLong();
-            insertData.setLong(1, DBMember.getDatabaseId(this.target.getIdLong(), guildId));
-            insertData.setLong(2, DBMember.getDatabaseId(this.moderator.getIdLong(), guildId));
+            insertData.setLong(1, DBMember.getDatabaseId(this.moderator.getIdLong(), guildId));
+            insertData.setLong(2, DBMember.getDatabaseId(this.target.getIdLong(), guildId));
             insertData.setLong(3, this.type.getId());
             insertData.setString(4, this.reason);
             long updatedRows = insertData.executeUpdate();

@@ -1,4 +1,4 @@
-package de.sparkarmy.db;
+package de.sparkarmy.data.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

@@ -1,5 +1,6 @@
-package de.sparkarmy.db;
+package de.sparkarmy.data.db.enties;
 
+import de.sparkarmy.data.db.DatabaseSource;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,26 +16,24 @@ public record DBRole(
         long guildId,
         boolean isMuteRole,
         boolean isWarnRole,
-        boolean isModMailPingRole,
-        boolean isModRole) {
+        boolean isTicketPing) {
     public static List<DBRole> getRolesFromGuild(long guildId) {
         List<DBRole> roles = new ArrayList<>();
         try {
             Connection conn = DatabaseSource.connection();
             PreparedStatement prepStmt = conn.prepareStatement("""
-                    SELECT * FROM guilddata."tblRole" WHERE "fk_rolGuildId" = ?;
+                    SELECT * FROM bot."table_roles" WHERE "fk_rolguildid" = ?;
                     """);
             prepStmt.setLong(1, guildId);
 
             ResultSet rs = prepStmt.executeQuery();
             while (rs.next()) {
                 roles.add(new DBRole(
-                        rs.getLong("rolRoleId"),
-                        rs.getLong("fk_rolGuildId"),
-                        rs.getBoolean("rolIsMute"),
-                        rs.getBoolean("rolIsWarn"),
-                        rs.getBoolean("rolIsModmailPingRole"),
-                        rs.getBoolean("rolIsModRole")
+                        rs.getLong("pk_rolid"),
+                        rs.getLong("fk_rolguildid"),
+                        rs.getBoolean("rolismute"),
+                        rs.getBoolean("roliswarn"),
+                        rs.getBoolean("rolisticketping")
                 ));
             }
             conn.close();
@@ -60,5 +59,7 @@ public record DBRole(
         return getMuteRolesFromGuild(guild.getIdLong());
     }
 
-    // TODO add createEntry Method
+    // TODO add getter for ticketPing
+    // TODO add create&UpdateEntry Method
+    // TODO add deleteEntry Method
 }

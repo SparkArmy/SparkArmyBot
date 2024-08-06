@@ -24,11 +24,11 @@ public class TwitchApi {
     public TwitchApi(@NotNull Main main) {
         this.main = main;
         Logger logger = main.getLogger();
-        Twitch twitch = main.getController().getConfig().twitch();
+        Twitch twitch = main.getController().getConfig().getTwitch();
         this.twitchClient = TwitchClientBuilder.builder()
                 .withEnableHelix(true)
-                .withClientId(twitch.clientId())
-                .withClientSecret(twitch.secret())
+                .withClientId(twitch.getTwitchClientId())
+                .withClientSecret(twitch.getTwitchClientSecret())
                 .withDefaultEventHandler(ReactorEventHandler.class)
                 .withTimeout(30000)
                 .withHelperThreadDelay(30_000)

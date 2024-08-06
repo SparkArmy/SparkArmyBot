@@ -1,70 +1,79 @@
-package de.sparkarmy.config;
+package de.sparkarmy.config
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.sparkarmy.utils.ErrorCodes;
-import de.sparkarmy.utils.FileHandler;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import de.sparkarmy.Main
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.Path
+import kotlin.io.path.exists
+import kotlin.io.path.readText
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
+@Serializable
+data class Config(
+    val discord: Discord,
+    val database: Database,
+    val twitch: Twitch,
+    val youtube: YouTube
+)
 
-public record Config(
-        @JsonProperty("postgres") Database database,
-        @JsonProperty("discord") Discord discord,
-        @JsonProperty("twitch") Twitch twitch,
-        @JsonProperty("youtube") Youtube youtube,
-        @JsonProperty("virustotal-api-key") String virustotal
-) {
-    static final Logger logger = LoggerFactory.getLogger("Config");
-    static final File configFolder = FileHandler.getDirectoryInUserDirectory("configs");
+@Serializable
+data class Discord(
+    val discordClientId: String,
+    val discordToken: String,
+    val log: String
+)
 
-    public static Config getConfig() {
-        File configFile = FileHandler.getFileInDirectory(configFolder, "main-config.json");
-        if (!configFile.exists()) {
-            logger.warn("The main-config.json-file not exist, we will created a new");
+@Serializable
+data class Database(
+    val url: String,
+    val user: String,
+    val password: String
+)
 
-            if (copyConfigPreset(configFile)) {
-                logger.debug("main-config.json was successful created");
-                logger.warn("Please finish your configuration");
-                try {
-                    Desktop.getDesktop().open(FileHandler.getFileInDirectory(configFolder, "main-config.json"));
-                } catch (Exception ignored) {
-                    systemExit(ErrorCodes.GENERAL_CONFIG_ERROR.getId());
-                }
-            } else {
-                logger.error(ErrorCodes.GENERAL_CONFIG_CANT_CREATE_MAIN_CONFIG.getDescription());
-                systemExit(ErrorCodes.GENERAL_CONFIG_CANT_CREATE_MAIN_CONFIG.getId());
-            }
-            systemExit(0);
+@Serializable
+data class Twitch(
+    val twitchClientId: String,
+    val twitchClientSecret: String
+)
+
+@Serializable
+data class YouTube(
+    val youtubeApiKey: String,
+    val springCallbackUrl: String
+)
+
+
+fun readConfig(copyPresetIfMissing: Boolean = false): Config {
+    val mainConfigPath = Path("./configs/main-config.json")
+    val devConfigPath = Path("./configs/dev-config.json")
+
+    var configContent = ""
+
+    if (!mainConfigPath.exists() and !devConfigPath.exists()) {
+        if (copyPresetIfMissing) {
+            copyConfigPreset(mainConfigPath)
+            throw IllegalStateException("config created. exiting")
+        } else {
+            throw IllegalStateException("Could not locate config file")
         }
-        try {
-            return new ObjectMapper().readValue(configFile, Config.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    } else if (mainConfigPath.exists()) {
+        configContent = mainConfigPath.readText()
+    } else if (devConfigPath.exists()) {
+        configContent = devConfigPath.readText()
     }
 
-    static boolean copyConfigPreset(@NotNull File configFilePath) {
-        try {
-            InputStream is = Config.class.getResourceAsStream("/config.json");
-            if (is == null) throw new IllegalStateException("Could not find config.json preset in resources");
-            Files.copy(is, configFilePath.toPath());
-            return true;
-        } catch (IOException e) {
-            logger.error("Error to copy configFile from resources", e);
-            return false;
-        }
+    if (configContent.isBlank()) {
+        throw IllegalStateException("config content is empty")
     }
 
-    static void systemExit(int exitCode) {
-        System.exit(exitCode);
-    }
+    return Json.decodeFromString(configContent)
 
 }
 
+private fun copyConfigPreset(to: Path) {
+    val preset = Main::class.java.getResourceAsStream("/config.json")
+        ?: throw IllegalStateException("Could not find config.json preset in resources")
+
+    preset.use { Files.copy(it, to) }
+}

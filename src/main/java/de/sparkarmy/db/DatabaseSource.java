@@ -14,7 +14,7 @@ import java.sql.SQLException;
 public class DatabaseSource {
     private static final Main main = Util.controller.main();
     private static final Logger logger = main.getLogger();
-    private static final Database databaseConfig = main.getController().getConfig().database();
+    private static final Database databaseConfig = main.getController().getConfig().getDatabase();
 
     private static final HikariConfig hikariConfig = new HikariConfig();
     private static final HikariDataSource hikariDataSource;
@@ -22,20 +22,20 @@ public class DatabaseSource {
     static {
 
         PGSimpleDataSource pgSimpleDataSource = new PGSimpleDataSource();
-        if (databaseConfig.url().isEmpty()) {
+        if (databaseConfig.getUrl().isEmpty()) {
             logger.error("postgres-url is empty");
             main.systemExit(110);
-        } else if (databaseConfig.user().isEmpty()) {
+        } else if (databaseConfig.getUser().isEmpty()) {
             logger.error("postgres-user is empty");
             main.systemExit(111);
-        } else if (databaseConfig.password().isEmpty()) {
+        } else if (databaseConfig.getPassword().isEmpty()) {
             logger.error("postgres-password is empty");
             main.systemExit(112);
         }
 
-        pgSimpleDataSource.setUrl("jdbc:postgresql://" + databaseConfig.url());
-        pgSimpleDataSource.setUser(databaseConfig.user());
-        pgSimpleDataSource.setPassword(databaseConfig.password());
+        pgSimpleDataSource.setUrl("jdbc:postgresql://" + databaseConfig.getUrl());
+        pgSimpleDataSource.setUser(databaseConfig.getUser());
+        pgSimpleDataSource.setPassword(databaseConfig.getPassword());
         pgSimpleDataSource.setLoginTimeout(2);
 
         hikariConfig.setDataSource(pgSimpleDataSource);

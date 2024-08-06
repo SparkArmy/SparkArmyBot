@@ -20,7 +20,7 @@ public class YouTubeApi {
 
     public YouTubeApi(@NotNull Main main) {
         ConfigController controller = main.getController();
-        this.apiKey = controller.getConfig().youtube().apiKey();
+        this.apiKey = controller.getConfig().getYoutube().getYoutubeApiKey();
     }
 
     private @NotNull YouTube getYouTubeService() throws GeneralSecurityException, IOException {

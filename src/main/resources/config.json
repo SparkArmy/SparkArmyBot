@@ -1,21 +1,20 @@
 {
   "twitch": {
-    "twitch-client-id": "TWITCH_CLIENT_ID",
-    "twitch-client-secret": "TWITCH_CLIENT_SECRET"
+    "twitchClientId": "TWITCH_CLIENT_ID",
+    "twitchClientSecret": "TWITCH_CLIENT_SECRET"
   },
   "discord": {
-    "discord-client-id": "DISCORD_CLIENT_ID",
-    "discord-token": "DISCORD_API_TOKEN",
+    "discordClientId": "DISCORD_CLIENT_ID",
+    "discordToken": "DISCORD_API_TOKEN",
     "log": "WEBHOOK_URL"
   },
   "youtube": {
-    "youtube-api-key": "YOUTUBE_API_KEY",
-    "spring-callback-url": "CALLBACK_URL"
+    "youtubeApiKey": "YOUTUBE_API_KEY",
+    "springCallbackUrl": "CALLBACK_URL"
   },
-  "postgres": {
+  "database": {
     "url": "DATABASE_URL",
     "user": "DATABASE_USER",
     "password": "DATABASE_USER_PASSWORD"
-  },
-  "virustotal-api-key": "[Optional] Write here your API-Key from VirusTotal"
+  }
 }

@@ -28,9 +28,9 @@ public class JdaApi extends ListenerAdapter {
         this.controller = main.getController();
         this.logger = main.getLogger();
 
-        Discord discord = controller.getConfig().discord();
+        Discord discord = controller.getConfig().getDiscord();
 
-        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createLight(discord.token());
+        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createLight(discord.getDiscordToken());
         builder.enableIntents(
                 GatewayIntent.GUILD_MEMBERS,
                 GatewayIntent.GUILD_MODERATION,

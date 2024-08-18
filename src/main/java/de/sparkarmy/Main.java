@@ -27,6 +27,7 @@ public class Main {
 
 
     public Main() {
+        logger.info("Main started");
         // Initialize Logger variables
         Util.logger = this.logger;
         WebhookAppenderKt.initWebhookLogger(config.getDiscord().getLog());

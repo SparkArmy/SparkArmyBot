@@ -10,11 +10,12 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
-//noinspection GroovyUnusedAssignment
-mainClassName = 'de.sparkarmy.Main'
+application {
+    mainClass.set('de.sparkarmy.Main')
+    group('de.sparkarmy')
+    version('2.0.0')
+}
 
-group 'de.sparkarmy'
-version '2.0.0'
 
 shadowJar {
     archiveFileName = "SparkArmyBot.jar"

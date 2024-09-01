@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     // JDA and Webhook
-    implementation("net.dv8tion:JDA:5.0.2")
+    implementation("net.dv8tion:JDA:5.1.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
 
     // Database

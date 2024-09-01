@@ -57,7 +57,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
 
     // Exposed
-    val exposedVersion = "0.53.0"
+    val exposedVersion = "0.54.0"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")

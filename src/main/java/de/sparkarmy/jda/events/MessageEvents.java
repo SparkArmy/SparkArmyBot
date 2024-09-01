@@ -2,13 +2,12 @@ package de.sparkarmy.jda.events;
 
 import club.minnced.discord.webhook.WebhookClient;
 import de.sparkarmy.config.ConfigController;
-import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.data.DatabaseAction;
 import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.WebhookApi;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
 import de.sparkarmy.jda.misc.LogChannelType;
-import de.sparkarmy.utils.Util;
-import net.dv8tion.jda.api.entities.ISnowflake;
+import de.sparkarmy.misc.Util;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageBulkDeleteEvent;
@@ -26,7 +25,8 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.concurrent.TimeUnit;
+
+// TODO Change Database Methods
 
 public class MessageEvents implements IJDAEvent {
 
@@ -40,7 +40,7 @@ public class MessageEvents implements IJDAEvent {
         this.controller = dispatcher.getController();
         this.webhookApi = dispatcher.getApi().getWebhookApi();
         this.db = new DatabaseAction();
-        this.modRoleIds = db.getModerationRoles();
+        this.modRoleIds = null; //db.getModerationRoles();
     }
 
     private ResourceBundle bundle(DiscordLocale locale) {
@@ -74,77 +74,82 @@ public class MessageEvents implements IJDAEvent {
     @JDAEvent
     public void messageReceivedEvent(@NotNull MessageReceivedEvent event) {
         putDataInDatabase(event.getMessage());
-        mediaOnlyFunction(event);
-        blacklistFunction(event);
-        regexFunction(event);
+//        mediaOnlyFunction(event);
+//        blacklistFunction(event);
+//        regexFunction(event);
     }
 
 
-    private synchronized void removeDataFromDatabase(List<Long> ids) {
-        db.removeMessageFromDatabase(ids);
+    private void removeDataFromDatabase(List<Long> ids) {
+//        DBMessage.deleteEntries(ids);
     }
 
     private void putDataInDatabase(@NotNull Message message) {
         if (message.getAuthor().isBot() || message.getAuthor().isSystem() || !message.isFromGuild()) return;
-        db.writeInMessageTable(message);
+//        DBMessage dbMessage = DBMessage.getDBMessage(message);
+//        dbMessage.insertOrUpdateEntry();
     }
 
-    private void mediaOnlyFunction(@NotNull MessageReceivedEvent event) {
-        if (!event.isFromGuild()) return;
-        if (event.getAuthor().isBot() || event.getAuthor().isSystem()) return;
-        if (event.isWebhookMessage()) return;
-
-        if (checkMemberPermissions(event)) return;
-
-        JSONObject channelPermissions = controller.getGuildMediaOnlyChannelPermissions(event.getChannel().getIdLong());
-        if (channelPermissions.isEmpty()) return;
-
-        boolean textPerms = channelPermissions.getBoolean("permText");
-        boolean attachmentPerms = channelPermissions.getBoolean("permAttachment");
-        boolean filePerms = channelPermissions.getBoolean("permFiles");
-        boolean linkPerms = channelPermissions.getBoolean("permLinks");
-
-        Message message = event.getMessage();
-
-        boolean hasText = !message.getContentRaw().isEmpty();
-        boolean hasAttachments = !message.getAttachments().stream().filter(x -> x.isImage() || x.isVideo()).toList().isEmpty();
-        boolean hasFiles = !message.getAttachments().stream().filter(x -> !x.isImage() || !x.isVideo()).toList().isEmpty();
-        String linkRegex = "(?:(?:https?|ftp)://|\\b[a-z\\d]+\\.)(?:(?:[^\\s()<>]+|\\((?:[^\\s()<>]+|\\([^\\s()<>]+\\))?\\))+(?:\\((?:[^\\s()<>]+|\\(?:[^\\s()<>]+\\))?\\)|[^\\s`!()\\[\\]{};:'\".,<>?«»“”‘’]))?";
-        boolean hasLinks = message.getContentRaw().matches(linkRegex);
-
-        ResourceBundle bundle = bundle(event.getGuild().getLocale());
-        if (!textPerms && !hasLinks && hasText) {
-            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
-            message.reply(bundle.getString("mediaOnlyFunction.textPermsViolation"))
-                    .delay(3, TimeUnit.SECONDS)
-                    .flatMap(Message::delete)
-                    .queue();
-            return;
-        }
-        if (!attachmentPerms && hasAttachments && !hasFiles) {
-            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
-            message.reply(bundle.getString("mediaOnlyFunction.attachmentPermsViolation"))
-                    .delay(3, TimeUnit.SECONDS)
-                    .flatMap(Message::delete)
-                    .queue();
-            return;
-        }
-        if (!filePerms && hasFiles) {
-            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
-            message.reply(bundle.getString("mediaOnlyFunction.filePermsViolation"))
-                    .delay(3, TimeUnit.SECONDS)
-                    .flatMap(Message::delete)
-                    .queue();
-            return;
-        }
-        if (!linkPerms && hasLinks) {
-            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
-            message.reply(bundle.getString("mediaOnlyFunction.linkPermsViolation"))
-                    .delay(3, TimeUnit.SECONDS)
-                    .flatMap(Message::delete)
-                    .queue();
-        }
-    }
+//    private void mediaOnlyFunction(@NotNull MessageReceivedEvent event) {
+//        if (!event.isFromGuild()) return;
+//        if (event.getAuthor().isBot() || event.getAuthor().isSystem()) return;
+//        if (event.isWebhookMessage()) return;
+//
+//        if (checkMemberPermissions(event)) return;
+//
+//        // Get ChannelValues and check if values 0
+////        long channelValues = DBChannel.getDBChannel(event.getGuildChannel()).getRawValues();
+//        if (channelValues == 0) return;
+//
+//        // Check if the Channel a log channel
+//        if (ChannelValueUtil.checkIsApplied(channelValues, Arrays.stream(ChannelValue.values()).filter(ChannelValue::isLogChannel).toArray(ChannelValue[]::new))) return;
+//
+//        boolean textPerms = ChannelValueUtil.checkIsApplied(channelValues, ChannelValue.ALLOW_TEXT);
+//        boolean attachmentPerms = ChannelValueUtil.checkIsApplied(channelValues,ChannelValue.ALLOW_ATTACHMENT);
+//        boolean filePerms = ChannelValueUtil.checkIsApplied(channelValues,ChannelValue.ALLOW_FILE);
+//        boolean linkPerms = ChannelValueUtil.checkIsApplied(channelValues,ChannelValue.ALLOW_LINK);
+//
+//        Message message = event.getMessage();
+//
+//        boolean hasText = !message.getContentRaw().isEmpty();
+//        boolean hasAttachments = !message.getAttachments().stream().filter(x -> x.isImage() || x.isVideo()).toList().isEmpty();
+//        boolean hasFiles = !message.getAttachments().stream().filter(x -> !x.isImage() || !x.isVideo()).toList().isEmpty();
+//        String linkRegex = "(?:(?:https?|ftp)://|\\b[a-z\\d]+\\.)(?:(?:[^\\s()<>]+|\\((?:[^\\s()<>]+|\\([^\\s()<>]+\\))?\\))+(?:\\((?:[^\\s()<>]+|\\(?:[^\\s()<>]+\\))?\\)|[^\\s`!()\\[\\]{};:'\".,<>?«»“”‘’]))?";
+//        boolean hasLinks = message.getContentRaw().matches(linkRegex);
+//
+//        ResourceBundle bundle = bundle(event.getGuild().getLocale());
+//        if (!textPerms && !hasLinks && hasText) {
+//            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
+//            message.reply(bundle.getString("mediaOnlyFunction.textPermsViolation"))
+//                    .delay(3, TimeUnit.SECONDS)
+//                    .flatMap(Message::delete)
+//                    .queue();
+//            return;
+//        }
+//        if (!attachmentPerms && hasAttachments && !hasFiles) {
+//            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
+//            message.reply(bundle.getString("mediaOnlyFunction.attachmentPermsViolation"))
+//                    .delay(3, TimeUnit.SECONDS)
+//                    .flatMap(Message::delete)
+//                    .queue();
+//            return;
+//        }
+//        if (!filePerms && hasFiles) {
+//            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
+//            message.reply(bundle.getString("mediaOnlyFunction.filePermsViolation"))
+//                    .delay(3, TimeUnit.SECONDS)
+//                    .flatMap(Message::delete)
+//                    .queue();
+//            return;
+//        }
+//        if (!linkPerms && hasLinks) {
+//            message.delete().reason("MediaOnlyChannel").queueAfter(1, TimeUnit.SECONDS);
+//            message.reply(bundle.getString("mediaOnlyFunction.linkPermsViolation"))
+//                    .delay(3, TimeUnit.SECONDS)
+//                    .flatMap(Message::delete)
+//                    .queue();
+//        }
+//    }
 
     private void blacklistFunction(@NotNull MessageReceivedEvent event) {
         String messageContent = event.getMessage().getContentRaw();
@@ -192,7 +197,8 @@ public class MessageEvents implements IJDAEvent {
     private boolean checkMemberPermissions(@NotNull MessageReceivedEvent event) {
         Member member = event.getMember();
         if (member == null) return false;
-        return modRoleIds.stream().anyMatch(x -> member.getRoles().stream().map(ISnowflake::getIdLong).toList().contains(x));
+//        return modRoleIds.stream().anyMatch(x -> member.getRoles().stream().map(ISnowflake::getIdLong).toList().contains(x));
+        return true;
     }
 
     @Override

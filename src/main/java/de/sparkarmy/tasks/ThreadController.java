@@ -1,9 +1,9 @@
 package de.sparkarmy.tasks;
 
 import de.sparkarmy.config.ConfigController;
+import de.sparkarmy.misc.Util;
 import de.sparkarmy.tasks.runnables.DeleteOldMessageAttachments;
 import de.sparkarmy.tasks.runnables.YouTubePubSubSubscriber;
-import de.sparkarmy.utils.Util;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;

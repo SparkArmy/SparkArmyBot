@@ -1,6 +1,6 @@
 package de.sparkarmy.jda.events.commands;
 
-import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.data.DatabaseAction;
 import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.annotations.events.JDAButtonInteractionEvent;
 import de.sparkarmy.jda.annotations.events.JDAModalInteractionEvent;
@@ -8,7 +8,7 @@ import de.sparkarmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.sparkarmy.jda.annotations.events.JDAStringSelectInteractionEvent;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
 import de.sparkarmy.jda.events.IJDAEvent;
-import de.sparkarmy.utils.Util;
+import de.sparkarmy.misc.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -34,7 +34,7 @@ import org.json.JSONObject;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
-import static de.sparkarmy.utils.Util.logger;
+import static de.sparkarmy.misc.Util.logger;
 
 public class NoteSlashCommandEvents implements IJDAEvent {
     private final DatabaseAction db;

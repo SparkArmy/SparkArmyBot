@@ -1,6 +1,6 @@
 package de.sparkarmy.tasks.runnables;
 
-import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.data.DatabaseAction;
 
 import java.time.LocalDateTime;
 

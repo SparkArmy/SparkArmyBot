@@ -12,7 +12,7 @@ import kotlin.io.path.readText
 @Serializable
 data class Config(
     val discord: Discord,
-    val database: Database,
+    val database: DatabaseConfig,
     val twitch: Twitch,
     val youtube: YouTube
 )
@@ -25,7 +25,7 @@ data class Discord(
 )
 
 @Serializable
-data class Database(
+data class DatabaseConfig(
     val url: String,
     val user: String,
     val password: String

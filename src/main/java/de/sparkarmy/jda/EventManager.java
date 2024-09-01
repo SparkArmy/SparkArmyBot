@@ -76,7 +76,7 @@ public class EventManager extends ListenerAdapter {
         registerEventClass(new GeneralCommandEvents(this));
         registerEventClass(new NoteSlashCommandEvents(this));
         registerEventClass(new NotificationSlashCommandEvents(this));
-        registerEventClass(new PunishmentCommandEvents(this));
+//        registerEventClass(new PunishmentCommandEvents(this));
         registerEventClass(new MessageEvents(this));
         registerEventClass(new ModMailEvents(this));
     }

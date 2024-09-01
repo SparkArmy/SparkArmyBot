@@ -1,10 +1,10 @@
-package de.sparkarmy.data.db;
+package de.sparkarmy.data.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import de.sparkarmy.Main;
-import de.sparkarmy.config.Database;
-import de.sparkarmy.utils.Util;
+import de.sparkarmy.config.DatabaseConfig;
+import de.sparkarmy.misc.Util;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 
@@ -14,7 +14,7 @@ import java.sql.SQLException;
 public class DatabaseSource {
     private static final Main main = Util.controller.main();
     private static final Logger logger = main.getLogger();
-    private static final Database databaseConfig = main.getController().getConfig().getDatabase();
+    private static final DatabaseConfig databaseConfig = main.getController().getConfig().getDatabase();
 
     private static final HikariConfig hikariConfig = new HikariConfig();
     private static final HikariDataSource hikariDataSource;

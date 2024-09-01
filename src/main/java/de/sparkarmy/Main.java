@@ -3,15 +3,19 @@ package de.sparkarmy;
 import de.sparkarmy.config.Config;
 import de.sparkarmy.config.ConfigController;
 import de.sparkarmy.config.ConfigKt;
+import de.sparkarmy.data.database.Database;
+import de.sparkarmy.data.database.entity.DiscordChannel;
+import de.sparkarmy.data.repository.Repository;
 import de.sparkarmy.jda.JdaApi;
-import de.sparkarmy.log.WebhookAppenderKt;
+import de.sparkarmy.misc.Util;
 import de.sparkarmy.twitch.TwitchApi;
-import de.sparkarmy.utils.Util;
 import de.sparkarmy.webserver.SpringApp;
 import de.sparkarmy.youtube.YouTubeApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
+
+import java.math.BigDecimal;
 
 public class Main {
 
@@ -25,22 +29,32 @@ public class Main {
 
     private final Config config = ConfigKt.readConfig(true);
 
+    private final Database database;
+    private final Repository repository;
+
 
     public Main() {
         logger.info("Main started");
         // Initialize Logger variables
         Util.logger = this.logger;
-        WebhookAppenderKt.initWebhookLogger(config.getDiscord().getLog());
+//        WebhookAppenderKt.initWebhookLogger(config.getDiscord().getLog());
 
         // Initialize ConfigController
         this.controller = new ConfigController(this);
         Util.controller = this.controller;
 
+        // Database
+        this.database = new Database(config.getDatabase());
+        this.repository = new Repository(database);
+
+        DiscordChannel discordChannel = repository.getChannelRepository().getChannelDataBlocking(BigDecimal.valueOf(1234), BigDecimal.valueOf(1234));
+        logger.info(String.valueOf(discordChannel.getChannelId()));
 
         //Register Apis
         this.jdaApi = new JdaApi(this);
         this.twitchApi = new TwitchApi(this);
         this.youTubeApi = new YouTubeApi(this);
+
 
         // Start web server
         SpringApplication.run(SpringApp.class,"");
@@ -82,4 +96,13 @@ public class Main {
     public Config getConfig() {
         return config;
     }
+
+    public Database getDatabase() {
+        return database;
+    }
+
+    public Repository getRepository() {
+        return repository;
+    }
+
 }

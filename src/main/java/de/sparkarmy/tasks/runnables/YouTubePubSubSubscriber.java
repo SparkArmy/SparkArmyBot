@@ -1,8 +1,8 @@
 package de.sparkarmy.tasks.runnables;
 
 import de.sparkarmy.config.ConfigController;
-import de.sparkarmy.db.DatabaseAction;
-import de.sparkarmy.utils.NotificationService;
+import de.sparkarmy.data.DatabaseAction;
+import de.sparkarmy.misc.NotificationService;
 import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;

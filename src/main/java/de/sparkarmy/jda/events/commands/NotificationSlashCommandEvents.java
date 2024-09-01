@@ -2,14 +2,14 @@ package de.sparkarmy.jda.events.commands;
 
 import com.github.twitch4j.helix.domain.User;
 import de.sparkarmy.config.ConfigController;
-import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.data.DatabaseAction;
 import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.annotations.events.*;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
 import de.sparkarmy.jda.events.IJDAEvent;
+import de.sparkarmy.misc.NotificationService;
+import de.sparkarmy.misc.Util;
 import de.sparkarmy.twitch.TwitchApi;
-import de.sparkarmy.utils.NotificationService;
-import de.sparkarmy.utils.Util;
 import de.sparkarmy.youtube.YouTubeApi;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -147,7 +147,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         // Get component-ID and split
         String componentId = event.getComponentId();
         String[] splitComponentIds = componentId.split(";");
-        // Get String of the component-owner-id
+        // Get String of the component-owner-guildId
         String componentOwnerId = splitComponentIds[1];
 
         ResourceBundle bundle = bundle(event.getUserLocale());
@@ -156,7 +156,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         // compare eventUserId and componentOwnerId
         // Return if not equal
         if (!componentOwnerId.equals(event.getUser().getId())) return;
-        // Dispatch button notification events by id
+        // Dispatch button notification events by guildId
         switch (splitComponentIds[0]) {
             case "notification_initialSlashCommand_selectPlatformEmbedButton" ->
                     dispatchSelectPlatformButtonClickEvent(event, splitComponentIds, bundle, standardPhrases);
@@ -203,7 +203,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         String value = showAddResultEmbed.getFields().getFirst().getValue();
         if (value == null || userName == null) return;
 
-        // Get channel-id
+        // Get channel-guildId
         String userId = value.split("\n")[0].split(" ")[1];
         long dbValue = db.putDataInContentCreatorTable(notificationService, userName, userId);
         if (dbValue < 0) {
@@ -242,7 +242,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
     }
 
     private void editNotificationMessageClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids) {
-        // Get component-id and check the ids from buttonUser and buttonId
+        // Get component-guildId and check the ids from buttonUser and buttonId
         String componentOwnerId = ids[1];
         String userChannelId = ids[2];
         if (!event.getUser().getId().equals(componentOwnerId)) return;
@@ -352,7 +352,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         // Get component-ID and split
         String componentId = event.getModalId();
         String[] splitComponentIds = componentId.split(";");
-        // Get String of the component-owner-id
+        // Get String of the component-owner-guildId
         String componentOwnerId = splitComponentIds[1];
 
         // compare eventUserId and componentOwnerId
@@ -362,7 +362,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
         ResourceBundle bundle = bundle(event.getUserLocale());
         ResourceBundle standardPhrases = standardPhrase(event.getUserLocale());
 
-        // Dispatch modal events by id
+        // Dispatch modal events by guildId
         switch (splitComponentIds[0]) {
             case "notification_addServiceModal" ->
                     initialNotificationModalEvent(event, ActionType.ADD, splitComponentIds, bundle, standardPhrases);
@@ -472,7 +472,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
     private void notificationChannelSelectOkClickEvent(@NotNull ButtonInteractionEvent event, String @NotNull [] ids, ResourceBundle bundle, ResourceBundle standardPhrases) {
         event.deferEdit().queue();
         InteractionHook hook = event.getHook();
-        // Get component-id and check the ids from buttonUser and buttonId
+        // Get component-guildId and check the ids from buttonUser and buttonId
         String componentOwnerId = ids[1];
         String userChannelId = ids[2];
         if (!event.getUser().getId().equals(componentOwnerId)) return;
@@ -730,7 +730,7 @@ public class NotificationSlashCommandEvents implements IJDAEvent {
     public void notificationChannelEntitySelectEvent(@NotNull EntitySelectInteractionEvent event) {
         event.deferEdit().queue();
         InteractionHook hook = event.getHook();
-        // Get component-id and check the ids from buttonUser and buttonId
+        // Get component-guildId and check the ids from buttonUser and buttonId
         String componentId = event.getComponentId();
         String[] splitId = componentId.split(";");
         String componentOwnerId = splitId[1];

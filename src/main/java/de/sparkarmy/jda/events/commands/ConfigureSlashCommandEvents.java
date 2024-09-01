@@ -8,7 +8,7 @@ import de.sparkarmy.jda.events.IJDAEvent;
 import de.sparkarmy.jda.misc.ConfigureUtils;
 import de.sparkarmy.jda.misc.LogChannelType;
 import de.sparkarmy.jda.misc.MediaOnlyPermissions;
-import de.sparkarmy.utils.Util;
+import de.sparkarmy.misc.Util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;

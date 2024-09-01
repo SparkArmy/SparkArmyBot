@@ -1,4 +1,4 @@
-package de.sparkarmy.utils;
+package de.sparkarmy.misc;
 
 @SuppressWarnings("unused")
 public enum ErrorCodes {

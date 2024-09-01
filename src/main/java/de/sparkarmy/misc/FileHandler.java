@@ -1,4 +1,4 @@
-package de.sparkarmy.utils;
+package de.sparkarmy.misc;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

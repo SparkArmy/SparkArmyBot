@@ -1,4 +1,4 @@
-package de.sparkarmy.utils;
+package de.sparkarmy.misc;
 
 import de.sparkarmy.config.ConfigController;
 import net.dv8tion.jda.api.interactions.DiscordLocale;

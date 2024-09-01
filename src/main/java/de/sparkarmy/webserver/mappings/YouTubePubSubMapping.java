@@ -1,7 +1,7 @@
 package de.sparkarmy.webserver.mappings;
 
-import de.sparkarmy.db.DatabaseAction;
-import de.sparkarmy.utils.Util;
+import de.sparkarmy.data.DatabaseAction;
+import de.sparkarmy.misc.Util;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;

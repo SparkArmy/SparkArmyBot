@@ -1,29 +1,22 @@
-package de.sparkarmy.db;
+package de.sparkarmy.data;
 
+import de.sparkarmy.data.database.DatabaseSource;
 import de.sparkarmy.jda.misc.LogChannelType;
-import de.sparkarmy.utils.ErrorCodes;
-import de.sparkarmy.utils.FileHandler;
-import de.sparkarmy.utils.NotificationService;
-import net.dv8tion.jda.api.entities.Message;
+import de.sparkarmy.misc.ErrorCodes;
+import de.sparkarmy.misc.NotificationService;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.*;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-import static de.sparkarmy.utils.Util.logger;
+import static de.sparkarmy.misc.Util.logger;
 
 public class DatabaseAction {
 
@@ -242,125 +235,6 @@ public class DatabaseAction {
         prepStmt.setBoolean(1, state);
         prepStmt.setLong(2, databaseMemberId);
         return prepStmt.executeUpdate();
-    }
-
-    private long putMessageContentInDatabase(Connection conn, @NotNull Message message) throws SQLException {
-        if (!message.isFromGuild()) return ErrorCodes.SQL_UPDATE_PRECONDITION_FAILED.getId();
-
-        long messageId = message.getIdLong();
-        long isMessageInDatabase = isMessageInDatabase(conn, messageId);
-        if (isMessageInDatabase > 0) return 0;
-        if (isMessageInDatabase < 0) return isMessageInDatabase;
-
-        long guildId = message.getGuildIdLong();
-        long userId = message.getAuthor().getIdLong();
-        long channelId = message.getChannelIdLong();
-
-        long databaseMemberId = getDatabaseMemberId(conn, userId, guildId);
-        if (databaseMemberId < 0) return databaseMemberId;
-
-        long putChannelIdInChannelTable = putChannelIdInChannelTable(conn, channelId, guildId);
-        if (putChannelIdInChannelTable < 0) return putChannelIdInChannelTable;
-
-        String messageContent = message.getContentRaw();
-        Timestamp messageTimestamp = Timestamp.from(Instant.from(message.getTimeCreated()));
-
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO guilddata."tblMessage" ("msgId", "fk_msgMemberId", "msgContent", "msgTimestamp", "fk_msgChannelId") VALUES (?,?,?,?,?);
-                """);
-        prepStmt.setLong(1, messageId);
-        prepStmt.setLong(2, databaseMemberId);
-        prepStmt.setString(3, messageContent);
-        prepStmt.setTimestamp(4, messageTimestamp);
-        prepStmt.setLong(5, channelId);
-
-        return prepStmt.executeUpdate();
-    }
-
-    private void updateMessageContentInDatabase(Connection conn, @NotNull Message message) throws SQLException {
-        long messageId = message.getIdLong();
-        long isMessageInDatabase = isMessageInDatabase(conn, messageId);
-        if (isMessageInDatabase == 0) {
-            putMessageAttachmentDataInDatabase(conn, message);
-            return;
-        }
-        if (isMessageInDatabase < 0) return;
-
-        String content = message.getContentRaw();
-
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                UPDATE guilddata."tblMessage" SET "msgContent" = ? WHERE "msgId" = ?;
-                """);
-        prepStmt.setString(1, content);
-        prepStmt.setLong(2, messageId);
-        prepStmt.executeUpdate();
-        conn.close();
-    }
-
-    private long isMessageInDatabase(@NotNull Connection conn, long messageId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                SELECT COUNT(*) FROM guilddata."tblMessage" WHERE "msgId" = ?;
-                """);
-        prepStmt.setLong(1, messageId);
-        return getSelectCountValue(prepStmt);
-    }
-
-    private void removeMessageFromDatabase(@NotNull Connection conn, long messageId) throws SQLException {
-        PreparedStatement prepStmt = conn.prepareStatement("""
-                DELETE FROM guilddata."tblMessage" WHERE "msgId" = ?;
-                """);
-        prepStmt.setLong(1, messageId);
-        prepStmt.executeUpdate();
-    }
-
-    private void putMessageAttachmentDataInDatabase(Connection conn, @NotNull Message message) throws SQLException {
-        long putMessageContentInDatabase = putMessageContentInDatabase(conn, message);
-        if (putMessageContentInDatabase < 0) {
-            conn.close();
-            return;
-        }
-
-        List<Message.Attachment> attachments = message.getAttachments();
-        if (attachments.isEmpty()) {
-            conn.close();
-            return;
-        }
-
-        final PreparedStatement prepStmt = conn.prepareStatement("""
-                INSERT INTO guilddata."tblMessageAttachment" ("fk_msaMessageId", "msaData") VALUES (?,?);
-                """);
-
-        long messageId = message.getIdLong();
-        prepStmt.setLong(1, messageId);
-
-        List<CompletableFuture<File>> attachmentFiles = new ArrayList<>();
-        for (Message.Attachment attachment : attachments) {
-            File directory = FileHandler.getDirectoryInUserDirectory("attachments");
-            File attachmentFile = FileHandler.getFileInDirectory(directory, attachment.getFileName());
-            attachmentFiles.add(attachment.getProxy().downloadToFile(attachmentFile)
-                    .thenApply(file -> {
-                        try {
-                            prepStmt.setBytes(2, Files.readAllBytes(Path.of(file.getAbsolutePath())));
-                            prepStmt.execute();
-                        } catch (SQLException e) {
-                            handleSQLException(e);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                        if (attachmentFile.delete()) {
-                            return null;
-                        } else {
-                            throw new RuntimeException("Attachment File was not deleted");
-                        }
-                    }));
-        }
-        CompletableFuture.allOf(attachmentFiles.toArray(new CompletableFuture[0])).thenAccept(x -> {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                handleSQLException(e);
-            }
-        });
     }
 
 
@@ -2632,27 +2506,6 @@ public class DatabaseAction {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 removeMessageAttachmentDataFromDatabase(connection, resultSet.getLong("msgId"));
-            }
-            connection.close();
-        } catch (SQLException e) {
-            handleSQLException(e);
-        }
-    }
-
-    public void writeInMessageTable(Message message) {
-        try {
-            Connection connection = DatabaseSource.connection();
-            updateMessageContentInDatabase(connection, message);
-        } catch (SQLException e) {
-            handleSQLException(e);
-        }
-    }
-
-    public void removeMessageFromDatabase(@NotNull List<Long> messageIds) {
-        try {
-            Connection connection = DatabaseSource.connection();
-            for (long messageId : messageIds) {
-                removeMessageFromDatabase(connection, messageId);
             }
             connection.close();
         } catch (SQLException e) {

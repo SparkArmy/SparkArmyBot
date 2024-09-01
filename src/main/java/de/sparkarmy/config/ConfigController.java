@@ -1,7 +1,7 @@
 package de.sparkarmy.config;
 
 import de.sparkarmy.Main;
-import de.sparkarmy.db.DatabaseAction;
+import de.sparkarmy.data.DatabaseAction;
 import de.sparkarmy.jda.misc.LogChannelType;
 import de.sparkarmy.jda.misc.MediaOnlyPermissions;
 import net.dv8tion.jda.api.entities.Guild;

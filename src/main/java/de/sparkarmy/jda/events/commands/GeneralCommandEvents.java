@@ -5,7 +5,7 @@ import de.sparkarmy.jda.EventManager;
 import de.sparkarmy.jda.annotations.events.JDASlashCommandInteractionEvent;
 import de.sparkarmy.jda.annotations.internal.JDAEvent;
 import de.sparkarmy.jda.events.IJDAEvent;
-import de.sparkarmy.utils.Util;
+import de.sparkarmy.misc.Util;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +15,7 @@ public class GeneralCommandEvents implements IJDAEvent {
 
     private final ConfigController controller;
 
-    public GeneralCommandEvents(EventManager manager) {
+    public GeneralCommandEvents(@NotNull EventManager manager) {
         this.controller = manager.getController();
     }
 

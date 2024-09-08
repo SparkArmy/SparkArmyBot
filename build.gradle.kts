@@ -11,7 +11,7 @@ plugins {
 }
 
 application {
-    mainClass.set("de.sparkarmy.Main")
+    mainClass.set("de.sparkarmy.de.sparkarmy.Main")
 }
 
 java {
@@ -41,16 +41,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.6")
     implementation("org.slf4j:slf4j-api:2.0.13")
 
-    // Spring
-    val springVersion = "3.3.0"
-
-    implementation("org.springframework:spring-web:6.1.8")
-    implementation("org.springframework.boot:spring-boot-autoconfigure:${springVersion}")
-    implementation("org.springframework.boot:spring-boot-starter-tomcat:${springVersion}")
-    implementation("org.springframework.boot:spring-boot-actuator:${springVersion}")
-    implementation("org.springframework.boot:spring-boot-starter-data-rest:${springVersion}")
-    implementation("org.springframework.boot:spring-boot:${springVersion}")
-
     // Ktor
     val ktorVersion = "2.3.12"
 
@@ -70,7 +60,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains:annotations:24.1.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.20")
-    implementation("com.sksamuel.aedile:aedile-core:1.3.1")
+
 }
 
 tasks.register("clearResources") {

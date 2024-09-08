@@ -1,17 +1,4 @@
-/.idea
-/target/
-/logs
 /configs
-/botstuff/
-/SparkArmyBot.iml
-/attachments/
-/modMailAttachments/
 /.gradle/
-/.kotlin/
 /build/
-
-# Ignore Gradle project-specific cache directory
-.gradle
-
-# Ignore Gradle build output directory
-build
+/.idea/

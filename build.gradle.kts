@@ -27,26 +27,14 @@ dependencies {
     // JDA and Webhook
     implementation("net.dv8tion:JDA:5.1.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
+    implementation("io.github.freya022:BotCommands:3.0.0-alpha.18")
 
-    // Database
+    // Database & Exposed
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("com.zaxxer:HikariCP:5.1.0")
+    implementation("org.flywaydb:flyway-core:10.17.3")
+    implementation("org.flywaydb:flyway-database-postgresql:10.17.3")
 
-    // Twitch and YouTube
-    implementation("com.github.twitch4j:twitch4j:1.21.0")
-    implementation("com.github.philippheuer.events4j:events4j-handler-reactor:0.12.1")
-    implementation("com.google.apis:google-api-services-youtube:v3-rev20240514-2.0.0")
-
-    // Logging
-    implementation("ch.qos.logback:logback-classic:1.5.6")
-    implementation("org.slf4j:slf4j-api:2.0.13")
-
-    // Ktor
-    val ktorVersion = "2.3.12"
-
-    implementation("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
-
-    // Exposed
     val exposedVersion = "0.54.0"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
@@ -54,6 +42,16 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
+
+    // Logging
+    implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("org.slf4j:slf4j-api:2.0.13")
+
+    // Ktor
+    val ktorVersion = "2.3.12"
+    implementation("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
+
+
 
     // Other Dependencies
     implementation("org.json:json:20240303")

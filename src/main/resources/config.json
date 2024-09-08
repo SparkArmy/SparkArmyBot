@@ -1,0 +1,15 @@
+{
+  "discord": {
+    "clientId": "your discord client-id",
+    "token": "your bot token",
+    "secret": "your o-auth secret",
+    "redirect": "your redirect url"
+  },
+  "database": {
+    "host": "your postgres host",
+    "schema": "your schema",
+    "port": 5432,
+    "username": "username for the database",
+    "password": "password for the database"
+  }
+}

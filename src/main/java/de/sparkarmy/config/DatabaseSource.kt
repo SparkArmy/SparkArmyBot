@@ -2,7 +2,9 @@ package de.sparkarmy.config
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import de.sparkarmy.data.db.tables.Users
+import de.sparkarmy.data.db.table.Guilds
+import de.sparkarmy.data.db.table.Members
+import de.sparkarmy.data.db.table.Users
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -15,10 +17,10 @@ class DatabaseSource(config: Config) {
 
     init {
         dataSource = getDataSource()
-        createFlyway("bc","bc_database_scripts").migrate()
 
-        val flyway = Flyway.configure().dataSource(dataSource).load()
-        flyway.migrate()
+        createFlyway("bc","bc_database_scripts").migrate()
+        createFlyway("bot","filesystem:./sql/bot_scripts").migrate()
+
 
         val (source,db) = connect()
         exposed = db
@@ -56,8 +58,11 @@ class DatabaseSource(config: Config) {
 
     private fun createMissingTables(){
         transaction(exposed) {
-            SchemaUtils.createMissingTablesAndColumns(Users)
+            SchemaUtils.createMissingTablesAndColumns(
+                Users,
+                Guilds,
+                Members,
+                )
         }
-
     }
 }

@@ -1,39 +1,41 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.apache.commons.io.FileUtils
-
-
 plugins {
-    java
     application
-    id("org.jetbrains.kotlin.jvm") version "2.0.20"
+    kotlin("jvm") version "2.0.20"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.google.devtools.ksp") version "2.0.20-1.0.25"
 }
 
-application {
-    mainClass.set("de.sparkarmy.de.sparkarmy.Main")
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+kotlin {
+    jvmToolchain(21)
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-receivers")
     }
 }
+
+
+
 repositories {
     mavenCentral()
+    maven("https://maven.xirado.dev/releases")
 }
 
 dependencies {
     // JDA and Webhook
     implementation("net.dv8tion:JDA:5.1.0")
+    implementation("club.minnced:jda-ktx:0.12.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
-    implementation("io.github.freya022:BotCommands:3.0.0-alpha.18")
+    implementation("at.xirado:JDUI:0.4.5")
 
-    // Database & Exposed
+    // Database, Exposed & Cache
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.flywaydb:flyway-core:10.17.3")
     implementation("org.flywaydb:flyway-database-postgresql:10.17.3")
+    implementation("com.sksamuel.aedile:aedile-core:1.3.1")
+
+    implementation("io.insert-koin:koin-core:4.0.0-RC1")
+    implementation("io.insert-koin:koin-annotations:1.4.0-RC4")
+    ksp("io.insert-koin:koin-ksp-compiler:1.3.1")
 
     val exposedVersion = "0.54.0"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -46,7 +48,7 @@ dependencies {
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.6")
     implementation("org.slf4j:slf4j-api:2.0.13")
-    runtimeOnly("io.github.oshai:kotlin-logging-jvm:7.0.0")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
     // Ktor
     val ktorVersion = "2.3.12"
@@ -59,23 +61,14 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains:annotations:24.1.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.20")
-
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("dev.reformator.stacktracedecoroutinator:stacktrace-decoroutinator-jvm:2.4.4")
 }
 
-tasks.register("clearResources") {
-    FileUtils.deleteDirectory(FileUtils.getFile(project.rootDir, "build/resources/main"))
+ksp {
+    arg("KOIN_CONFIG_CHECK","true")
 }
 
-tasks.build {
-    dependsOn(tasks.shadowJar)
-}
-
-tasks {
-    named<ShadowJar>("shadowJar") {
-        archiveBaseName.set("SparkArmyBot.jar")
-        mergeServiceFiles()
-    }
-}
 
 
 

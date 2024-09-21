@@ -1,49 +1,25 @@
-package de.sparkarmy;
+package de.sparkarmy
 
-import de.sparkarmy.config.Config;
-import de.sparkarmy.config.ConfigKt;
-import de.sparkarmy.config.DatabaseSource;
-import de.sparkarmy.data.repository.Repository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import de.sparkarmy.jda.JDAService
+import dev.reformator.stacktracedecoroutinator.jvm.DecoroutinatorJvmApi
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.context.startKoin
+import org.koin.ksp.generated.module
 
-public final class Main {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-    private static Main instance;
-
-    private final Config config = ConfigKt.readConfig(true);
-    private final DatabaseSource databaseSource;
-    private final Repository repository;
-
-    private Main() {
-        // Create and get Database
-        this.databaseSource = new DatabaseSource(config);
-        this.repository = new Repository(databaseSource);
-
-
-        // Get static instance
-        instance = this;
+fun main() {
+    DecoroutinatorJvmApi.install()
+    startKoin {
+        modules(Module().module)
     }
 
-    private static Main getInstance() {
-        return instance;
-    }
+    Application().initialize()
+}
 
-    public static void main(String[] args) {
-        LOGGER.info("Main start requested");
-        new Main();
-    }
+class Application : KoinComponent {
+    private val jdaService: JDAService by inject()
 
-    public Config getConfig() {
-        return config;
-    }
-
-    public DatabaseSource getDatabaseSource() {
-        return databaseSource;
-    }
-
-    public Repository getRepository() {
-        return repository;
+    fun initialize() {
+        jdaService.initialize()
     }
 }

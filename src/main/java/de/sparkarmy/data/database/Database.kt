@@ -33,6 +33,7 @@ class Database(
             jdbcUrl = "jdbc:postgresql://$host:$port/$database"
             username = config.username
             password = config.password
+            schema = config.schema
             maximumPoolSize = 10
             addDataSourceProperty("rewriteBatchedInserts", "true")
         }
@@ -43,6 +44,7 @@ class Database(
     private fun migrateFlyway() {
         Flyway
             .configure()
+            .locations("db/migration/")
             .dataSource(dataSource)
             .load()
             .migrate()

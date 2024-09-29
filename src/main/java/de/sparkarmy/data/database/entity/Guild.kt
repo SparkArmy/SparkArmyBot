@@ -1,5 +1,6 @@
 package de.sparkarmy.data.database.entity
 
+import de.sparkarmy.data.database.exposed.optionalRelated
 import de.sparkarmy.data.database.table.Guilds
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
@@ -11,4 +12,5 @@ class Guild(id: EntityID<Long>): Entity<Long>(id) {
 
     var guildId by Guilds.id
     var guildName by Guilds.guildName
+    var guildChannel by optionalRelated(GuildChannel)
 }

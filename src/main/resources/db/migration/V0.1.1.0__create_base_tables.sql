@@ -5,7 +5,8 @@ create table table_guild
             primary key,
     gld_name  text   not null
         constraint check_table_guild_0
-            check ((char_length(gld_name) >= 2) AND (char_length(gld_name) <= 100))
+            check ((char_length(gld_name) >= 2) AND (char_length(gld_name) <= 100)),
+    "gld_type" INT NOT NULL DEFAULT 0
 );
 
 alter table table_guild
@@ -33,7 +34,7 @@ create table table_member
             on update cascade on delete cascade,
     pk_fk_mbr_guild_id bigint           not null
         constraint fk_table_member_pk_fk_mbr_guild_id__pk_gld_id
-            references table_guilds
+            references table_guild
             on update cascade on delete cascade,
     mbr_flags          bigint default 0 not null,
     constraint pk_table_member

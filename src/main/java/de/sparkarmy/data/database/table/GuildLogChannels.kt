@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 
 object GuildLogChannels: IdTable<Long>("table_log_guild_channel") {
-    override val id = reference("pk_fk_lcn_id", GuildChannels, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+    override val id = reference("pk_fk_lcn_id", Channels, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
     val webhookUrl = text("lcn_webhook_url")
     val channelType = enumeration<ChannelType>("lcn_type")
 

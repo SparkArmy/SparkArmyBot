@@ -1,1 +1,0 @@
-alter table table_guild ADD COLUMN "gld_type" INT NOT NULL DEFAULT 0;

@@ -1,9 +1,9 @@
 package de.sparkarmy.jda
 
-import de.sparkarmy.misc.Virtual
+import de.sparkarmy.coroutines.Virtual
+import de.sparkarmy.coroutines.virtualExecutor
+import de.sparkarmy.coroutines.virtualScheduledExecutor
 import de.sparkarmy.misc.mapAsync
-import de.sparkarmy.misc.virtualExecutor
-import de.sparkarmy.misc.virtualScheduledExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitAll
@@ -20,12 +20,16 @@ import kotlin.time.toJavaDuration
 
 private val log = KotlinLogging.logger { }
 
-@Single
+@Single(createdAtStart = true)
 class JDAService(
     private val config: JdaConfig,
     private val eventManager: JDAEventManager,
 ) : KoinComponent {
     lateinit var shardManager: ShardManager
+
+    init {
+        initialize()
+    }
 
     fun initialize() {
         val token = config.token

@@ -2,8 +2,8 @@ package de.sparkarmy.jda.listeners
 
 import de.sparkarmy.data.cache.ChannelCacheView
 import de.sparkarmy.data.cache.GuildCacheView
-import de.sparkarmy.data.database.entity.Channel
-import de.sparkarmy.data.database.entity.GuildChannel
+import de.sparkarmy.database.entity.Channel
+import de.sparkarmy.database.entity.GuildChannel
 import dev.minn.jda.ktx.events.CoroutineEventListener
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.events.GenericEvent

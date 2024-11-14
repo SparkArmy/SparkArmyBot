@@ -1,12 +1,12 @@
 package de.sparkarmy.data.cache
 
-import de.sparkarmy.data.database.DBContext
-import de.sparkarmy.data.database.entity.Channel
+import de.sparkarmy.data.DBContext
+import de.sparkarmy.database.entity.Channel
 import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
 import net.dv8tion.jda.api.entities.channel.Channel as JDAChannel
 
-@Single
+@Single(createdAtStart = true)
 class ChannelCacheView(
     private val db: DBContext
 ) : CacheView<Long, Channel>(1000), KoinComponent {

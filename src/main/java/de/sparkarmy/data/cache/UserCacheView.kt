@@ -1,16 +1,12 @@
 package de.sparkarmy.data.cache
 
-import de.sparkarmy.data.database.DBContext
-import de.sparkarmy.data.database.entity.User
+
+import de.sparkarmy.data.DBContext
+import de.sparkarmy.database.entity.User
 import org.koin.core.annotation.Single
 import net.dv8tion.jda.api.entities.User as JDAUser
 
-private val populate: User.(JDAUser) -> Unit = {
-    username = it.name
-    displayName = it.globalName
-}
-
-@Single
+@Single(createdAtStart = true)
 class UserCacheView(
     private val db: DBContext
 ) : CacheView<Long, User>(1000) {
@@ -27,11 +23,14 @@ class UserCacheView(
     }
 
     private fun User.setMetadata(jdaUser: JDAUser) {
+//        avatar = jdaUser.avatarId
         username = jdaUser.name
         displayName = jdaUser.globalName
     }
 
     private fun User.updateMetadata(jdaUser: JDAUser) {
+//        if (avatar != jdaUser.avatarId)
+//            avatar = jdaUser.avatarId
         if (username != jdaUser.name)
             username = jdaUser.name
         if (displayName != jdaUser.globalName)

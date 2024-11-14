@@ -1,8 +1,10 @@
 plugins {
-    application
     kotlin("jvm") version "2.0.20"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.20"
+    id("com.google.cloud.tools.jib") version "3.4.2"
     id("com.google.devtools.ksp") version "2.0.20-1.0.25"
+    id("org.bytedeco.gradle-javacpp-platform") version "1.5.10"
+    application
 }
 
 kotlin {
@@ -17,11 +19,12 @@ kotlin {
 repositories {
     mavenCentral()
     maven("https://maven.xirado.dev/releases")
+    maven("https://maven.xirado.dev/jitpack")
 }
 
 dependencies {
     // JDA and Webhook
-    implementation("net.dv8tion:JDA:5.1.0")
+    implementation("io.github.JDA-Fork:JDA:ef41a9445d")
     implementation("club.minnced:jda-ktx:0.12.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
     implementation("at.xirado:JDUI:0.4.5")
@@ -62,6 +65,9 @@ dependencies {
     implementation("org.jetbrains:annotations:24.1.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("dev.reformator.stacktracedecoroutinator:stacktrace-decoroutinator-jvm:2.4.4")
+    implementation("org.tomlj:tomlj:1.1.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
     implementation("dev.reformator.stacktracedecoroutinator:stacktrace-decoroutinator-jvm:2.4.4")
 }
 

@@ -1,8 +1,8 @@
 package de.sparkarmy.jda
 
 
-import de.sparkarmy.misc.newCoroutineScope
-import de.sparkarmy.misc.virtualDispatcher
+import de.sparkarmy.coroutines.newCoroutineScope
+import de.sparkarmy.coroutines.virtualDispatcher
 import dev.minn.jda.ktx.events.CoroutineEventListener
 import dev.minn.jda.ktx.events.CoroutineEventManager
 import kotlinx.coroutines.CoroutineScope
@@ -13,7 +13,7 @@ import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
 import java.util.*
 
-@Single
+@Single(createdAtStart = true)
 class JDAEventManager(
     scope: CoroutineScope = newCoroutineScope<JDAEventManager>(virtualDispatcher),
 ) : CoroutineEventManager(scope), KoinComponent {

@@ -1,7 +1,8 @@
 package de.sparkarmy.data.cache
 
-import de.sparkarmy.data.database.DBContext
-import de.sparkarmy.data.database.entity.Guild
+
+import de.sparkarmy.data.DBContext
+import de.sparkarmy.database.entity.Guild
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
@@ -9,7 +10,7 @@ import net.dv8tion.jda.api.entities.Guild as JDAGuild
 
 private val log = KotlinLogging.logger { }
 
-@Single
+@Single(createdAtStart = true)
 class GuildCacheView(
     private val db: DBContext
 ) : CacheView<Long, Guild>(1000), KoinComponent {
@@ -25,13 +26,19 @@ class GuildCacheView(
         guild
     }
 
-    private fun Guild.setMetadata(guild: JDAGuild) {
-        guildName = guild.name
+    private fun Guild.setMetadata(jdaGuild: JDAGuild) {
+        guildName = jdaGuild.name
+        guildIcon = jdaGuild.iconId
+        guildOwner = jdaGuild.ownerIdLong
     }
 
-    private fun Guild.updateMetadata(guild: JDAGuild) {
-        if (guildName != guild.name)
-            guildName = guild.name
+    private fun Guild.updateMetadata(jdaGuild: JDAGuild) {
+        if (guildName != jdaGuild.name)
+            guildName = jdaGuild.name
+        if (guildIcon != jdaGuild.iconId)
+            guildIcon = jdaGuild.iconId
+        if (guildOwner != jdaGuild.ownerIdLong)
+            guildOwner = jdaGuild.ownerIdLong
     }
 
     override suspend fun load(key: Long): Guild? = db.doTransaction {

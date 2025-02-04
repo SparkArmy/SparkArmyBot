@@ -7,7 +7,6 @@ import de.sparkarmy.data.cache.UserCacheView
 import de.sparkarmy.database.table.GuildCommands
 import de.sparkarmy.database.table.HashedCommands
 import de.sparkarmy.interaction.command.model.*
-import de.sparkarmy.interaction.command.model.AppCommand
 import de.sparkarmy.interaction.command.model.message.MessageContextCommand
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
 import de.sparkarmy.jda.JDAEventListener

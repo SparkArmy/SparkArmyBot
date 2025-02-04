@@ -1,5 +1,6 @@
 package de.sparkarmy.database.entity
 
+import de.sparkarmy.database.exposed.optionalRelated
 import de.sparkarmy.database.table.Guilds
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
@@ -13,5 +14,9 @@ class Guild(id: EntityID<Long>): Entity<Long>(id) {
     var guildOwner by Guilds.guildOwnerId
     var guildFlags by Guilds.guildFlags
     var guildFeatures by Guilds.features
-//    var guildChannel by optionalRelated(GuildChannel)
+    var guildChannel by optionalRelated(GuildChannel)
+    var guildPunishmentConfig by optionalRelated(GuildPunishmentConfig)
+
+
+
 }

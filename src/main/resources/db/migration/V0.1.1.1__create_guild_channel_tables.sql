@@ -7,8 +7,6 @@ create table table_channel
     cnl_type  integer      not null
 );
 
-alter table table_channel
-    owner to botuser;
 
 create table table_guild_channel
 (
@@ -24,8 +22,6 @@ create table table_guild_channel
             on update cascade on delete cascade
 );
 
-alter table table_guild_channel
-    owner to botuser;
 
 create table "table_log_guild_channel"
 (
@@ -38,6 +34,3 @@ create table "table_log_guild_channel"
     lcn_webhook_url text    not null,
     lcn_type        integer not null
 );
-
-alter table "table_log_guild_channel"
-    owner to botuser;

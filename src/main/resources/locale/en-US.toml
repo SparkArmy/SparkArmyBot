@@ -4,3 +4,20 @@ success = "The action was completed successfully"
 [commands.avatar]
 userProfile = "{0}''s avatar"
 guildProfile = "{0}''s server-avatar"
+
+[commands.punishment.ban]
+userBanSuccessfully = "User {0} was banned"
+userBanFailed = "User {0} weren't banned"
+[commands.punishment.kick]
+userKickSuccessfully = "User {0} was kicked"
+userKickFailed = "User {0} weren't kicked"
+[commands.punishment.mute]
+userWarnSuccessfully = "User {0} was muted"
+userMuteFailed = "User {0} weren't muted"
+noMuteRoleSet = "Please set a mute Role"
+
+
+[[command.mod.modCase.fields]]
+offenderName = "Offender"
+[command.mod.modCase.fields.reason]
+name = "Reason"

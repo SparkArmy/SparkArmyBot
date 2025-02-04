@@ -1,0 +1,24 @@
+[modCase]
+template = "modCase"
+title = "${title}"
+timestamp = "${timestamp}"
+
+[modCase.author]
+name = "${mod}"
+icon_url = "${modIcon}"
+
+[modCase.footer]
+text = "${selfUser}"
+icon_url = "${selfUserIcon}"
+
+[[modCase.fields]]
+name = "${offenderName}"
+value = "${offender}"
+inline = "false"
+
+[[modCase.fields]]
+name = "${reasonName}"
+value = "${reason}"
+inline = "false"
+
+

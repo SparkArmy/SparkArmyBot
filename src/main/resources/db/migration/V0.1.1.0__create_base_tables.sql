@@ -12,8 +12,6 @@ create table table_guild
     "gld_features" int
 );
 
-alter table table_guild
-    owner to botuser;
 
 create table table_user
 (
@@ -24,14 +22,11 @@ create table table_user
             check ((char_length((usr_username)::text) >= 2) AND (char_length((usr_username)::text) <= 32)),
     "usr_displayname" varchar(32)
         constraint check_table_user_nickname_in_range
-            check ((char_length(usr_displayname)::text) >= 1 AND (char_length((usr_displayname)::text) <= 32)),
+            check ((char_length((usr_displayname)::text) >= 1) AND (char_length((usr_displayname)::text) <= 32)),
     "usr_avatar"      text,
     "usr_banner"      text,
     "usr_flags"       bigint      not null default 0
 );
-
-alter table table_user
-    owner to botuser;
 
 
 create table table_member
@@ -51,9 +46,6 @@ create table table_member
         primary key (pk_fk_mbr_user_id, pk_fk_mbr_guild_id)
 );
 
-alter table table_member
-    owner to botuser;
-
 
 create table table_guild_commands
 (
@@ -64,9 +56,6 @@ create table table_guild_commands
         primary key (pk_gcd_guild, pk_gcd_identifier)
 );
 
-alter table table_guild_commands
-    owner to botuser;
-
 
 create table table_command_hashes
 (
@@ -74,6 +63,3 @@ create table table_command_hashes
         primary key,
     cmh_hash          char(64)     not null
 );
-
-alter table table_command_hashes
-    owner to botuser;

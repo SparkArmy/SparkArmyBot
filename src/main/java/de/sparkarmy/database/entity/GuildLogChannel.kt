@@ -10,6 +10,4 @@ class GuildLogChannel(id: EntityID<Long>): Entity<Long>(id) {
 
     var webhookUrl by GuildLogChannels.webhookUrl
     var channelType by GuildLogChannels.logChannelType
-
-
 }

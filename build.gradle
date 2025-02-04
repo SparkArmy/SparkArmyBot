@@ -41,7 +41,7 @@ dependencies {
 
     // Twitch and Youtube
     implementation('com.github.twitch4j:twitch4j:1.21.0')
-    implementation('com.github.philippheuer.events4j:events4j-handler-reactor:0.12.1')
+    implementation('com.github.philippheuer.events4j:events4j-handler-reactor:0.12.2')
     implementation('com.google.apis:google-api-services-youtube:v3-rev20240514-2.0.0')
 
     // Logging

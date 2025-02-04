@@ -24,13 +24,13 @@ repositories {
 
 dependencies {
     // JDA and Webhook
-    implementation("io.github.JDA-Fork:JDA:ef41a9445d")
+    implementation("net.dv8tion:JDA:5.3.0")
     implementation("club.minnced:jda-ktx:0.12.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
     implementation("at.xirado:JDUI:0.4.5")
 
     // Database, Exposed & Cache
-    implementation("org.postgresql:postgresql:42.7.3")
+    implementation("org.postgresql:postgresql:42.7.5")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.flywaydb:flyway-core:10.17.3")
     implementation("org.flywaydb:flyway-database-postgresql:10.17.3")

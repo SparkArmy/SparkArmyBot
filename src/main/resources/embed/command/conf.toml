@@ -1,0 +1,35 @@
+[conf_0]
+template = "conf_0"
+title = "${title}"
+description = "${description}"
+color = 0x6a0880
+
+[[conf_0.fields]]
+name = "${punishmentFieldName}"
+value = "${punishmentFieldValue}"
+inline = "false"
+
+[conf_100]
+template = "conf_100"
+title = "${title}"
+description = "${description}"
+
+[[conf_100.fields]]
+name = "${muteRoleFieldName}"
+value = "${muteRoleFieldValue}"
+inline = "false"
+
+[[conf_100.fields]]
+name = "${warnRoleFieldName}"
+value = "${warnRoleFieldValue}"
+inline = "false"
+
+[conf_101]
+template = "conf_101"
+title = "${title}"
+description = "${description}"
+
+[conf_102]
+template = "conf_102"
+title = "${title}"
+description = "${description}"

@@ -3,3 +3,12 @@ color = 0x26e03c
 
 [modCase]
 color = 0xff0000
+
+[conf_0]
+color = 0x6a0880
+[conf_100]
+color = 0x6a0880
+[conf_101]
+color = 0x6a0880
+[conf_102]
+color = 0x6a0880

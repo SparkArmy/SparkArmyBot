@@ -1,5 +1,6 @@
 [action]
 success = "The action was completed successfully"
+backButton = "Back"
 
 [commands.avatar]
 userProfile = "{0}''s avatar"
@@ -16,8 +17,32 @@ userWarnSuccessfully = "User {0} was muted"
 userMuteFailed = "User {0} weren't muted"
 noMuteRoleSet = "Please set a mute Role"
 
+[commands.configuration.embeds.conf_0]
+title = "Overwiew"
+description = "Configure the Bot-Properties for the server"
+punishmentFieldName = "Punishment-Config"
+punishmentFieldDescription = "Set Roles for punishment and activate/deactivate the function"
 
-[[command.mod.modCase.fields]]
+[commands.configuration.embeds.conf_100]
+title = "Punishment-Config"
+description = "Set Roles for punishment and activate/deactivate the function"
+muteRoleFieldName = "Mute"
+muteRoleFieldValue = "Test"
+warnRoleFieldName = "Warn"
+warnRoleFieldValue = "Test"
+
+[commands.configuration.embeds.conf_101]
+title = "Punishment-Config - MuteRoleConfig"
+description = "Please select a role below or disable the role"
+muteRoleSelectPlaceholder = "Please select"
+muteRoleDisableButtonLabel = "Disable"
+
+[commands.configuration.embeds.conf_102]
+title = "Punishment-Config - WarnRoleConfig"
+description = "Please select a role below or disable the role"
+warnRoleSelectPlaceholder = "Please select"
+warnRoleDisableButtonLabel = "Disable"
+
+[command.mod.modCase.fields]
 offenderName = "Offender"
-[command.mod.modCase.fields.reason]
-name = "Reason"
+reasonName = "Reason"

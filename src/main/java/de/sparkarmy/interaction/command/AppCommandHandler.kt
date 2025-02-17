@@ -9,6 +9,7 @@ import de.sparkarmy.database.table.HashedCommands
 import de.sparkarmy.interaction.command.model.*
 import de.sparkarmy.interaction.command.model.message.MessageContextCommand
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
+import de.sparkarmy.interaction.command.model.user.UserContextCommand
 import de.sparkarmy.jda.JDAEventListener
 import dev.minn.jda.ktx.coroutines.await
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -102,7 +103,7 @@ class AppCommandHandler(
 
     private fun loadCommands(): Map<String, AppCommand<*>> {
         return getKoin().let {
-            it.getAll<SlashCommand>() + it.getAll<MessageContextCommand>()
+            it.getAll<SlashCommand>() + it.getAll<MessageContextCommand>() + it.getAll<UserContextCommand>()
         }.associateBy { it.identifier }
     }
 

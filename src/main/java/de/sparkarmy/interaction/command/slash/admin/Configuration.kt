@@ -14,6 +14,7 @@ import de.sparkarmy.data.cache.GuildCacheView
 import de.sparkarmy.database.entity.GuildPunishmentConfig
 import de.sparkarmy.embed.EmbedService
 import de.sparkarmy.i18n.LocalizationService
+import de.sparkarmy.interaction.command.model.contexts
 import de.sparkarmy.interaction.command.model.embedService
 import de.sparkarmy.interaction.command.model.localizationService
 import de.sparkarmy.interaction.command.model.slash.Handler
@@ -27,6 +28,7 @@ import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
+import net.dv8tion.jda.api.interactions.InteractionContextType
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -39,6 +41,7 @@ class Configuration(
 
     init {
         commandData.defaultPermissions = DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)
+        contexts(InteractionContextType.GUILD)
     }
 
     @Handler

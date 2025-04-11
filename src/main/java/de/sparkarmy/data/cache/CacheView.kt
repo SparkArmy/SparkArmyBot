@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
 
 
-abstract class CacheView<K : Comparable<K>, V>(maximumSize: Long) {
+abstract class CacheView<K : Any, V>(maximumSize: Long) {
     private val lock = ReentrantReadWriteLock()
     private val cache = Caffeine.newBuilder()
         .maximumSize(maximumSize)

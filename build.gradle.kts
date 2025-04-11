@@ -24,7 +24,7 @@ repositories {
 
 dependencies {
     // JDA and Webhook
-    implementation("net.dv8tion:JDA:5.3.1")
+    implementation("net.dv8tion:JDA:5.3.2")
     implementation("club.minnced:jda-ktx:0.12.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
     implementation("at.xirado:JDUI:0.4.6")
@@ -40,7 +40,7 @@ dependencies {
     implementation("io.insert-koin:koin-annotations:1.4.0-RC4")
     ksp("io.insert-koin:koin-ksp-compiler:1.3.1")
 
-    val exposedVersion = "0.54.0"
+    val exposedVersion = "0.60.0"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")

@@ -130,19 +130,19 @@ fun SlashCommandInteractionEvent.getOptionByType(type: KType, name: String): Any
     }
 }
 
-context(AppCommand<*>)
+context(appCommand: AppCommand<*>)
 fun Interaction.getLocalizedEmbed(name: String, useGuildLocale: Boolean = true, params: Map<String, Any?>): MessageEmbed {
     val locale = if (useGuildLocale) guild?.locale ?: userLocale else userLocale
-    return embedService.getLocalizedMessageEmbed(name, locale, params).toMessageEmbed()
+    return appCommand.embedService.getLocalizedMessageEmbed(name, locale, params).toMessageEmbed()
 }
 
-context(AppCommand<*>)
+context(_: AppCommand<*>)
 fun Interaction.getLocalizedEmbed(name: String, useGuildLocale: Boolean = true, vararg params: Pair<String, Any?>): MessageEmbed {
     return getLocalizedEmbed(name, useGuildLocale, params.toMap())
 }
 
-context(AppCommand<*>)
+context(appCommand: AppCommand<*>)
 fun Interaction.getLocalizedString(key: String, useGuildLocale: Boolean = true, vararg params: Any): String {
     val locale = if (useGuildLocale) guild?.locale ?: userLocale else userLocale
-    return localizationService.getString(locale, key, *params)
+    return appCommand.localizationService.getString(locale, key, *params)
 }

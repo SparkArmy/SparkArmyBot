@@ -8,7 +8,7 @@ abstract class SubcommandGroup(name: String, description: String) {
     val groupData = SubcommandGroupData(name, description)
     private val subcommands = mutableMapOf<String, Subcommand>()
 
-    context(AppCommandHandler)
+    context(_: AppCommandHandler)
     fun initialize() {
         subcommands.values.forEach {
             checkCommandFunctionParameters(it.handler.second, it.subcommandData.options)

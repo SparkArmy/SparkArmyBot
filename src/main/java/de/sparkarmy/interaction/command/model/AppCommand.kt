@@ -37,10 +37,10 @@ interface AppCommand<E : GenericCommandInteractionEvent> : KoinComponent {
     val requiredGuildFlags: EnumSet<GuildFlag>
     val requiredUserFlags: EnumSet<UserFlag>
 
-    context(AppCommandHandler)
+    context(_: AppCommandHandler)
     fun initialize()
 
-    context(AppCommandHandler)
+    context(_: AppCommandHandler)
     fun computeHash(): String {
         val commandMap = commandData.toData().toMap()
         val json = objectMapper.writeValueAsString(commandMap)

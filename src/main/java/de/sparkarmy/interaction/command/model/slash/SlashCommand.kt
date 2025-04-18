@@ -74,7 +74,7 @@ abstract class SlashCommand(
         }
     }
 
-    context(AppCommandHandler) override fun initialize() {
+    context(_: AppCommandHandler) override fun initialize() {
         if (subcommands.isEmpty() && subcommandGroups.isEmpty()) {
             if (handler == null)
                 throw IllegalStateException("Command has no handler function")

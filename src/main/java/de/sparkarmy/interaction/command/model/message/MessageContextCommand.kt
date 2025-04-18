@@ -18,7 +18,7 @@ abstract class MessageContextCommand(name: String) : AppCommand<MessageContextIn
     override val requiredUserFlags: EnumSet<UserFlag> = EnumSet.noneOf(UserFlag::class.java)
     override var feature: GuildFeature? = null
 
-    context(AppCommandHandler) override fun initialize() {
+    context(_: AppCommandHandler) override fun initialize() {
 
     }
 }

@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.2.0-Beta1"
-    kotlin("plugin.serialization") version "2.2.0-Beta1"
+    kotlin("jvm") version "2.1.20"
+    kotlin("plugin.serialization") version "2.1.20"
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.google.devtools.ksp") version "2.1.20-2.0.0"
     id("org.bytedeco.gradle-javacpp-platform") version "1.5.10"
@@ -10,8 +10,7 @@ plugins {
 kotlin {
     jvmToolchain(21)
     compilerOptions {
-        freeCompilerArgs.add("-Xcontext-receivers")
-//        freeCompilerArgs.add("-Xcontext-parameters")
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 
@@ -64,7 +63,7 @@ dependencies {
     implementation("org.json:json:20250107")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains:annotations:26.0.2")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.0-Beta1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("dev.reformator.stacktracedecoroutinator:stacktrace-decoroutinator-jvm:2.4.8")
     implementation("org.tomlj:tomlj:1.1.1")

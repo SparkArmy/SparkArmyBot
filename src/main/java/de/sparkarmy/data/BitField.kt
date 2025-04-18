@@ -22,22 +22,24 @@ fun <T : Number> Long.toNumber(type: KClass<T>): T = when (type) {
     else -> throw IllegalArgumentException("Unsupported Number type: ${type.simpleName}")
 } as T
 
-context(Table)
+context(table: Table)
 inline fun <reified T, reified E> Column<T>.bitField(): Column<EnumSet<E>>
         where T : Number, E : Enum<E>, E : BitField {
 
-    return transform(
-        wrap = { number ->
-            val longNumber = number.toLong()
-            enumValues<E>().filterTo(enumSetOf<E>()) { bitFieldEnum ->
-                longNumber and (1L shl bitFieldEnum.offset) != 0L
+    return with(table) {
+        transform(
+            wrap = { number ->
+                val longNumber = number.toLong()
+                enumValues<E>().filterTo(enumSetOf<E>()) { bitFieldEnum ->
+                    longNumber and (1L shl bitFieldEnum.offset) != 0L
+                }
+            },
+            unwrap = { enumSet ->
+                val longValue = enumSet.fold(0L) { acc, bitFieldEnum ->
+                    acc or (1L shl bitFieldEnum.offset)
+                }
+                longValue.toNumber(T::class)
             }
-        },
-        unwrap = { enumSet ->
-            val longValue = enumSet.fold(0L) { acc, bitFieldEnum ->
-                acc or (1L shl bitFieldEnum.offset)
-            }
-            longValue.toNumber(T::class)
-        }
-    )
+        )
+    }
 }

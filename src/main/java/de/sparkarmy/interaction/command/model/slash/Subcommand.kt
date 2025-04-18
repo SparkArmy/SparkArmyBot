@@ -11,7 +11,7 @@ abstract class Subcommand(name: String, description: String) {
     val handler: Pair<Handler, KFunction<*>> = findFunctionWithAnnotation<Handler>()
         ?: throw IllegalStateException("Missing handler function")
 
-    context(AppCommandHandler)
+    context(_: AppCommandHandler)
     fun initialize() {
         checkCommandFunctionParameters(handler.second, subcommandData.options)
     }

@@ -18,7 +18,7 @@ abstract class CacheView<K : Any, V>(maximumSize: Long) {
         cache.put(key, value)
     }
 
-    context(CacheManager)
+    context(_: CacheManager)
     operator fun set(key: K, value: V) = put(key, value)
 
     operator fun contains(key: K): Boolean = read {

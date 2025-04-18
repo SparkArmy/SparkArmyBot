@@ -9,14 +9,14 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 
-context(R)
+context(_: R)
 infix fun <C : Entity<ID>, ID : Comparable<ID>, R : Entity<*>, T : Any> Column<T>.provideUsing(
     cacheView: CacheView<ID, C>
 ): CachedEntityDelegate<C, ID, R> {
     return CachedEntityDelegate(this as Column<Any>, cacheView)
 }
 
-context(R)
+context(_: R)
 infix fun <C : Entity<ID>, ID : Comparable<ID>, R : Entity<*>, T : Any> Column<T?>.provideUsing(
     cacheView: CacheView<ID, C>
 ): NullableCachedEntityDelegate<C, ID, R> {

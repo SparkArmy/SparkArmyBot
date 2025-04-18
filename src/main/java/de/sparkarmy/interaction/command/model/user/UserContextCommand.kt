@@ -18,6 +18,6 @@ abstract class UserContextCommand(name: String) : AppCommand<UserContextInteract
     override val requiredUserFlags: EnumSet<UserFlag> = EnumSet.noneOf(UserFlag::class.java)
     override var feature: GuildFeature? = null
 
-    context(AppCommandHandler) override fun initialize() {
+    context(_: AppCommandHandler) override fun initialize() {
     }
 }

@@ -246,10 +246,10 @@ class MutePunishmentView(
             val guildPunishmentConfig = guildCacheView.getById(eEvent.guild?.idLong!!)?.guildPunishmentConfig
             when {
                 guildPunishmentConfig == null -> GuildPunishmentConfig.new(eEvent.guild?.idLong) {
-                    muteRole = eEvent.idLong
+                    muteRole = eEvent.mentions.roles.component1().idLong
                 }
 
-                else -> guildPunishmentConfig.muteRole = eEvent.idLong
+                else -> guildPunishmentConfig.muteRole = eEvent.mentions.roles.component1().idLong
             }
         }
         MessageComponentCallbackResult.ChildView(
@@ -334,10 +334,10 @@ class WarnPunishmentView(
             val guildPunishmentConfig = guildCacheView.getById(eEvent.guild?.idLong!!)?.guildPunishmentConfig
             when {
                 guildPunishmentConfig == null -> GuildPunishmentConfig.new(eEvent.guild?.idLong) {
-                    warnRole = eEvent.idLong
+                    warnRole = eEvent.mentions.roles.component1().idLong
                 }
 
-                else -> guildPunishmentConfig.warnRole = eEvent.idLong
+                else -> guildPunishmentConfig.warnRole = eEvent.mentions.roles.component1().idLong
             }
         }
         MessageComponentCallbackResult.ChildView(

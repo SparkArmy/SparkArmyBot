@@ -20,11 +20,13 @@ repositories {
     mavenCentral()
     maven("https://maven.xirado.dev/releases")
     maven("https://maven.xirado.dev/jitpack")
+    maven("https://jitpack.io")
 }
 
 dependencies {
     // JDA and Webhook
     implementation("net.dv8tion:JDA:5.3.2")
+    implementation("io.github.freya022:JDA:4b468cdd09")
     implementation("club.minnced:jda-ktx:0.12.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
     implementation("at.xirado:JDUI:0.4.6")

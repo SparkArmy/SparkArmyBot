@@ -14,9 +14,5 @@ class Guild(id: EntityID<Long>): Entity<Long>(id) {
     var guildOwner by Guilds.guildOwnerId
     var guildFlags by Guilds.guildFlags
     var guildFeatures by Guilds.features
-    var guildChannel by optionalRelated(GuildChannel)
     var guildPunishmentConfig by optionalRelated(GuildPunishmentConfig)
-
-
-
 }

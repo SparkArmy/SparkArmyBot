@@ -1,7 +1,9 @@
 package de.sparkarmy.jda.listeners
 
 import de.sparkarmy.data.cache.GuildCacheView
+import de.sparkarmy.data.cache.WebhookCacheView
 import de.sparkarmy.database.entity.Guild
+import de.sparkarmy.database.entity.GuildLogChannel
 import dev.minn.jda.ktx.events.CoroutineEventListener
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.events.GenericEvent
@@ -17,7 +19,8 @@ private val log = KotlinLogging.logger { }
 
 @Single
 class GuildUpdateListener(
-    private val guildRepo: GuildCacheView
+    private val guildRepo: GuildCacheView,
+    private val webhookRepo: WebhookCacheView
 ) : CoroutineEventListener {
     override suspend fun onEvent(event: GenericEvent) {
         when (event) {
@@ -29,6 +32,7 @@ class GuildUpdateListener(
 
     private suspend fun saveGuild(guild: JDAGuild) {
         guildRepo.save(guild)
+        webhookRepo.save(guild.jda, GuildLogChannel.getLogChannels(guild))
     }
 
     private val guildChanges: Map<String, Guild.(JDAGuild) -> Unit> = mapOf(

@@ -25,8 +25,7 @@ repositories {
 
 dependencies {
     // JDA and Webhook
-    implementation("net.dv8tion:JDA:5.3.2")
-    implementation("io.github.freya022:JDA:4b468cdd09")
+    implementation("io.github.freya022:JDA:6dc8746825")
     implementation("club.minnced:jda-ktx:0.12.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
     implementation("at.xirado:JDUI:0.4.6")
@@ -51,7 +50,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("org.slf4j:slf4j-api:2.0.13")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 

@@ -46,3 +46,9 @@ warnRoleDisableButtonLabel = "Disable"
 [command.mod.modCase.fields]
 offenderName = "Offender"
 reasonName = "Reason"
+
+[punishment.createUserCaseEmbed]
+guildText = "You are punished on {0}"
+reasonHeader = "Reason"
+complainsText = "If you have complains about the punishment use the button below"
+buttonLabel = "Create Ticket"

@@ -46,3 +46,9 @@ warnRoleDisableButtonLabel = "Disable"
 [command.mod.modCase.fields]
 offenderName = "Verursacher"
 reasonName = "Grund"
+
+[punishment.createUserCaseEmbed]
+guildText = "Du hast eine Bestrafung auf {0} erhalten"
+reasonHeader = "Grund: {0}"
+complainsText = "Möchtest du Einspruch erheben? Nutze den Button unten."
+buttonLabel = "Ticket erstellen"

@@ -1,8 +1,17 @@
 package de.sparkarmy.interaction.misc
 
+import at.xirado.jdui.component.message.button
+import at.xirado.jdui.component.message.container
+import at.xirado.jdui.component.message.separator
+import at.xirado.jdui.component.message.text
+import at.xirado.jdui.component.row
+import at.xirado.jdui.view.definition.function.view
 import de.sparkarmy.embed.EmbedService
+import de.sparkarmy.i18n.LocalizationService
 import de.sparkarmy.model.Embed
 import de.sparkarmy.model.PunishmentType
+import net.dv8tion.jda.api.components.button.ButtonStyle
+import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.User
@@ -17,10 +26,10 @@ fun checkPreconditions(offender: User, moderator: Member?, guild: Guild): RestAc
         }
 }
 
-fun createCaseEmbed(
+fun createGuildCaseEmbed(
     embedService: EmbedService,
     locale: DiscordLocale,
-    offender: User,
+    offender: Member,
     reason: String,
     punishmentType: PunishmentType,
     event: SlashCommandInteractionEvent
@@ -63,3 +72,33 @@ fun createCaseEmbed(
 
     return embedService.getLocalizedMessageEmbed("command.mod.modCase", locale, embedArgs)
 }
+
+fun createUserCaseEmbed(
+    reason: String,
+    punishmentType: PunishmentType,
+    guild: Guild,
+    locale: DiscordLocale,
+    localizationService: LocalizationService
+) = view {
+    compose {
+        +container {
+            accentColor = 0xff0000
+            +text(punishmentType.name)
+            +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.guildText", guild.name))
+            +separator(true, Separator.Spacing.SMALL)
+            +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.reasonHeader", reason))
+            +separator(true, Separator.Spacing.SMALL)
+            +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.complainsText"))
+            +row {
+                +button(
+                    ButtonStyle.SECONDARY,
+                    localizationService.getString(locale, "punishment.createUserCaseEmbed.buttonLabel")
+                )
+                {
+                    // TODO Implement Modmail-Function
+                }
+            }
+        }
+    }
+}
+

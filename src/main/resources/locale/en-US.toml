@@ -18,7 +18,7 @@ userMuteFailed = "User {0} weren't muted"
 noMuteRoleSet = "Please set a mute Role"
 
 [commands.configuration.embeds.conf_0]
-title = "Overwiew"
+title = "Overview"
 description = "Configure the Bot-Properties for the server"
 punishmentFieldName = "Punishment-Config"
 punishmentFieldDescription = "Set Roles for punishment and activate/deactivate the function"
@@ -49,6 +49,7 @@ reasonName = "Reason"
 
 [punishment.createUserCaseEmbed]
 guildText = "You are punished on {0}"
+effect = "Effect: {0}"
 reasonHeader = "Reason"
 complainsText = "If you have complains about the punishment use the button below"
 buttonLabel = "Create Ticket"

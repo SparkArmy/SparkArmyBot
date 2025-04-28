@@ -83,9 +83,15 @@ fun createUserCaseEmbed(
     compose {
         +container {
             accentColor = 0xff0000
-            +text(punishmentType.name)
             +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.guildText", guild.name))
             +separator(true, Separator.Spacing.SMALL)
+            +text(
+                localizationService.getString(
+                    locale,
+                    "punishment.createUserCaseEmbed.effect",
+                    punishmentType.name.lowercase()
+                )
+            )
             +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.reasonHeader", reason))
             +separator(true, Separator.Spacing.SMALL)
             +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.complainsText"))

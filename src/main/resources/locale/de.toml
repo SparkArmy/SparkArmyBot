@@ -48,7 +48,8 @@ offenderName = "Verursacher"
 reasonName = "Grund"
 
 [punishment.createUserCaseEmbed]
-guildText = "Du hast eine Bestrafung auf {0} erhalten"
+guildText = "Du hast auf {0} einen Regelverstoß begangen"
+effect = "Konsequenz: {0}"
 reasonHeader = "Grund: {0}"
 complainsText = "Möchtest du Einspruch erheben? Nutze den Button unten."
 buttonLabel = "Ticket erstellen"

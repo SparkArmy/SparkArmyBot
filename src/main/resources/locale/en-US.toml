@@ -1,6 +1,7 @@
 [action]
 success = "The action was completed successfully"
 backButton = "Back"
+disableButton = "Disable"
 
 [commands.avatar]
 userProfile = "{0}''s avatar"
@@ -22,26 +23,23 @@ title = "Overview"
 description = "Configure the Bot-Properties for the server"
 punishmentFieldName = "Punishment-Config"
 punishmentFieldDescription = "Set Roles for punishment and activate/deactivate the function"
+logChannelFieldName = "Log-Channel-Configuration"
+logChannelFieldDescription = "Configures the Log-Channel"
 
 [commands.configuration.embeds.conf_100]
 title = "Punishment-Config"
 description = "Set Roles for punishment and activate/deactivate the function"
-muteRoleFieldName = "Mute"
-muteRoleFieldValue = "Test"
-warnRoleFieldName = "Warn"
-warnRoleFieldValue = "Test"
+muteRoleFieldName = "Mute-Role"
+warnRoleFieldName = "Warn-Role"
+noRoleSet = "No role set"
+roleSelectPlaceholder = "Please select"
+roleSelectDescription = "Please select a role below or disable the role"
 
 [commands.configuration.embeds.conf_101]
 title = "Punishment-Config - MuteRoleConfig"
-description = "Please select a role below or disable the role"
-muteRoleSelectPlaceholder = "Please select"
-muteRoleDisableButtonLabel = "Disable"
 
 [commands.configuration.embeds.conf_102]
 title = "Punishment-Config - WarnRoleConfig"
-description = "Please select a role below or disable the role"
-warnRoleSelectPlaceholder = "Please select"
-warnRoleDisableButtonLabel = "Disable"
 
 [command.mod.modCase.fields]
 offenderName = "Offender"

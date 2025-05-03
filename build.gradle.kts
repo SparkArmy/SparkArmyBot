@@ -18,8 +18,6 @@ kotlin {
 
 repositories {
     mavenCentral()
-    maven("https://maven.xirado.dev/releases")
-    maven("https://maven.xirado.dev/jitpack")
     maven("https://jitpack.io")
 }
 
@@ -28,7 +26,7 @@ dependencies {
     implementation("io.github.freya022:JDA:6dc8746825")
     implementation("club.minnced:jda-ktx:0.12.0")
     implementation("club.minnced:discord-webhooks:0.8.4")
-    implementation("com.github.Xirado:JDUI:-SNAPSHOT")
+    implementation("com.github.Xirado:JDUI:33331c6617")
 
     // Database, Exposed & Cache
     implementation("org.postgresql:postgresql:42.7.5")

@@ -27,13 +27,11 @@ logChannelFieldName = "Log-Kanal-Konfig"
 logChannelFieldDescription = "Konfiguriert Log-Kanäle"
 
 [commands.configuration.embeds.conf_100]
-title = "Bestrafungskonfig"
-description = "Legt Rollen für die Bestrafung fest und aktiviert/deaktiviert die Funktion"
 muteRoleFieldName = "Muterolle"
 warnRoleFieldName = "Warnrolle"
 noRoleSet = "Keine Rolle gesetzt"
-roleSelectPlaceholder = "Bitte auswählen"
-roleSelectDescription = "Bitte wähle eine Rolle aus oder deaktiviere die Rolle"
+roleSelectPlaceholder = "Bitte eine Rolle auswählen"
+roleSelectDescription = "Bitte wähle unten eine Rolle aus oder deaktiviere die Rolle"
 
 [commands.configuration.embeds.conf_101]
 title = "Bestrafungskonfig - Mute-Role-Konfiguration"

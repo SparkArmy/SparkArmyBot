@@ -9,11 +9,13 @@ import at.xirado.jdui.view.compose
 import at.xirado.jdui.view.replyView
 import de.sparkarmy.data.cache.GuildCacheView
 import de.sparkarmy.database.entity.Guild
+import de.sparkarmy.database.entity.GuildPunishmentConfig
 import de.sparkarmy.i18n.LocalizationService
 import de.sparkarmy.interaction.command.model.contexts
 import de.sparkarmy.interaction.command.model.localizationService
 import de.sparkarmy.interaction.command.model.slash.Handler
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
+import de.sparkarmy.model.LogChannelType
 import de.sparkarmy.util.headerFirst
 import de.sparkarmy.util.headerSecond
 import de.sparkarmy.util.roleMention
@@ -72,11 +74,6 @@ class ConfigurationView : View() {
         this.jdaGuild = contextData.jdaGuild
         this.localizationService = contextData.localizationService
         this.locale = contextData.locale
-
-        newSuspendedTransaction {
-            muteRole = cachedGuild.guildPunishmentConfig?.muteRole
-            warnRole = cachedGuild.guildPunishmentConfig?.warnRole
-        }
     }
 
     override suspend fun createView() = compose {
@@ -93,47 +90,49 @@ class ConfigurationView : View() {
     }
 
     private fun Container.overview() {
-        +text(headerFirst(localizationService.getString(locale, "commands.configuration.embeds.conf_0.title")))
-        +text(localizationService.getString(locale, "commands.configuration.embeds.conf_0.description"))
+        +text(headerFirst(getLocalizeString("commands.configuration.embeds.conf_0.title")))
+        +text(getLocalizeString("commands.configuration.embeds.conf_0.description"))
         +separator(true, Separator.Spacing.SMALL)
         +section(
             button(
                 ButtonStyle.SECONDARY,
-                localizationService.getString(locale, "commands.configuration.embeds.conf_0.punishmentFieldName")
+                getLocalizeString("commands.configuration.embeds.conf_0.punishmentFieldName")
             ) {
+
+                newSuspendedTransaction {
+
+                    val punishmentConfig = cachedGuild.guildPunishmentConfig
+                    punishmentConfig?.let { GuildPunishmentConfig.new(cachedGuild.id.value) {} }
+
+                    muteRole = punishmentConfig?.muteRole
+                    warnRole = punishmentConfig?.warnRole
+                }
+
                 nextView = 100
             }) {
-            +text(
-                headerSecond(
-                    localizationService.getString(
-                        locale,
-                        "commands.configuration.embeds.conf_0.punishmentFieldName"
-                    )
-                )
-            )
-            +text(
-                localizationService.getString(
-                    locale,
-                    "commands.configuration.embeds.conf_0.punishmentFieldDescription"
-                )
-            )
+            +text(headerSecond(getLocalizeString("commands.configuration.embeds.conf_0.punishmentFieldName")))
+            +text(getLocalizeString("commands.configuration.embeds.conf_0.punishmentFieldDescription"))
+        }
+        +separator(true, Separator.Spacing.SMALL)
+        +section(
+            button(
+                ButtonStyle.SECONDARY,
+                getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldName")
+            ) {
+                nextView = 200
+            }
+        ) {
+            +text(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldName"))
+            +text(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldDescription"))
         }
     }
 
     private fun Container.punishmentView() {
         +text(
-            headerFirst(
-                localizationService.getString(
-                    locale,
-                    "commands.configuration.embeds.conf_100.title"
-                )
-            )
+            headerFirst(getLocalizeString("commands.configuration.embeds.conf_0.punishmentFieldName"))
         )
         +text(
-            localizationService.getString(
-                locale,
-                "commands.configuration.embeds.conf_100.description"
-            )
+            getLocalizeString("commands.configuration.embeds.conf_0.punishmentFieldDescription")
         )
         +separator(true, Separator.Spacing.SMALL)
 
@@ -143,25 +142,16 @@ class ConfigurationView : View() {
                     muteRole == null -> ButtonStyle.SECONDARY
                     else -> ButtonStyle.SUCCESS
                 },
-                localizationService.getString(locale, "commands.configuration.embeds.conf_100.muteRoleFieldName")
+                getLocalizeString("commands.configuration.embeds.conf_100.muteRoleFieldName")
             ) {
                 nextView = 101
             }) {
             val rolePart = when (muteRole) {
-                null -> localizationService.getString(
-                    locale,
-                    "commands.configuration.embeds.conf_100.noRoleSet"
-                )
-
+                null -> getLocalizeString("commands.configuration.embeds.conf_100.noRoleSet")
                 else -> roleMention(muteRole!!)
             }
             +text(
-                "${
-                    localizationService.getString(
-                        locale,
-                        "commands.configuration.embeds.conf_100.muteRoleFieldName",
-                    )
-                }: $rolePart"
+                "${getLocalizeString("commands.configuration.embeds.conf_100.muteRoleFieldName")}: $rolePart"
             )
         }
         +section(
@@ -170,32 +160,24 @@ class ConfigurationView : View() {
                     warnRole == null -> ButtonStyle.SECONDARY
                     else -> ButtonStyle.SUCCESS
                 },
-                localizationService.getString(locale, "commands.configuration.embeds.conf_100.warnRoleFieldName")
+                getLocalizeString("commands.configuration.embeds.conf_100.warnRoleFieldName")
             ) {
                 nextView = 102
             }
         ) {
-            val rolePart = when (muteRole) {
-                null -> localizationService.getString(
-                    locale,
-                    "commands.configuration.embeds.conf_100.noRoleSet"
-                )
+            val rolePart = when (warnRole) {
+                null -> getLocalizeString("commands.configuration.embeds.conf_100.noRoleSet")
 
                 else -> roleMention(warnRole!!)
             }
             +text(
-                "${
-                    localizationService.getString(
-                        locale,
-                        "commands.configuration.embeds.conf_100.warnRoleFieldName",
-                    )
-                }: $rolePart"
+                "${getLocalizeString("commands.configuration.embeds.conf_100.warnRoleFieldName")}: $rolePart"
             )
         }
         +row {
             +button(
                 ButtonStyle.SECONDARY,
-                localizationService.getString(locale, "action.backButton")
+                getLocalizeString("action.backButton")
             ) {
                 nextView = 0
             }
@@ -205,20 +187,17 @@ class ConfigurationView : View() {
     private fun Container.punishmentSelectView() {
         +text(
             headerFirst(
-                localizationService.getString(
-                    locale,
+                getLocalizeString(
                     when (nextView) {
                         101 -> "commands.configuration.embeds.conf_101.title"
                         102 -> "commands.configuration.embeds.conf_102.title"
                         else -> "error"
                     }
-
                 )
             )
         )
         +text(
-            localizationService.getString(
-                locale,
+            getLocalizeString(
                 "commands.configuration.embeds.conf_100.roleSelectDescription"
             )
         )
@@ -226,10 +205,8 @@ class ConfigurationView : View() {
         +row {
             +entitySelect(
                 targets = listOf(EntitySelectMenu.SelectTarget.ROLE),
-                placeholder = localizationService.getString(
-                    locale,
+                placeholder = getLocalizeString(
                     "commands.configuration.embeds.conf_100.roleSelectPlaceholder"
-
                 )
             ) {
                 val selectedRole = mentions.roles[0].idLong
@@ -256,12 +233,38 @@ class ConfigurationView : View() {
         +row {
             +button(
                 ButtonStyle.DANGER,
-                "action.disableButton"
+                getLocalizeString("action.disableButton")
             ) {
+                when (nextView) {
+                    101 -> {
+                        muteRole = null
+
+                        newSuspendedTransaction {
+                            cachedGuild.guildPunishmentConfig?.muteRole = muteRole
+                        }
+                    }
+
+                    102 -> {
+                        warnRole = null
+
+                        newSuspendedTransaction {
+                            cachedGuild.guildPunishmentConfig?.warnRole = warnRole
+                        }
+                    }
+                }
                 nextView = 100
             }
         }
     }
+
+    private fun Container.logChannelConfigurationView() {
+        LogChannelType.entries.map { SelectOption.of(it.name, it.id.toString()) }
+        +text(headerFirst(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldName")))
+        +text(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldDescription"))
+    }
+
+    private fun getLocalizeString(key: String, vararg arguments: Any) =
+        localizationService.getString(locale, key, arguments)
 }
 
 data class ContextData(

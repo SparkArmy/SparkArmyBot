@@ -27,12 +27,10 @@ logChannelFieldName = "Log-Channel-Configuration"
 logChannelFieldDescription = "Configures the Log-Channel"
 
 [commands.configuration.embeds.conf_100]
-title = "Punishment-Config"
-description = "Set Roles for punishment and activate/deactivate the function"
 muteRoleFieldName = "Mute-Role"
 warnRoleFieldName = "Warn-Role"
 noRoleSet = "No role set"
-roleSelectPlaceholder = "Please select"
+roleSelectPlaceholder = "Please select a roile"
 roleSelectDescription = "Please select a role below or disable the role"
 
 [commands.configuration.embeds.conf_101]

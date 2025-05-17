@@ -146,7 +146,7 @@ class ConfigurationView : View() {
                 nextView = 200
             }
         ) {
-            +text(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldName"))
+            +text(headerFirst(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldName")))
             +text(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldDescription"))
         }
     }
@@ -313,7 +313,11 @@ class ConfigurationView : View() {
                 }"
             )
         )
-        +text("commands.configuration.embeds.conf_200.channelSelectViewDescription")
+        +text(
+            getLocalizeString(
+                "commands.configuration.embeds.conf_200.channelSelectViewDescription"
+            )
+        )
         +row {
             logChannelSelectRow(type)
         }

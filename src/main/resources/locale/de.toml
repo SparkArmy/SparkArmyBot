@@ -2,6 +2,8 @@
 success = "Der Vorgang wurde erfolgreich durchgeführt"
 backButton = "Zurück"
 disableButton = "Deaktivieren"
+roleSelectPlaceholder = "Bitte eine Rolle auswählen"
+channelSelectPlaceholder = "Bitte einen Channel auswählen"
 
 [commands.avatar]
 userProfile = "Avatar von {0}"
@@ -38,6 +40,11 @@ title = "Bestrafungskonfig - Mute-Role-Konfiguration"
 
 [commands.configuration.embeds.conf_102]
 title = "Bestrafungskonfig - Warn-Role-Konfiguration"
+
+[commands.configuration.embeds.conf_200]
+channelSelectDescription = "Wähle einen ChannelType aus, den du konfigurieren möchtest"
+channelSelectViewHeader = "Konfiguration"
+channelSelectViewDescription = "Wähle Channel unten aus, diese werden dann zu den Log-Channeln des ausgewählten Types"
 
 [command.mod.modCase.fields]
 offenderName = "Verursacher"

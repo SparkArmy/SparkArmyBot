@@ -9,11 +9,12 @@ import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.util.*
 
 class GuildLogChannel(id: EntityID<Long>): Entity<Long>(id) {
     companion object : EntityClass<Long, GuildLogChannel>(GuildLogChannels) {
 
-        suspend fun getLogChannels(type: LogChannelType, guildId: Long) = newSuspendedTransaction {
+        suspend fun getLogChannels(type: EnumSet<LogChannelType>, guildId: Long) = newSuspendedTransaction {
             val query = GuildLogChannels
                 .innerJoin(GuildChannels)
                 .select(GuildLogChannels.columns)

@@ -27,6 +27,7 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.requests.ErrorResponse
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
+import java.util.*
 
 @Single
 class MuteCommand(
@@ -110,7 +111,7 @@ class MuteCommand(
 
                     else -> hook.editOriginal(
                         event.getLocalizedString(
-                            "",
+                            "commands.punishment.mute.userMuteFailed",
                             false,
                             user.effectiveName
                         )
@@ -120,7 +121,7 @@ class MuteCommand(
             .await()
 
 
-        val guildChannel = GuildLogChannel.getLogChannels(LogChannelType.MOD_LOG, guild.idLong)
+        val guildChannel = GuildLogChannel.getLogChannels(EnumSet.of(LogChannelType.MOD_LOG), guild.idLong)
         val embed =
             createGuildCaseEmbed(
                 embedService,

@@ -2,6 +2,8 @@
 success = "The action was completed successfully"
 backButton = "Back"
 disableButton = "Disable"
+roleSelectPlaceholder = "Please select a role"
+channelSelectPlaceholder = "Please select a channel"
 
 [commands.avatar]
 userProfile = "{0}''s avatar"
@@ -38,6 +40,11 @@ title = "Punishment-Config - MuteRoleConfig"
 
 [commands.configuration.embeds.conf_102]
 title = "Punishment-Config - WarnRoleConfig"
+
+[commands.configuration.embeds.conf_200]
+channelSelectDescription = "Select a channel, you would like to configure"
+channelSelectViewHeader = "Configuration"
+channelSelectViewDescription = "Please select channel below. The selected channel will become the log channel of the selected type"
 
 [command.mod.modCase.fields]
 offenderName = "Offender"

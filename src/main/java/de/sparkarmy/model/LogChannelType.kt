@@ -1,11 +1,13 @@
 package de.sparkarmy.model
 
-enum class LogChannelType(val id : Short) {
-    MESSAGE_LOG(0),
-    MEMBER_LOG(1),
-    COMMAND_LOG(2),
-    SERVER_LOG(3),
-    VOICE_LOG(4),
-    MOD_LOG(5),
-    LEAVE_LOG(6),
+import de.sparkarmy.data.BitField
+
+enum class LogChannelType(override val offset: Int, val identifier: String) : BitField {
+    MESSAGE_LOG(0, "Message-Log"),
+    MEMBER_LOG(1, "Member-Log"),
+    COMMAND_LOG(2, "Command-Log"),
+    SERVER_LOG(3, "Server-Log"),
+    VOICE_LOG(4, "Voice-Log"),
+    MOD_LOG(5, "Mod-Log"),
+    LEAVE_LOG(6, "Leave-Log"),
 }

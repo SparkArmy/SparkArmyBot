@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.charLength
 
-object Punishments : IdTable<Long>("table_punishments") {
+object ModerationActions : IdTable<Long>("table_moderation_action") {
     override val id = long("psm_id").entityId().autoIncrement()
     val type = short("psm_type").bitField<Short, PunishmentType>()
     val offender = reference("fk_psm_offender_user_id", Users, ReferenceOption.CASCADE, ReferenceOption.CASCADE)

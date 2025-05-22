@@ -3,7 +3,7 @@ package de.sparkarmy.interaction.command.slash.mod
 import de.sparkarmy.interaction.command.model.slash.Handler
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
 import de.sparkarmy.interaction.command.model.slash.dsl.option
-import de.sparkarmy.interaction.misc.checkPreconditions
+import de.sparkarmy.jda.listeners.checkPreconditions
 import de.sparkarmy.model.GuildFeature
 import de.sparkarmy.util.getLocalizedString
 import dev.minn.jda.ktx.messages.MessageCreate

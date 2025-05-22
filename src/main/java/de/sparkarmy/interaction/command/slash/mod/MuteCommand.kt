@@ -9,12 +9,12 @@ import de.sparkarmy.interaction.command.model.localizationService
 import de.sparkarmy.interaction.command.model.slash.Handler
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
 import de.sparkarmy.interaction.command.model.slash.dsl.option
-import de.sparkarmy.interaction.misc.checkPreconditions
-import de.sparkarmy.interaction.misc.createGuildCaseEmbed
-import de.sparkarmy.interaction.misc.createUserCaseEmbed
+import de.sparkarmy.jda.listeners.checkPreconditions
+import de.sparkarmy.jda.listeners.createGuildCaseEmbed
+import de.sparkarmy.jda.listeners.createUserCaseEmbed
 import de.sparkarmy.model.GuildFeature
 import de.sparkarmy.model.LogChannelType
-import de.sparkarmy.model.PunishmentType
+import de.sparkarmy.model.ModerationActionType
 import de.sparkarmy.model.toMessageEmbed
 import de.sparkarmy.util.getLocalizedString
 import dev.minn.jda.ktx.coroutines.await
@@ -22,7 +22,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.requests.ErrorResponse
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -126,24 +125,27 @@ class MuteCommand(
             createGuildCaseEmbed(
                 embedService,
                 event.guildLocale,
-                user,
+                user.idLong,
+                event.user,
                 reason,
-                PunishmentType.MUTE,
-                event
+                ModerationActionType.MUTE,
+                event.jda
             ).toMessageEmbed()
 
         guildChannel.forEach {
-            try {
-                webhookCacheView.getById(it.id.value)?.sendMessageEmbeds(embed)?.await()
-            } catch (e: ErrorResponseException) {
-                log.warn { "Webhook from ${it.id} removed, can't send webhook message" }
-
-                webhookCacheView.remove(it.id.value)
-            }
+            webhookCacheView.sendMessageEmbeds(it.id.value, embed)
         }
 
         user.user.openPrivateChannel().await()
-            .sendView(createUserCaseEmbed(reason, PunishmentType.MUTE, guild, event.guildLocale, localizationService))
+            .sendView(
+                createUserCaseEmbed(
+                    reason,
+                    ModerationActionType.MUTE,
+                    guild,
+                    event.guildLocale,
+                    localizationService
+                )
+            )
             .onErrorFlatMap(ErrorResponse.test(ErrorResponse.UNKNOWN_CHANNEL, ErrorResponse.CANNOT_SEND_TO_USER)) {
                 hook.editOriginal("Nop")
             }

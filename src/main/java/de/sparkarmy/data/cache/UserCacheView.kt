@@ -23,14 +23,14 @@ class UserCacheView(
     }
 
     private fun User.setMetadata(jdaUser: JDAUser) {
-//        avatar = jdaUser.avatarId
+        avatar = jdaUser.avatarId
         username = jdaUser.name
         displayName = jdaUser.globalName
     }
 
     private fun User.updateMetadata(jdaUser: JDAUser) {
-//        if (avatar != jdaUser.avatarId)
-//            avatar = jdaUser.avatarId
+        if (avatar != jdaUser.avatarId)
+            avatar = jdaUser.avatarId
         if (username != jdaUser.name)
             username = jdaUser.name
         if (displayName != jdaUser.globalName)

@@ -10,5 +10,7 @@ class User(id: EntityID<Long>) : Entity<Long>(id) {
 
     var username by Users.username
     var displayName by Users.displayname
+    var avatar by Users.avatar
+    var banner by Users.banner
     var userFlags by Users.flags
 }

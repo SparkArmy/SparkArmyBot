@@ -25,7 +25,7 @@ dependencies {
     // JDA and Webhook
     implementation("io.github.freya022:JDA:6dc8746825")
     implementation("club.minnced:jda-ktx:0.12.0")
-    implementation("com.github.Xirado:JDUI:33331c6617")
+    implementation("dev.xirado:jdui-core:0.1.1")
 
     // Database, Exposed & Cache
     implementation("org.postgresql:postgresql:42.7.5")

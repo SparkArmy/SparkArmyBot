@@ -28,7 +28,7 @@ class BanCommand : SlashCommand("ban", "Ban a user from the server") {
         option<Boolean?>("messages", "Remove messages from the last day")
     }
 
-    // TODO add Embeds for log and user
+    // TODO Add User-Embed
 
     @Handler(ephemeral = true)
     suspend fun run(event: SlashCommandInteractionEvent, user: User, reason: String, messages: Boolean = false) {

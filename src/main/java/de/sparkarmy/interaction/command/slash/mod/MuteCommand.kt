@@ -46,8 +46,6 @@ class MuteCommand(
         })
     }
 
-    // TODO add Embeds for log and user
-
     @Handler(ephemeral = true)
     suspend fun run(event: SlashCommandInteractionEvent, user: Member, reason: String) {
         val guild = event.guild

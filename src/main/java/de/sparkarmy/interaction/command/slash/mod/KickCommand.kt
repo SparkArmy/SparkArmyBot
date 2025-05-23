@@ -26,7 +26,7 @@ class KickCommand : SlashCommand("kick", "Kicks a user from the server") {
         })
     }
 
-    // TODO add Embeds for log and user
+    // TODO Add User-Embed
 
     @Handler
     suspend fun run(event: SlashCommandInteractionEvent, user: User, reason: String) {

@@ -247,7 +247,7 @@ fun createUserCaseEmbed(
                     localizationService.getString(locale, "punishment.createUserCaseEmbed.buttonLabel")
                 )
                 {
-                    // TODO Implement Modmail-Function
+                    // TODO Implement Modmail-Function (Waiting for Feature-Release from JDUI)
                 }
             }
         }

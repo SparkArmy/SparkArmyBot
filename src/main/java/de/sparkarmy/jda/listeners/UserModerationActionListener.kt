@@ -45,7 +45,8 @@ class UserModerationActionListener(
     private val webhookCacheView: WebhookCacheView,
     private val embedService: EmbedService,
     private val guildCacheView: GuildCacheView,
-    private val userCacheView: UserCacheView
+    private val userCacheView: UserCacheView,
+    private val localizationService: LocalizationService
 ) : JDAEventListener {
     override val intents: EnumSet<GatewayIntent> =
         EnumSet.of(GatewayIntent.GUILD_MODERATION, GatewayIntent.GUILD_MEMBERS)
@@ -74,7 +75,8 @@ class UserModerationActionListener(
                 moderator.user,
                 reason,
                 ModerationActionType.TIMEOUT,
-                event.jda
+                event.jda,
+                localizationService
             ).toMessageEmbed()
             GuildLogChannel.getLogChannels(logChannelType, event.guild.idLong).forEach {
                 webhookCacheView.sendMessageEmbeds(it.id.value, guildEmbed)
@@ -111,7 +113,8 @@ class UserModerationActionListener(
                 moderator,
                 reason,
                 moderationActionType,
-                event.jda
+                event.jda,
+                localizationService
             ).toMessageEmbed()
             GuildLogChannel.getLogChannels(logChannelType, event.guild.idLong).forEach {
                 webhookCacheView.sendMessageEmbeds(it.id.value, guildEmbed)
@@ -172,7 +175,8 @@ fun createGuildCaseEmbed(
     moderator: User?,
     reason: String,
     moderationActionType: ModerationActionType,
-    jda: JDA
+    jda: JDA,
+    localizationService: LocalizationService
 ): Embed {
 
     val bot = jda.selfUser
@@ -193,6 +197,9 @@ fun createGuildCaseEmbed(
     val offenderAsString = "${userMention(offenderId)} || $offenderId"
     val reason = reason
 
+    val offenderName = localizationService.getString(locale, "command.mod.modCase.fields.offenderName")
+    val reasonName = localizationService.getString(locale, "command.mod.modCase.fields.reasonName")
+
 
     val embedArgs = mapOf(
         "title" to title,
@@ -203,8 +210,8 @@ fun createGuildCaseEmbed(
         "selfUserIcon" to selfUserIcon,
         "offender" to offenderAsString,
         "reason" to reason,
-        "offenderName" to "Offender", // TODO Add Localization
-        "reasonName" to "Reason" // TODO Add Localization
+        "offenderName" to offenderName,
+        "reasonName" to reasonName
 
     )
 

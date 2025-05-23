@@ -129,7 +129,8 @@ class MuteCommand(
                 event.user,
                 reason,
                 ModerationActionType.MUTE,
-                event.jda
+                event.jda,
+                localizationService
             ).toMessageEmbed()
 
         guildChannel.forEach {

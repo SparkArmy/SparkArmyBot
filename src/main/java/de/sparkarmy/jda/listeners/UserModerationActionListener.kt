@@ -15,10 +15,7 @@ import de.sparkarmy.database.entity.ModerationAction
 import de.sparkarmy.embed.EmbedService
 import de.sparkarmy.i18n.LocalizationService
 import de.sparkarmy.jda.JDAEventListener
-import de.sparkarmy.model.Embed
-import de.sparkarmy.model.LogChannelType
-import de.sparkarmy.model.ModerationActionType
-import de.sparkarmy.model.toMessageEmbed
+import de.sparkarmy.model.*
 import de.sparkarmy.util.userMention
 import dev.minn.jda.ktx.coroutines.await
 import net.dv8tion.jda.api.JDA
@@ -143,6 +140,8 @@ suspend fun modActionHandler(data: PunishmentContextData) {
     val offender = data.jda.retrieveUserById(data.offenderId).await()
     val moderator = data.jda.retrieveUserById(data.moderatorId).await()
 
+    val cachedGuild = data.guildCacheView.save(data.guild)
+
     createModerationActionEntry(
         data.guild,
         moderator,
@@ -164,20 +163,21 @@ suspend fun modActionHandler(data: PunishmentContextData) {
         data.localizationService
     ).toMessageEmbed()
 
-    val userEmbed = createUserCaseEmbed(
-        data.reason,
-        data.moderationActionType,
-        data.guild,
-        data.locale,
-        data.localizationService
-    )
-
     newSuspendedTransaction {
         val type = EnumSet.of(LogChannelType.MOD_LOG)
         GuildLogChannel.getLogChannels(type, data.guild.idLong).forEach {
             data.webhookCacheView.sendMessageEmbeds(it.id.value, guildCaseEmbed)
         }
     }
+
+    val userEmbed = createUserCaseEmbed(
+        data.reason,
+        data.moderationActionType,
+        data.guild,
+        data.locale,
+        data.localizationService,
+        cachedGuild.guildFeatures?.contains(GuildFeature.MOD_TICKET) ?: false
+    )
 
     offender.openPrivateChannel().await()
         .sendView(userEmbed)
@@ -251,7 +251,8 @@ private fun createUserCaseEmbed(
     moderationActionType: ModerationActionType,
     guild: Guild,
     locale: DiscordLocale,
-    localizationService: LocalizationService
+    localizationService: LocalizationService,
+    modTicketEnabled: Boolean
 ) = view {
     compose {
         +container {
@@ -268,7 +269,7 @@ private fun createUserCaseEmbed(
             +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.reasonHeader", reason))
             +separator(true, Separator.Spacing.SMALL)
             +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.complainsText"))
-            +row {
+            if (modTicketEnabled) +row {
                 +button(
                     ButtonStyle.SECONDARY,
                     localizationService.getString(locale, "punishment.createUserCaseEmbed.buttonLabel")

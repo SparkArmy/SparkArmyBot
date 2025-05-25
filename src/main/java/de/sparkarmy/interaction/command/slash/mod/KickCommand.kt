@@ -33,7 +33,7 @@ class KickCommand : SlashCommand("kick", "Kicks a user from the server") {
     suspend fun run(event: SlashCommandInteractionEvent, user: User, reason: String) {
         val guild = event.guild!!
 
-        event.deferReply().await()
+        event.deferReply().setEphemeral(true).await()
         val hook = event.hook
 
         checkPreconditions(user, event.member, guild)

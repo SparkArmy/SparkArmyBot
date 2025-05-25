@@ -35,7 +35,7 @@ class BanCommand : SlashCommand("ban", "Ban a user from the server") {
     suspend fun run(event: SlashCommandInteractionEvent, user: User, reason: String, messages: Boolean = false) {
         val guild = event.guild!!
 
-        event.deferReply().await()
+        event.deferReply().setEphemeral(true).await()
         val hook = event.hook
 
         val duration = when {

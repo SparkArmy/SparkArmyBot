@@ -48,7 +48,7 @@ class WarnCommand(
     @Handler(ephemeral = true)
     suspend fun run(event: SlashCommandInteractionEvent, user: Member, reason: String) {
         val guild = event.guild!!
-        event.deferReply().await()
+        event.deferReply().setEphemeral(true).await()
         val hook = event.hook
 
 

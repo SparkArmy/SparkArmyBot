@@ -4,6 +4,7 @@ backButton = "Back"
 disableButton = "Disable"
 roleSelectPlaceholder = "Please select a role"
 channelSelectPlaceholder = "Please select a channel"
+update = "Update"
 
 [commands.avatar]
 userProfile = "{0}''s avatar"
@@ -31,6 +32,7 @@ punishmentFieldName = "Punishment-Config"
 punishmentFieldDescription = "Set Roles for punishment and activate/deactivate the function"
 logChannelFieldName = "Log-Channel-Configuration"
 logChannelFieldDescription = "Configures the Log-Channel"
+updateConfigDescription = "Update the Guild-Config"
 
 [commands.configuration.embeds.conf_100]
 muteRoleFieldName = "Mute-Role"

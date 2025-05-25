@@ -23,6 +23,7 @@ noMuteRoleSet = "Bitte setzte eine Mute-Rolle"
 userWarnSuccessfully = "User {0} wurde verwarnt"
 userWarnFailed = "User {0} konnte nicht verwarnt werden"
 noWarnRoleSet = "Bitte setzte eine Verwarnungs-Rolle"
+update = "Update"
 
 [commands.configuration.embeds.conf_0]
 title = "Übersicht"
@@ -31,6 +32,7 @@ punishmentFieldName = "Bestrafungskonfig"
 punishmentFieldDescription = "Legt Rollen für die Bestrafung fest und aktiviert/deaktiviert die Funktion"
 logChannelFieldName = "Log-Kanal-Konfig"
 logChannelFieldDescription = "Konfiguriert Log-Kanäle"
+updateConfigDescription = "Aktualisiert die Server-Konfiguration"
 
 [commands.configuration.embeds.conf_100]
 muteRoleFieldName = "Muterolle"

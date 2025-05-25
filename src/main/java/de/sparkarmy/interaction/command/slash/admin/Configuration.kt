@@ -16,10 +16,12 @@ import de.sparkarmy.database.entity.GuildChannel
 import de.sparkarmy.database.entity.GuildLogChannel
 import de.sparkarmy.database.entity.GuildPunishmentConfig
 import de.sparkarmy.i18n.LocalizationService
+import de.sparkarmy.interaction.command.AppCommandHandler
 import de.sparkarmy.interaction.command.model.contexts
 import de.sparkarmy.interaction.command.model.localizationService
 import de.sparkarmy.interaction.command.model.slash.Handler
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
+import de.sparkarmy.model.GuildFeature
 import de.sparkarmy.model.LogChannelType
 import de.sparkarmy.util.headerFirst
 import de.sparkarmy.util.headerSecond
@@ -38,6 +40,7 @@ import net.dv8tion.jda.api.interactions.InteractionContextType
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
+import org.koin.core.component.inject
 import java.util.*
 import net.dv8tion.jda.api.components.selects.EntitySelectMenu.SelectTarget as JDASelectTarget
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
@@ -57,6 +60,8 @@ class Configuration(
         contexts(InteractionContextType.GUILD)
     }
 
+    private val appCommandHandler by inject<AppCommandHandler>()
+
     @Handler
     suspend fun run(event: SlashCommandInteractionEvent) {
         val guild = event.guild!!
@@ -65,7 +70,15 @@ class Configuration(
         if (cachedGuild == null) return
 
         val context = context {
-            +ContextData(cachedGuild, guild, localizationService, event.userLocale, channelCacheView, webhookCacheView)
+            +ContextData(
+                cachedGuild,
+                guild,
+                localizationService,
+                event.userLocale,
+                channelCacheView,
+                webhookCacheView,
+                appCommandHandler
+            )
         }
         event.replyView<ConfigurationView>(true, context).await()
     }
@@ -79,6 +92,7 @@ class ConfigurationView : View() {
     private lateinit var locale: DiscordLocale
     private lateinit var channelCacheView: ChannelCacheView
     private lateinit var webhookCacheView: WebhookCacheView
+    private lateinit var appCommandHandler: AppCommandHandler
 
 
     private var nextView: Int by state(0)
@@ -93,6 +107,7 @@ class ConfigurationView : View() {
         this.locale = contextData.locale
         this.channelCacheView = contextData.channelCacheView
         this.webhookCacheView = contextData.webhookCacheView
+        this.appCommandHandler = contextData.appCommandHandler
     }
 
     override suspend fun createView() = compose {
@@ -148,6 +163,24 @@ class ConfigurationView : View() {
         ) {
             +text(headerFirst(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldName")))
             +text(getLocalizeString("commands.configuration.embeds.conf_0.logChannelFieldDescription"))
+        }
+        +separator(true, Separator.Spacing.SMALL)
+        +section(
+            button(
+                ButtonStyle.DANGER,
+                getLocalizeString("action.update")
+            ) {
+                if (muteRole != null || warnRole != null) {
+                    cachedGuild.guildFeatures?.plusAssign(GuildFeature.PUNISHMENT)
+                } else {
+                    cachedGuild.guildFeatures?.remove(GuildFeature.PUNISHMENT)
+                }
+
+                appCommandHandler.updateGuildCommands(jdaGuild, true)
+                nextView = 0
+            }
+        ) {
+            +text(getLocalizeString("commands.configuration.embeds.conf_0.updateConfigDescription"))
         }
     }
 
@@ -361,6 +394,7 @@ class ConfigurationView : View() {
                 val webhookChannel = newSuspendedTransaction { GuildLogChannel[textChannelId] }
                 webhookCacheView.save(jda, listOf(webhookChannel))
 
+                nextView = 200
             }
         )
     }
@@ -380,7 +414,8 @@ data class ContextData(
     val localizationService: LocalizationService,
     val locale: DiscordLocale,
     val channelCacheView: ChannelCacheView,
-    val webhookCacheView: WebhookCacheView
+    val webhookCacheView: WebhookCacheView,
+    val appCommandHandler: AppCommandHandler
 )
 
 

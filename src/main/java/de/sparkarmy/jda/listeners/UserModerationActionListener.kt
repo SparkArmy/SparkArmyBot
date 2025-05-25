@@ -267,15 +267,17 @@ private fun createUserCaseEmbed(
                 )
             )
             +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.reasonHeader", reason))
-            +separator(true, Separator.Spacing.SMALL)
-            +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.complainsText"))
-            if (modTicketEnabled) +row {
-                +button(
-                    ButtonStyle.SECONDARY,
-                    localizationService.getString(locale, "punishment.createUserCaseEmbed.buttonLabel")
-                )
-                {
-                    // TODO Implement Modmail-Function (Waiting for Feature-Release from JDUI)
+            if (modTicketEnabled) {
+                +separator(true, Separator.Spacing.SMALL)
+                +text(localizationService.getString(locale, "punishment.createUserCaseEmbed.complainsText"))
+                +row {
+                    +button(
+                        ButtonStyle.SECONDARY,
+                        localizationService.getString(locale, "punishment.createUserCaseEmbed.buttonLabel")
+                    )
+                    {
+                        // TODO Implement Modmail-Function (Waiting for Feature-Release from JDUI)
+                    }
                 }
             }
         }

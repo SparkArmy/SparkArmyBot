@@ -4,6 +4,7 @@ import de.sparkarmy.data.cache.GuildCacheView
 import de.sparkarmy.data.cache.UserCacheView
 import de.sparkarmy.data.cache.WebhookCacheView
 import de.sparkarmy.embed.EmbedService
+import de.sparkarmy.interaction.command.model.contexts
 import de.sparkarmy.interaction.command.model.localizationService
 import de.sparkarmy.interaction.command.model.slash.Handler
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
@@ -15,56 +16,56 @@ import de.sparkarmy.model.GuildFeature
 import de.sparkarmy.model.ModerationActionType
 import de.sparkarmy.util.getLocalizedString
 import dev.minn.jda.ktx.coroutines.await
-import io.github.oshai.kotlinlogging.KotlinLogging
-import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.interactions.InteractionContextType
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.requests.ErrorResponse
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 
 @Single
-class MuteCommand(
-    private val guildCache: GuildCacheView,
-    private val webhookCacheView: WebhookCacheView,
+class WarnCommand(
+    private val guildCacheView: GuildCacheView,
     private val embedService: EmbedService,
+    private val webhookCacheView: WebhookCacheView,
     private val userCacheView: UserCacheView
-) : SlashCommand("mute", "Mutes a user on the server") {
-
-    val log = KotlinLogging.logger { "MuteCommand" }
+) : SlashCommand("warn", "Warns a user on the server") {
 
     init {
-        commandData.defaultPermissions = DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)
+        commandData.defaultPermissions =
+            DefaultMemberPermissions.enabledFor(net.dv8tion.jda.api.Permission.MODERATE_MEMBERS)
         feature = GuildFeature.PUNISHMENT
-        option<Member>("user", "The member to mute")
-        option<String>("reason", "The Reason for the mute", builder = {
+        contexts(InteractionContextType.GUILD)
+
+        option<Member>("user", "The member to warn")
+        option<String>("reason", "The reason for the warn") {
             setMinLength(10)
-        })
+        }
     }
+
 
     @Handler(ephemeral = true)
     suspend fun run(event: SlashCommandInteractionEvent, user: Member, reason: String) {
-        val guild = event.guild
-        if (guild == null) return
-        event.deferReply().setEphemeral(true).await()
+        val guild = event.guild!!
+        event.deferReply().await()
         val hook = event.hook
 
 
-        val cachedGuild = guildCache.getById(guild.idLong)
+        val cachedGuild = guildCacheView.save(guild)
 
-        val muteRole = newSuspendedTransaction {
-            val muteRoleLong = cachedGuild?.guildPunishmentConfig?.muteRole
+        val warnRole = newSuspendedTransaction {
+            val warnRoleLong = cachedGuild.guildPunishmentConfig?.warnRole
             when {
-                muteRoleLong != null -> guild.getRoleById(muteRoleLong)
+                warnRoleLong != null -> guild.getRoleById(warnRoleLong)
                 else -> null
             }
         }
 
-        if (muteRole == null) {
+        if (warnRole == null) {
             hook.editOriginal(
                 event.getLocalizedString(
-                    "commands.punishment.mute.noMuteRoleSet"
+                    "commands.punishment.warn.noWarnRoleSet"
                 )
             )
                 .await()
@@ -76,14 +77,14 @@ class MuteCommand(
                 when {
                     it -> guild.modifyMemberRoles(
                         user,
-                        listOf(muteRole),
+                        listOf(warnRole),
                         listOf()
                     )
                         .reason(reason)
                         .flatMap {
                             hook.editOriginal(
                                 event.getLocalizedString(
-                                    "commands.punishment.mute.userMuteSuccessfully",
+                                    "commands.punishment.warn.userWarnSuccessfully",
                                     false,
                                     user.effectiveName
                                 )
@@ -96,7 +97,7 @@ class MuteCommand(
                         ) {
                             hook.editOriginal(
                                 event.getLocalizedString(
-                                    "commands.punishment.mute.userMuteFailed",
+                                    "commands.punishment.warn.userWarnFailed",
                                     false,
                                     user.effectiveName
                                 )
@@ -105,7 +106,7 @@ class MuteCommand(
 
                     else -> hook.editOriginal(
                         event.getLocalizedString(
-                            "commands.punishment.mute.userMuteFailed",
+                            "commands.punishment.warn.userWarnFailed",
                             false,
                             user.effectiveName
                         )
@@ -120,7 +121,7 @@ class MuteCommand(
             localizationService,
             webhookCacheView,
             userCacheView,
-            guildCache,
+            guildCacheView,
             event.guildLocale,
             user.idLong,
             event.user.idLong,

@@ -16,6 +16,7 @@ class ModerationAction(id: EntityID<Long>) : Entity<Long>(id) {
         private val userCacheView by inject<UserCacheView>()
     }
 
+    var type by ModerationActions.type
     var offender by ModerationActions.offender provideUsing userCacheView
     var moderator by ModerationActions.moderator provideUsing userCacheView
     var guild by ModerationActions.guild provideUsing guildCacheView

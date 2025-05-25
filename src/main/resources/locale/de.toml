@@ -17,8 +17,12 @@ userKickSuccessfully = "User {0} wurde gekickt"
 userKickFailed = "User {0} konnte nicht gekickt werden"
 [commands.punishment.mute]
 userMuteSuccessfully = "User {0} wurde gemuted"
-userMuteFailed = "User {0} konnte nicht gekickt werden"
+userMuteFailed = "User {0} konnte nicht gemuted werden"
 noMuteRoleSet = "Bitte setzte eine Mute-Rolle"
+[commands.punishment.warn]
+userWarnSuccessfully = "User {0} wurde verwarnt"
+userWarnFailed = "User {0} konnte nicht verwarnt werden"
+noWarnRoleSet = "Bitte setzte eine Verwarnungs-Rolle"
 
 [commands.configuration.embeds.conf_0]
 title = "Übersicht"

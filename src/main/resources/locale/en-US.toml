@@ -16,9 +16,13 @@ userBanFailed = "User {0} weren't banned"
 userKickSuccessfully = "User {0} was kicked"
 userKickFailed = "User {0} weren't kicked"
 [commands.punishment.mute]
-userWarnSuccessfully = "User {0} was muted"
-userMuteFailed = "User {0} weren't muted"
+userMuteSuccessfully = "User {0} was muted"
+userMuteFailed = "User {0} wasn't muted"
 noMuteRoleSet = "Please set a mute Role"
+[commands.punishment.warn]
+userWarnSuccessfully = "User {0} was warned"
+userWarnFailed = "User {0} wasn't warned"
+noWarnRoleSet = "Please set a warn role"
 
 [commands.configuration.embeds.conf_0]
 title = "Overview"

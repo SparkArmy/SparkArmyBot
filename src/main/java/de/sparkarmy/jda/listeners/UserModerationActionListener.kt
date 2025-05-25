@@ -6,6 +6,7 @@ import at.xirado.jdui.component.message.separator
 import at.xirado.jdui.component.message.text
 import at.xirado.jdui.component.row
 import at.xirado.jdui.view.definition.function.view
+import at.xirado.jdui.view.sendView
 import de.sparkarmy.data.cache.GuildCacheView
 import de.sparkarmy.data.cache.UserCacheView
 import de.sparkarmy.data.cache.WebhookCacheView
@@ -31,6 +32,7 @@ import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.guild.GuildAuditLogEntryCreateEvent
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateTimeOutEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
+import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -64,24 +66,23 @@ class UserModerationActionListener(
         val moderator = event.member
         val locale = guild.locale
         val reason = "No Reason provided"
-        val logChannelType = EnumSet.of(LogChannelType.MOD_LOG)
 
-        newSuspendedTransaction {
-            createModerationActionEntry(guild, moderator.user, offender.user, reason)
-            val guildEmbed = createGuildCaseEmbed(
-                embedService,
-                locale,
-                offender.idLong,
-                moderator.user,
-                reason,
-                ModerationActionType.TIMEOUT,
-                event.jda,
-                localizationService
-            ).toMessageEmbed()
-            GuildLogChannel.getLogChannels(logChannelType, event.guild.idLong).forEach {
-                webhookCacheView.sendMessageEmbeds(it.id.value, guildEmbed)
-            }
-        }
+        val data = PunishmentContextData(
+            event.jda,
+            embedService,
+            localizationService,
+            webhookCacheView,
+            userCacheView,
+            guildCacheView,
+            locale,
+            offender.idLong,
+            moderator.idLong,
+            reason,
+            guild,
+            ModerationActionType.TIMEOUT
+        )
+
+        modActionHandler(data)
     }
 
     private suspend fun auditLogEvent(event: GuildAuditLogEntryCreateEvent) {
@@ -102,63 +103,89 @@ class UserModerationActionListener(
         val moderationActionType =
             ModerationActionType.entries.find { it.offset == event.entry.type.ordinal } ?: ModerationActionType.UNKNOWN
         val moderator = event.entry.user ?: event.jda.selfUser
-        val logChannelType = EnumSet.of(LogChannelType.MOD_LOG)
 
-        newSuspendedTransaction {
-            createModerationActionEntry(guild, moderator.idLong, offenderId, reason, event.jda)
-            val guildEmbed = createGuildCaseEmbed(
-                embedService,
-                guildLocale,
-                offenderId,
-                moderator,
-                reason,
-                moderationActionType,
-                event.jda,
-                localizationService
-            ).toMessageEmbed()
-            GuildLogChannel.getLogChannels(logChannelType, event.guild.idLong).forEach {
-                webhookCacheView.sendMessageEmbeds(it.id.value, guildEmbed)
-            }
-        }
+        val data = PunishmentContextData(
+            event.jda,
+            embedService,
+            localizationService,
+            webhookCacheView,
+            userCacheView,
+            guildCacheView,
+            guildLocale,
+            offenderId,
+            moderator.idLong,
+            reason,
+            guild,
+            moderationActionType
+        )
+
+        modActionHandler(data)
 
     }
+}
 
-    private suspend fun createModerationActionEntry(
-        guild: JDAGuild,
-        moderator: JDAUser,
-        offender: JDAUser,
-        reason: String
-    ) {
-        val cachedGuild = guildCacheView.getById(guild.idLong) ?: guildCacheView.save(guild)
-        val cachedModerator = userCacheView.getById(moderator.idLong) ?: userCacheView.save(moderator)
-        val cachedOffender = userCacheView.getById(offender.idLong) ?: userCacheView.save(offender)
-        ModerationAction.new {
-            this.guild = cachedGuild
-            this.reason = reason
-            this.moderator = cachedModerator
-            this.offender = cachedOffender
+data class PunishmentContextData(
+    val jda: JDA,
+    val embedService: EmbedService,
+    val localizationService: LocalizationService,
+    val webhookCacheView: WebhookCacheView,
+    val userCacheView: UserCacheView,
+    val guildCacheView: GuildCacheView,
+    val locale: DiscordLocale,
+    val offenderId: Long,
+    val moderatorId: Long,
+    val reason: String,
+    val guild: JDAGuild,
+    val moderationActionType: ModerationActionType
+)
+
+suspend fun modActionHandler(data: PunishmentContextData) {
+    val offender = data.jda.retrieveUserById(data.offenderId).await()
+    val moderator = data.jda.retrieveUserById(data.moderatorId).await()
+
+    createModerationActionEntry(
+        data.guild,
+        moderator,
+        offender,
+        data.reason,
+        data.moderationActionType,
+        data.guildCacheView,
+        data.userCacheView
+    )
+
+    val guildCaseEmbed = createGuildCaseEmbed(
+        data.embedService,
+        data.locale,
+        data.offenderId,
+        moderator,
+        data.reason,
+        data.moderationActionType,
+        data.jda,
+        data.localizationService
+    ).toMessageEmbed()
+
+    val userEmbed = createUserCaseEmbed(
+        data.reason,
+        data.moderationActionType,
+        data.guild,
+        data.locale,
+        data.localizationService
+    )
+
+    newSuspendedTransaction {
+        val type = EnumSet.of(LogChannelType.MOD_LOG)
+        GuildLogChannel.getLogChannels(type, data.guild.idLong).forEach {
+            data.webhookCacheView.sendMessageEmbeds(it.id.value, guildCaseEmbed)
         }
     }
 
-    private suspend fun createModerationActionEntry(
-        guild: JDAGuild,
-        moderatorId: Long,
-        offenderId: Long,
-        reason: String,
-        jda: JDA
-    ) {
-        val cachedGuild = guildCacheView.getById(guild.idLong) ?: guildCacheView.save(guild)
-        val jdaModerator = jda.retrieveUserById(moderatorId).await()
-        val cachedModerator = userCacheView.getById(moderatorId) ?: userCacheView.save(jdaModerator)
-        val jdaOffender = jda.retrieveUserById(offenderId).await()
-        val cachedOffender = userCacheView.getById(offenderId) ?: userCacheView.save(jdaOffender)
-        ModerationAction.new {
-            this.guild = cachedGuild
-            this.reason = reason
-            this.moderator = cachedModerator
-            this.offender = cachedOffender
+    offender.openPrivateChannel().await()
+        .sendView(userEmbed)
+        .onErrorFlatMap(ErrorResponse.test(ErrorResponse.UNKNOWN_CHANNEL, ErrorResponse.CANNOT_SEND_TO_USER)) {
+            return@onErrorFlatMap null
         }
-    }
+        .await()
+
 }
 
 fun checkPreconditions(offender: User, moderator: Member?, guild: Guild): RestAction<Boolean> {
@@ -168,7 +195,7 @@ fun checkPreconditions(offender: User, moderator: Member?, guild: Guild): RestAc
         }
 }
 
-fun createGuildCaseEmbed(
+private fun createGuildCaseEmbed(
     embedService: EmbedService,
     locale: DiscordLocale,
     offenderId: Long,
@@ -219,7 +246,7 @@ fun createGuildCaseEmbed(
     return embedService.getLocalizedMessageEmbed("command.mod.modCase", locale, embedArgs)
 }
 
-fun createUserCaseEmbed(
+private fun createUserCaseEmbed(
     reason: String,
     moderationActionType: ModerationActionType,
     guild: Guild,
@@ -252,4 +279,29 @@ fun createUserCaseEmbed(
             }
         }
     }
+}
+
+
+private suspend fun createModerationActionEntry(
+    guild: JDAGuild,
+    moderator: JDAUser,
+    offender: JDAUser,
+    reason: String,
+    type: ModerationActionType,
+    guildCacheView: GuildCacheView,
+    userCacheView: UserCacheView
+) {
+    val cachedGuild = guildCacheView.getById(guild.idLong) ?: guildCacheView.save(guild)
+    val cachedModerator = userCacheView.getById(moderator.idLong) ?: userCacheView.save(moderator)
+    val cachedOffender = userCacheView.getById(offender.idLong) ?: userCacheView.save(offender)
+    newSuspendedTransaction {
+        ModerationAction.new {
+            this.type = EnumSet.of(type)
+            this.guild = cachedGuild
+            this.reason = reason
+            this.moderator = cachedModerator
+            this.offender = cachedOffender
+        }
+    }
+
 }

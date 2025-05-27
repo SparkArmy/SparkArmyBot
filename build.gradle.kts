@@ -1,9 +1,9 @@
 plugins {
     kotlin("jvm") version "2.1.20"
     kotlin("plugin.serialization") version "2.1.20"
-    id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.google.devtools.ksp") version "2.1.20-2.0.0"
     id("org.bytedeco.gradle-javacpp-platform") version "1.5.10"
+    id("io.ktor.plugin") version "3.1.3"
     application
 }
 
@@ -12,6 +12,10 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xcontext-parameters")
     }
+}
+
+application {
+    mainClass.set("de.sparkarmy.Main")
 }
 
 
@@ -36,6 +40,12 @@ dependencies {
 
     implementation("io.insert-koin:koin-core:4.0.4")
     implementation("io.insert-koin:koin-annotations:2.0.0")
+    implementation("io.ktor:ktor-server-content-negotiation:3.1.3")
+    implementation("io.ktor:ktor-server-core:3.1.3")
+    implementation("io.ktor:ktor-server-core:3.1.3")
+    implementation("io.ktor:ktor-serialization-gson:3.1.3")
+    implementation("io.ktor:ktor-server-content-negotiation:3.1.3")
+    implementation("io.ktor:ktor-server-core:3.1.3")
     ksp("io.insert-koin:koin-ksp-compiler:2.0.0")
 
     val exposedVersion = "0.61.0"
@@ -52,8 +62,11 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
     // Ktor
-    val ktorVersion = "3.1.2"
+    val ktorVersion = "3.1.3"
+    implementation("io.ktor:ktor-server-core-jvm")
+    implementation("io.ktor:ktor-server-netty")
     implementation("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
+    implementation("io.ktor:ktor-serialization-kotlinx-xml:${ktorVersion}")
 
 
 
@@ -70,6 +83,33 @@ dependencies {
 
 ksp {
     arg("KOIN_CONFIG_CHECK","true")
+}
+
+ktor {
+    fatJar {
+        archiveFileName.set("SparkArmyBot.jar")
+    }
+    docker {
+        jreVersion.set(JavaVersion.VERSION_21)
+        localImageName.set("sparkarmybot")
+        imageTag.set("0.0.1")
+        portMappings.set(
+            listOf(
+                io.ktor.plugin.features.DockerPortMapping(
+                    8080,
+                    8080,
+                    io.ktor.plugin.features.DockerPortMappingProtocol.TCP
+                )
+            )
+        )
+        externalRegistry.set(
+            io.ktor.plugin.features.DockerImageRegistry.dockerHub(
+                appName = provider { "sparkarmybot" },
+                username = providers.environmentVariable("DOCKER_HUB_USERNAME"),
+                password = providers.environmentVariable("DOCKER_HUB_PASSWORD")
+            )
+        )
+    }
 }
 
 

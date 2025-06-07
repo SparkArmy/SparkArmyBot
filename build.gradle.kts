@@ -40,21 +40,20 @@ dependencies {
 
     implementation("io.insert-koin:koin-core:4.0.4")
     implementation("io.insert-koin:koin-annotations:2.0.0")
-    implementation("io.ktor:ktor-server-content-negotiation:3.1.3")
     implementation("io.ktor:ktor-server-core:3.1.3")
     implementation("io.ktor:ktor-server-core:3.1.3")
     implementation("io.ktor:ktor-serialization-gson:3.1.3")
-    implementation("io.ktor:ktor-server-content-negotiation:3.1.3")
     implementation("io.ktor:ktor-server-core:3.1.3")
     ksp("io.insert-koin:koin-ksp-compiler:2.0.0")
 
-    val exposedVersion = "0.61.0"
+    val exposedVersion = "1.0.0-beta-2"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-r2dbc:$exposedVersion")
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.18")
@@ -63,11 +62,11 @@ dependencies {
 
     // Ktor
     val ktorVersion = "3.1.3"
-    implementation("io.ktor:ktor-server-core-jvm")
-    implementation("io.ktor:ktor-server-netty")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
-    implementation("io.ktor:ktor-serialization-kotlinx-xml:${ktorVersion}")
-
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-xml:$ktorVersion")
 
 
     // Other Dependencies
@@ -79,6 +78,8 @@ dependencies {
     implementation("dev.reformator.stacktracedecoroutinator:stacktrace-decoroutinator-jvm:2.4.8")
     implementation("org.tomlj:tomlj:1.1.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
+    implementation("com.github.twitch4j:twitch4j:1.25.0")
+    implementation("com.github.twitch4j:twitch4j-kotlin:1.25.0")
 }
 
 ksp {
@@ -91,17 +92,7 @@ ktor {
     }
     docker {
         jreVersion.set(JavaVersion.VERSION_21)
-        localImageName.set("sparkarmybot")
         imageTag.set("0.0.1")
-        portMappings.set(
-            listOf(
-                io.ktor.plugin.features.DockerPortMapping(
-                    8080,
-                    8080,
-                    io.ktor.plugin.features.DockerPortMappingProtocol.TCP
-                )
-            )
-        )
         externalRegistry.set(
             io.ktor.plugin.features.DockerImageRegistry.dockerHub(
                 appName = provider { "sparkarmybot" },

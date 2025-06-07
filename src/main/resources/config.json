@@ -11,5 +11,12 @@
     "port": 5432,
     "username": "username for the database",
     "password": "password for the database"
+  },
+  "jduiConfig": {
+    "password": "you have to set a password"
+  },
+  "twitchConfig": {
+    "clientId": "your twitch client id",
+    "clientSecret": "your twitch client secret"
   }
 }

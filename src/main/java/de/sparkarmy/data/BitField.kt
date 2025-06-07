@@ -1,7 +1,7 @@
 package de.sparkarmy.data
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -12,7 +12,7 @@ interface BitField {
 inline fun <reified E : Enum<E>> enumSetOf(): EnumSet<E> = EnumSet.noneOf(E::class.java)
 
 
-// Helper function to cast a Long to the correct Number type
+// Helper function to cast an Long to the correct Number type
 @Suppress("UNCHECKED_CAST")
 fun <T : Number> Long.toNumber(type: KClass<T>): T = when (type) {
     Byte::class -> this.toByte()

@@ -1,6 +1,6 @@
 package de.sparkarmy.database.table
 
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 object HashedCommands : IdTable<String>("table_command_hashes") {
     override val id = varchar("pk_cmh_identifier", 100).entityId()

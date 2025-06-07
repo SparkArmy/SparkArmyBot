@@ -1,7 +1,7 @@
 package de.sparkarmy.database.table
 
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 object GuildChannels: IdTable<Long>("table_guild_channel") {
     override val id = reference("pk_fk_gcl_channel_id", Channels, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)

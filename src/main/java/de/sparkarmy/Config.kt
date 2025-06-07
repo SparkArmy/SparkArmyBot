@@ -5,6 +5,7 @@ import de.sparkarmy.database.DatabaseConfig
 import de.sparkarmy.jda.JdaConfig
 import de.sparkarmy.jdui.JduiConfig
 import de.sparkarmy.model.GuildFeature
+import de.sparkarmy.social.twitch.TwitchConfig
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,6 +14,7 @@ data class Config(
     val discord: JdaConfig,
     val defaultGuildFeatures: List<String> = emptyList(),
     val jduiConfig: JduiConfig,
+    val twitchConfig: TwitchConfig,
 
     ) {
     val defaultGuildFeaturesParsed by lazy {

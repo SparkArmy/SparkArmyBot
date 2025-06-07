@@ -1,9 +1,9 @@
 package de.sparkarmy.database.table
 
-import org.jetbrains.exposed.dao.id.CompositeIdTable
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 
 object Members: CompositeIdTable("table_member") {
     val user: Column<EntityID<Long>> = reference("pk_fk_mbr_user_id", Users, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)

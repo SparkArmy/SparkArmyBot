@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.events.guild.GuildReadyEvent
 import net.dv8tion.jda.api.events.guild.update.GenericGuildUpdateEvent
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.koin.core.annotation.Single
 import java.util.*
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
@@ -51,12 +51,12 @@ class GuildUpdateListener(
         val jdaGuild = event.guild
         val guildId = jdaGuild.idLong
 
-        newSuspendedTransaction {
+        suspendTransaction {
             val guild = guildRepo.getById(guildId)
             if (guild == null) {
                 log.warn { "Got GenericGuildUpdateEvent($identifier) for guild ($guildId) not stored in database!" }
                 guildRepo.save(jdaGuild)
-                return@newSuspendedTransaction
+                return@suspendTransaction
             }
 
             guild.change(jdaGuild)

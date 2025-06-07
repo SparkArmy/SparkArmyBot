@@ -38,7 +38,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.InteractionContextType
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.koin.core.annotation.Single
 import org.koin.core.component.inject
 import java.util.*
@@ -138,7 +138,7 @@ class ConfigurationView : View() {
                 getLocalizeString("commands.configuration.embeds.conf_0.punishmentFieldName")
             ) {
 
-                newSuspendedTransaction {
+                suspendTransaction {
 
                     val punishmentConfig = cachedGuild.guildPunishmentConfig
                     if (punishmentConfig == null) GuildPunishmentConfig.new(cachedGuild.id.value) {}
@@ -271,7 +271,7 @@ class ConfigurationView : View() {
                     101 -> {
                         muteRole = selectedRole
 
-                        newSuspendedTransaction {
+                        suspendTransaction {
                             cachedGuild.guildPunishmentConfig?.muteRole = muteRole
                         }
                     }
@@ -279,7 +279,7 @@ class ConfigurationView : View() {
                     102 -> {
                         warnRole = selectedRole
 
-                        newSuspendedTransaction {
+                        suspendTransaction {
                             cachedGuild.guildPunishmentConfig?.warnRole = warnRole
                         }
                     }
@@ -296,7 +296,7 @@ class ConfigurationView : View() {
                     101 -> {
                         muteRole = null
 
-                        newSuspendedTransaction {
+                        suspendTransaction {
                             cachedGuild.guildPunishmentConfig?.muteRole = muteRole
                         }
                     }
@@ -304,7 +304,7 @@ class ConfigurationView : View() {
                     102 -> {
                         warnRole = null
 
-                        newSuspendedTransaction {
+                        suspendTransaction {
                             cachedGuild.guildPunishmentConfig?.warnRole = warnRole
                         }
                     }
@@ -371,7 +371,7 @@ class ConfigurationView : View() {
                 val typeEnumSet = EnumSet.of(type)
 
                 if (cachedWebhook != null) {
-                    newSuspendedTransaction {
+                    suspendTransaction {
                         GuildLogChannel[textChannelId].channelType += type
                     }
                     return@entitySelect
@@ -379,7 +379,7 @@ class ConfigurationView : View() {
 
                 val channelWebhookUrl = guildTextChannel.createWebhook(jda.selfUser.effectiveName).await().url
 
-                newSuspendedTransaction {
+                suspendTransaction {
                     val channel = channelCacheView.getById(textChannelId)
                     if (channel == null) channelCacheView.save(guildTextChannel)
 
@@ -391,7 +391,7 @@ class ConfigurationView : View() {
                         channelType = typeEnumSet
                     }
                 }
-                val webhookChannel = newSuspendedTransaction { GuildLogChannel[textChannelId] }
+                val webhookChannel = suspendTransaction { GuildLogChannel[textChannelId] }
                 webhookCacheView.save(jda, listOf(webhookChannel))
 
                 nextView = 200

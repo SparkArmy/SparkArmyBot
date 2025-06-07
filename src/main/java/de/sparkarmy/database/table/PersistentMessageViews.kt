@@ -1,6 +1,6 @@
 package de.sparkarmy.database.table
 
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 object PersistentMessageViews : IdTable<Long>("table_persistent_views") {
     override val id = long("pk_pvs_id").entityId()

@@ -11,7 +11,8 @@ import org.koin.core.annotation.Single
 
 @Single(createdAtStart = true)
 class Application(
-    private val jdaService: JDAService
+    private val jdaService: JDAService,
+    private val youTubeConfig: YouTubeConfig
 ) {
 
     init {
@@ -24,7 +25,7 @@ class Application(
                 json()
                 xml()
             }
-            youTubePubSub(jdaService)
+            youTubePubSub(jdaService, youTubeConfig)
         }.start()
     }
 }

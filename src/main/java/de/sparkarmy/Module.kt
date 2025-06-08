@@ -4,6 +4,7 @@ import de.sparkarmy.database.DatabaseConfig
 import de.sparkarmy.jda.JdaConfig
 import de.sparkarmy.jdui.JduiConfig
 import de.sparkarmy.social.twitch.TwitchConfig
+import de.sparkarmy.social.youtube.YouTubeConfig
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
@@ -22,6 +23,8 @@ class Module {
     @Single fun provideJdaConfig(config: Config): JdaConfig = config.discord
     @Single
     fun provideJduiConfig(config: Config): JduiConfig = config.jduiConfig
+    @Single
+    fun provideYouTubeConfig(config: Config): YouTubeConfig = config.youTubeConfig
 
     @Single
     fun provideTwitchConfig(config: Config): TwitchConfig = config.twitchConfig

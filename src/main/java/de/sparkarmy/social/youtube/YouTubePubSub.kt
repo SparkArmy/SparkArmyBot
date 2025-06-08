@@ -1,12 +1,21 @@
 package de.sparkarmy.social.youtube
 
+import de.sparkarmy.database.entity.GuildNotificationChannel
+import de.sparkarmy.database.table.GuildNotificationChannels
 import de.sparkarmy.jda.JDAService
 import de.sparkarmy.social.misc.createNotificationMessage
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.Application
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.delay
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,51 +24,113 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.json.XML
+import kotlin.time.Duration.Companion.seconds
 
-fun Application.youTubePubSub(jdaService: JDAService) {
+val logger = KotlinLogging.logger { "YouTubePubSub" }
+
+fun Application.youTubePubSub(jdaService: JDAService, config: YouTubeConfig) {
     routing {
         get("/pubsubservice/youtube") {
-            val response = call.request.queryParameters["hub.challenge"] ?: "Error"
+
+            val queryParams = call.request.queryParameters
+            val response = queryParams["hub.challenge"] ?: "Error"
+            val topicUrl = queryParams["hub.topic"]
+            val leaseSeconds = queryParams["hub.lease_seconds"]?.toInt()
+
+            logger.info { response }
+            logger.info { topicUrl }
+            logger.info { leaseSeconds }
+            logger.info { queryParams }
+
+            youTubeResubscriber(leaseSeconds, topicUrl, config)
+
             call.respondText(response)
         }
-        post("/pubsubservice/youtube") {
-            val contentType = call.request.contentType()
+        postYouTubePubSub(jdaService)
+    }
+}
 
-            if (!contentType.match(ContentType.Application.Xml) and
-                !contentType.match(ContentType.Application.Atom) and
-                !contentType.match(ContentType.Application.Json)
-            ) {
-                call.respond(HttpStatusCode.UnsupportedMediaType)
-                return@post
-            }
+private suspend fun youTubeResubscriber(leaseSeconds: Int?, topicUrl: String?, config: YouTubeConfig) {
+    if (leaseSeconds == null || topicUrl == null) return
 
-            val callAsText = call.receiveText()
+    val id = topicUrl.removePrefix("https://www.youtube.com/feeds/videos.xml?channel_id=")
 
-            val obj = when {
-                contentType.match(ContentType.Application.Json) -> {
-                    Json.decodeFromString<MainObject>(callAsText)
-                }
+    logger.info { "ContentCreatorId: $id" }
 
-                else -> {
-                    val callAsJsonString = XML.toJSONObject(callAsText).toString()
-                    Json.decodeFromString<MainObject>(callAsJsonString)
-                }
-            }
-
-            for (entry in obj.feed.entry) {
-                val id = entry.ytChannelId
-                val videoId = entry.ytVideoId
-
-                val link = "https://youtu.be/$videoId"
-
-                val lastPublishing = Instant.parse(entry.published)
-
-                createNotificationMessage(jdaService, id, link, lastPublishing)
-            }
-
-            call.respond(HttpStatusCode.OK)
+    newSuspendedTransaction {
+        GuildNotificationChannel.find {
+            GuildNotificationChannels.contentCreator eq id
         }
+            .forEach {
+                it.expirationTime = Clock.System.now().plus(leaseSeconds.seconds)
+            }
+    }
+
+    delay((leaseSeconds - 60).seconds)
+    val notificationChannels = newSuspendedTransaction {
+        GuildNotificationChannel.find {
+            GuildNotificationChannels.contentCreator eq id
+        }
+    }
+    if (notificationChannels.empty()) return
+
+    val client = HttpClient(CIO)
+    val response: HttpResponse = client.submitForm {
+        url {
+            protocol = URLProtocol.HTTPS
+            host = "pubsubhubbub.appspot.com"
+        }
+        formData {
+            append("hub.callback", config.redirect)
+            append("hub.mode", "subscribe")
+            append("hub.topic", topicUrl)
+        }
+    }
+
+    logger.info { "ResponseCode: ${response.status}" }
+
+    client.close()
+}
+
+private fun Routing.postYouTubePubSub(jdaService: JDAService) {
+    post("/pubsubservice/youtube") {
+        val contentType = call.request.contentType()
+
+        if (!contentType.match(ContentType.Application.Xml) and
+            !contentType.match(ContentType.Application.Atom) and
+            !contentType.match(ContentType.Application.Json)
+        ) {
+            call.respond(HttpStatusCode.UnsupportedMediaType)
+            return@post
+        }
+
+        val callAsText = call.receiveText()
+
+        val obj = when {
+            contentType.match(ContentType.Application.Json) -> {
+                Json.decodeFromString<MainObject>(callAsText)
+            }
+
+            else -> {
+                val callAsJsonString = XML.toJSONObject(callAsText).toString()
+                Json.decodeFromString<MainObject>(callAsJsonString)
+            }
+        }
+
+        for (entry in obj.feed.entry) {
+            val id = entry.ytChannelId
+            val videoId = entry.ytVideoId
+
+            val link = "https://youtu.be/$videoId"
+
+            val lastPublishing = Instant.parse(entry.published)
+
+            createNotificationMessage(jdaService, id, link, lastPublishing)
+        }
+
+        call.respond(HttpStatusCode.OK)
     }
 }
 

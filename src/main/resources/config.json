@@ -18,5 +18,9 @@
   "twitchConfig": {
     "clientId": "your twitch client id",
     "clientSecret": "your twitch client secret"
+  },
+  "youTubeConfig": {
+    "redirect": "your redirect url",
+    "token": "your youtube token"
   }
 }

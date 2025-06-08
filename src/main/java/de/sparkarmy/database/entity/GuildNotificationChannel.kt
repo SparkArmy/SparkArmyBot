@@ -15,4 +15,5 @@ class GuildNotificationChannel(id: EntityID<CompositeID>) : CompositeEntity(id) 
     var pingMessage by GuildNotificationChannels.message
     var webhookUrl by GuildNotificationChannels.webhookUrl
     var lastTime by GuildNotificationChannels.lastTime
+    var expirationTime by GuildNotificationChannels.expirationTime
 }

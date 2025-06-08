@@ -12,6 +12,7 @@ object GuildNotificationChannels : CompositeIdTable("table_guild_notification_ch
     val message = varchar("ncl_message", 1000)
     val webhookUrl = varchar("ncl_webhook_url", 500)
     val lastTime = timestamp("ncl_last_time").nullable()
+    val expirationTime = timestamp("ncl_expiration_time").nullable()
 
     init {
         addIdColumn(channel)

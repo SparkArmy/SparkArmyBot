@@ -3,7 +3,7 @@ package de.sparkarmy.data.cache
 import de.sparkarmy.data.DBContext
 import de.sparkarmy.database.entity.Member
 import de.sparkarmy.database.table.Members
-import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeID
 import org.koin.core.annotation.Single
 import net.dv8tion.jda.api.entities.Member as JDAMember
 

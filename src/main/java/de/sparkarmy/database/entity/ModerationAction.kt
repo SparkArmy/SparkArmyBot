@@ -4,9 +4,9 @@ import de.sparkarmy.data.cache.GuildCacheView
 import de.sparkarmy.data.cache.UserCacheView
 import de.sparkarmy.database.exposed.provideUsing
 import de.sparkarmy.database.table.ModerationActions
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.id.EntityID
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

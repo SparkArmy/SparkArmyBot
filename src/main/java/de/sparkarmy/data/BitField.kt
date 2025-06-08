@@ -1,7 +1,7 @@
 package de.sparkarmy.data
 
-import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Table
 import java.util.*
 import kotlin.reflect.KClass
 

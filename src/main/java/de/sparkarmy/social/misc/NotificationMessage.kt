@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel
 import net.dv8tion.jda.api.requests.RestAction
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 suspend fun createNotificationMessage(
     jdaService: JDAService,
@@ -20,14 +20,14 @@ suspend fun createNotificationMessage(
     notificationLink: String,
     lastPublishing: Instant,
 ) {
-    val notificationChannelList = suspendTransaction {
+    val notificationChannelList = newSuspendedTransaction {
 
         GuildNotificationChannel.find {
             GuildNotificationChannels.contentCreator eq contentCreatorId
         }.toList()
     }
 
-    val restActions = suspendTransaction {
+    val restActions = newSuspendedTransaction {
         notificationChannelList.stream()
             .map { notificationChannel ->
                 val time = notificationChannel.lastTime

@@ -1,8 +1,8 @@
 package de.sparkarmy.database.table
 
-import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
-import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.dao.id.CompositeIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 object GuildNotificationChannels : CompositeIdTable("table_guild_notification_channel") {
     val channel = reference("pk_fk_ncl_channel_id", GuildChannels, ReferenceOption.CASCADE, ReferenceOption.CASCADE)

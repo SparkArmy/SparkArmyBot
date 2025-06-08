@@ -2,9 +2,9 @@ package de.sparkarmy.database.exposed
 
 import de.sparkarmy.data.cache.CacheManager
 import de.sparkarmy.data.cache.CacheView
-import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.Column
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 

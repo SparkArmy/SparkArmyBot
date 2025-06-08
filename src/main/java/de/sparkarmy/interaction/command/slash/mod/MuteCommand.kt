@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.requests.ErrorResponse
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 
 @Single
@@ -53,7 +53,7 @@ class MuteCommand(
 
         val cachedGuild = guildCache.getById(guild.idLong)
 
-        val muteRole = suspendTransaction {
+        val muteRole = newSuspendedTransaction {
             val muteRoleLong = cachedGuild?.guildPunishmentConfig?.muteRole
             when {
                 muteRoleLong != null -> guild.getRoleById(muteRoleLong)

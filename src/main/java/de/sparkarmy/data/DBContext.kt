@@ -5,8 +5,8 @@ import de.sparkarmy.coroutines.virtualDispatcher
 import de.sparkarmy.database.Database
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.withContext
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Factory
 import org.koin.core.component.KoinComponent
 import java.sql.Connection

@@ -3,8 +3,8 @@ package de.sparkarmy.database.table
 import de.sparkarmy.data.bitField
 import de.sparkarmy.model.GuildFeature
 import de.sparkarmy.model.GuildFlag
-import org.jetbrains.exposed.v1.core.charLength
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.charLength
 
 object Guilds: IdTable<Long>("table_guild") {
     override val id     = long("pk_gld_id").entityId()

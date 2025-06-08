@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.entities.IncomingWebhookClient
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.WebhookClient
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 
 private val log = KotlinLogging.logger { "WebhookCacheView" }
@@ -24,7 +24,7 @@ class WebhookCacheView : CacheView<Long, IncomingWebhookClient?>(1000) {
         }
     }
 
-    private suspend fun remove(key: Long) = suspendTransaction {
+    private suspend fun remove(key: Long) = newSuspendedTransaction {
         webhookList.remove(key)
         GuildLogChannel[key].delete()
     }

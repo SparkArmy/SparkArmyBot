@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.InteractionContextType
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.requests.ErrorResponse
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 
 @Single
@@ -54,7 +54,7 @@ class WarnCommand(
 
         val cachedGuild = guildCacheView.save(guild)
 
-        val warnRole = suspendTransaction {
+        val warnRole = newSuspendedTransaction {
             val warnRoleLong = cachedGuild.guildPunishmentConfig?.warnRole
             when {
                 warnRoleLong != null -> guild.getRoleById(warnRoleLong)

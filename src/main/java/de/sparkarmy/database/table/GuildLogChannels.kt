@@ -2,9 +2,9 @@ package de.sparkarmy.database.table
 
 import de.sparkarmy.data.bitField
 import de.sparkarmy.model.LogChannelType
-import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.ShortColumnType
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.ShortColumnType
 
 object GuildLogChannels: IdTable<Long>("table_log_guild_channel") {
     override val id =

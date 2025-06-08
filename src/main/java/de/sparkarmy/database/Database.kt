@@ -3,7 +3,7 @@ package de.sparkarmy.database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.sql.Database
 import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
 import java.sql.Connection

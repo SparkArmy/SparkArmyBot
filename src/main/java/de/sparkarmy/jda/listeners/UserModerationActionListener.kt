@@ -32,7 +32,7 @@ import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.requests.ErrorResponse
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 import java.time.OffsetDateTime
 import java.util.*
@@ -163,7 +163,7 @@ suspend fun modActionHandler(data: PunishmentContextData) {
         data.localizationService
     ).toMessageEmbed()
 
-    suspendTransaction {
+    newSuspendedTransaction {
         val type = EnumSet.of(LogChannelType.MOD_LOG)
         GuildLogChannel.getLogChannels(type, data.guild.idLong).forEach {
             data.webhookCacheView.sendMessageEmbeds(it.id.value, guildCaseEmbed)
@@ -297,7 +297,7 @@ private suspend fun createModerationActionEntry(
     val cachedGuild = guildCacheView.getById(guild.idLong) ?: guildCacheView.save(guild)
     val cachedModerator = userCacheView.getById(moderator.idLong) ?: userCacheView.save(moderator)
     val cachedOffender = userCacheView.getById(offender.idLong) ?: userCacheView.save(offender)
-    suspendTransaction {
+    newSuspendedTransaction {
         ModerationAction.new {
             this.type = EnumSet.of(type)
             this.guild = cachedGuild

@@ -4,11 +4,8 @@ import de.sparkarmy.database.entity.GuildNotificationChannel
 import de.sparkarmy.database.table.GuildNotificationChannels
 import de.sparkarmy.jda.JDAService
 import de.sparkarmy.social.misc.createNotificationMessage
+import de.sparkarmy.social.misc.youTubeSubscribeCall
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.Application
 import io.ktor.server.request.*
@@ -76,22 +73,7 @@ private suspend fun youTubeResubscriber(leaseSeconds: Int?, topicUrl: String?, c
     }
     if (notificationChannels.empty()) return
 
-    val client = HttpClient(CIO)
-    val response: HttpResponse = client.submitForm {
-        url {
-            protocol = URLProtocol.HTTPS
-            host = "pubsubhubbub.appspot.com"
-        }
-        formData {
-            append("hub.callback", config.redirect)
-            append("hub.mode", "subscribe")
-            append("hub.topic", topicUrl)
-        }
-    }
-
-    logger.info { "ResponseCode: ${response.status}" }
-
-    client.close()
+    youTubeSubscribeCall(config.redirect, topicUrl)
 }
 
 private fun Routing.postYouTubePubSub(jdaService: JDAService) {

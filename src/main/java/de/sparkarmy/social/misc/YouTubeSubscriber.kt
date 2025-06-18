@@ -1,25 +1,28 @@
 package de.sparkarmy.social.misc
 
-import de.sparkarmy.coroutines.newCoroutineScope
+
 import de.sparkarmy.coroutines.virtualDispatcher
 import de.sparkarmy.database.entity.ContentCreator
 import de.sparkarmy.database.table.ContentCreators
 import de.sparkarmy.model.PlatformType
+import de.sparkarmy.social.twitch.TwitchEventSubHandler
 import de.sparkarmy.social.youtube.YouTubeConfig
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 
 @Single(createdAtStart = true)
 class YouTubeSubscriber(
-    private val youTubeConfig: YouTubeConfig
+    private val youTubeConfig: YouTubeConfig,
+    scope: CoroutineScope = de.sparkarmy.coroutines.newCoroutineScope<TwitchEventSubHandler>(virtualDispatcher)
 ) {
     init {
-        newCoroutineScope<YouTubeSubscriber>(virtualDispatcher).launch {
+        scope.launch {
             newSuspendedTransaction {
                 ContentCreator.find { ContentCreators.platform eq PlatformType.YOUTUBE }
                     .forEach {

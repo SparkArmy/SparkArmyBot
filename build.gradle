@@ -64,7 +64,7 @@ dependencies {
     implementation "io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}"
 
     // Other Dependencies
-    implementation('org.json:json:20250107')
+    implementation('org.json:json:20250517')
     implementation('com.squareup.okhttp3:okhttp:4.12.0')
     implementation('org.jetbrains:annotations:26.0.2')
     implementation('org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20')

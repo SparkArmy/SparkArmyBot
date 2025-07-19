@@ -2,9 +2,9 @@ package de.sparkarmy.database.table
 
 import de.sparkarmy.data.bitField
 import de.sparkarmy.model.UserFlag
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ShortColumnType
-import org.jetbrains.exposed.sql.charLength
+import org.jetbrains.exposed.v1.core.ShortColumnType
+import org.jetbrains.exposed.v1.core.charLength
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 object Users : IdTable<Long>("table_user") {
     override val id             = long("pk_usr_id").entityId()

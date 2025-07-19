@@ -2,9 +2,9 @@ package de.sparkarmy.database.table
 
 import de.sparkarmy.data.bitField
 import de.sparkarmy.model.ModerationActionType
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.charLength
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.charLength
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 object ModerationActions : IdTable<Long>("table_moderation_action") {
     override val id = long("psm_id").entityId().autoIncrement()

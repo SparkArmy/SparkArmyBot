@@ -1,6 +1,6 @@
 package de.sparkarmy.database.table
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 object GuildCommands : Table("table_guild_commands") {
     val guild         = long("pk_gcd_guild")

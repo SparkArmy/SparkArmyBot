@@ -4,11 +4,12 @@ import de.sparkarmy.database.table.GuildChannels
 import de.sparkarmy.database.table.GuildLogChannels
 import de.sparkarmy.model.LogChannelType
 import net.dv8tion.jda.api.entities.Guild
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import java.util.*
 
 class GuildLogChannel(id: EntityID<Long>): Entity<Long>(id) {

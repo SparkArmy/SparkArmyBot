@@ -4,10 +4,10 @@ import de.sparkarmy.data.cache.GuildCacheView
 import de.sparkarmy.data.cache.UserCacheView
 import de.sparkarmy.database.exposed.provideUsing
 import de.sparkarmy.database.table.Members
-import org.jetbrains.exposed.dao.CompositeEntity
-import org.jetbrains.exposed.dao.CompositeEntityClass
-import org.jetbrains.exposed.dao.id.CompositeID
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.CompositeEntity
+import org.jetbrains.exposed.v1.dao.CompositeEntityClass
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

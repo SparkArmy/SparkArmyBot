@@ -1,9 +1,10 @@
 package de.sparkarmy.database.table
 
 import kotlinx.datetime.Clock
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
+
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.datetime.timestamp
 
 object Messages : IdTable<Long>("table_message") {
     override val id = long("pk_msg_id").entityId()

@@ -13,7 +13,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 
 @Single(createdAtStart = true)

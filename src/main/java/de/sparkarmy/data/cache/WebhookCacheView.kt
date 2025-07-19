@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.entities.IncomingWebhookClient
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.WebhookClient
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
 
 private val log = KotlinLogging.logger { "WebhookCacheView" }

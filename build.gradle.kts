@@ -27,9 +27,9 @@ repositories {
 
 dependencies {
     // JDA and Webhook
-    implementation("io.github.freya022:JDA:6dc8746825")
+    implementation("net.dv8tion:JDA:6.0.0-rc.1")
     implementation("club.minnced:jda-ktx:0.12.0")
-    implementation("dev.xirado:jdui-core:0.1.1")
+    implementation("dev.xirado:jdui-core:0.2.0")
 
     // Database, Exposed & Cache
     implementation("org.postgresql:postgresql:42.7.5")

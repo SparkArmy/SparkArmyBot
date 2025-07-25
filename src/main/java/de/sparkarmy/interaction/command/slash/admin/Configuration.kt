@@ -29,8 +29,8 @@ import de.sparkarmy.util.roleMention
 import dev.minn.jda.ktx.coroutines.await
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.Permission
-import net.dv8tion.jda.api.components.button.ButtonStyle
-import net.dv8tion.jda.api.components.selects.SelectOption
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
+import net.dv8tion.jda.api.components.selections.SelectOption
 import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
@@ -42,7 +42,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTrans
 import org.koin.core.annotation.Single
 import org.koin.core.component.inject
 import java.util.*
-import net.dv8tion.jda.api.components.selects.EntitySelectMenu.SelectTarget as JDASelectTarget
+import net.dv8tion.jda.api.components.selections.EntitySelectMenu.SelectTarget as JDASelectTarget
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
 
 
@@ -95,9 +95,9 @@ class ConfigurationView : View() {
     private lateinit var appCommandHandler: AppCommandHandler
 
 
-    private var nextView: Int by state(0)
-    private var muteRole: Long? by state(null)
-    private var warnRole: Long? by state(null)
+    private var nextView: Int by state { 0 }
+    private var muteRole: Long? by state { null }
+    private var warnRole: Long? by state { null }
 
 
     override suspend fun initialize() {

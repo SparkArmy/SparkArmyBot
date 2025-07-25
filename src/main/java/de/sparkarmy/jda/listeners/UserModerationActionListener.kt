@@ -20,7 +20,7 @@ import de.sparkarmy.util.userMention
 import dev.minn.jda.ktx.coroutines.await
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.audit.ActionType
-import net.dv8tion.jda.api.components.button.ButtonStyle
+import net.dv8tion.jda.api.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member

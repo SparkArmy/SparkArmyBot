@@ -4,6 +4,7 @@ backButton = "Zurück"
 disableButton = "Deaktivieren"
 roleSelectPlaceholder = "Bitte eine Rolle auswählen"
 channelSelectPlaceholder = "Bitte einen Channel auswählen"
+featureNotImplemented = "Dieses Feature ist noch nicht implementiert"
 
 [commands.avatar]
 userProfile = "Avatar von {0}"

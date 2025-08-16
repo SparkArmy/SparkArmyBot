@@ -12,8 +12,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -23,7 +21,10 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.json.XML
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 val logger = KotlinLogging.logger { "YouTubePubSub" }
 
@@ -49,6 +50,7 @@ fun Application.youTubePubSub(jdaService: JDAService, config: YouTubeConfig) {
     }
 }
 
+@OptIn(ExperimentalTime::class)
 private suspend fun youTubeResubscriber(leaseSeconds: Int?, topicUrl: String?, config: YouTubeConfig) {
     if (leaseSeconds == null || topicUrl == null) return
 
@@ -76,6 +78,7 @@ private suspend fun youTubeResubscriber(leaseSeconds: Int?, topicUrl: String?, c
     youTubeSubscribeCall(config.redirect, topicUrl)
 }
 
+@OptIn(ExperimentalTime::class)
 private fun Routing.postYouTubePubSub(jdaService: JDAService) {
     post("/pubsubservice/youtube") {
         val contentType = call.request.contentType()

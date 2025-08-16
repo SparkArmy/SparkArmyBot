@@ -46,7 +46,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core:3.1.3")
     ksp("io.insert-koin:koin-ksp-compiler:2.0.0")
 
-    val exposedVersion = "1.0.0-beta-4"
+    val exposedVersion = "1.0.0-beta-5"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")

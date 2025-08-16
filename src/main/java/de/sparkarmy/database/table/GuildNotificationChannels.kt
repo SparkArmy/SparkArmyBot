@@ -3,7 +3,9 @@ package de.sparkarmy.database.table
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.datetime.timestamp
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 object GuildNotificationChannels : CompositeIdTable("table_guild_notification_channel") {
     val channel = reference("pk_fk_ncl_channel_id", GuildChannels, ReferenceOption.CASCADE, ReferenceOption.CASCADE)
     val contentCreator =

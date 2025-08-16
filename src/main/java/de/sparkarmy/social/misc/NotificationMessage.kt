@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package de.sparkarmy.social.misc
 
 import de.sparkarmy.database.entity.GuildNotificationChannel
@@ -5,7 +7,6 @@ import de.sparkarmy.database.table.GuildNotificationChannels
 import de.sparkarmy.jda.JDAService
 import de.sparkarmy.util.roleMention
 import dev.minn.jda.ktx.coroutines.await
-import kotlinx.datetime.Instant
 import net.dv8tion.jda.api.entities.channel.ChannelType
 import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
@@ -13,6 +14,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel
 import net.dv8tion.jda.api.requests.RestAction
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 suspend fun createNotificationMessage(
     jdaService: JDAService,

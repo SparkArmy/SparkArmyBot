@@ -16,11 +16,12 @@ import de.sparkarmy.model.PlatformType
 import de.sparkarmy.social.misc.createNotificationMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.koin.core.annotation.Single
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-@Single(createdAtStart = true)
+@Single(createdAtStart = false)
 class TwitchEventSubHandler(
     private val twitchConfig: TwitchConfig,
     private val jdaService: JDAService,
@@ -62,6 +63,7 @@ class TwitchEventSubHandler(
 
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun streamOnlineEvent(event: StreamOnlineEvent) {
         val id = event.broadcasterUserId
         val userLogin = event.broadcasterUserLogin

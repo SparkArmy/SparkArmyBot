@@ -5,6 +5,7 @@ disableButton = "Disable"
 roleSelectPlaceholder = "Please select a role"
 channelSelectPlaceholder = "Please select a channel"
 update = "Update"
+featureNotImplemented = "Feature is currently not implemented"
 
 [commands.avatar]
 userProfile = "{0}''s avatar"

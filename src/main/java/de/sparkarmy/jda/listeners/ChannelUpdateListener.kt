@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.events.channel.ChannelCreateEvent
 import net.dv8tion.jda.api.events.channel.ChannelDeleteEvent
 import net.dv8tion.jda.api.events.channel.GenericChannelEvent
 import net.dv8tion.jda.api.events.channel.update.GenericChannelUpdateEvent
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.koin.core.annotation.Single
 
 private val log = KotlinLogging.logger { }
@@ -37,7 +37,7 @@ class ChannelUpdateListener(
         val jdaChannel = event.channel
         val channelId = event.channel.idLong
 
-        newSuspendedTransaction {
+        suspendTransaction {
             val channel = channelRepo.getById(channelId)
             if (channel == null) {
                 log.warn { "Got GenericChannelEvent($identifier) for channel ($channelId) not stored in database!" }
@@ -46,11 +46,13 @@ class ChannelUpdateListener(
                     val guild = guildRepo.save(event.guild)
                     GuildChannel.new(channelId) {this.guild = guild}
                 }
+            } else {
+                channelRepo.save(jdaChannel)
             }
         }
 
         when (event) {is ChannelDeleteEvent -> {
-            newSuspendedTransaction {
+            suspendTransaction {
                 channelRepo.getById(channelId)?.delete()
             }
         }}

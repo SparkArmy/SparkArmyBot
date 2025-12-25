@@ -12,21 +12,24 @@ class ChannelCacheView(
 ) : CacheView<Long, Channel>(1000), KoinComponent {
     suspend fun save(jdaChannel: JDAChannel, edit: Channel.() -> Unit = {}): Channel = db.doTransaction {
         val id = jdaChannel.idLong
-        val name = jdaChannel.name
-        val type = jdaChannel.type
 
-
-
-        val channel = getById(id)?.apply(edit)
-            ?: Channel.new(id) {
-                this.name = name
-                this.type = type
-            }
+        val channel = getById(id)?.apply { updateMetadata(jdaChannel); edit(this) }
+            ?: Channel.new(id) { setMetadata(jdaChannel); edit(this) }
 
         if (id !in this@ChannelCacheView)
             put(id,channel)
 
         channel
+    }
+
+    private fun Channel.setMetadata(jdaChannel: JDAChannel) {
+        name = jdaChannel.name
+        type = jdaChannel.type
+    }
+
+    private fun Channel.updateMetadata(jdaChannel: JDAChannel) {
+        if (name != jdaChannel.name)
+            name = jdaChannel.name
     }
 
     override suspend fun load(key: Long): Channel? = db.doTransaction {

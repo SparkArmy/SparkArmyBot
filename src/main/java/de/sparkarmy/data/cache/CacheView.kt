@@ -14,12 +14,12 @@ abstract class CacheView<K : Any, V>(maximumSize: Long) {
 
     protected abstract suspend fun load(key: K): V?
 
-    protected fun put(key: K, value: V) = write {
+    protected fun put(key: K, value: V & Any) = write {
         cache.put(key, value)
     }
 
     context(_: CacheManager)
-    operator fun set(key: K, value: V) = put(key, value)
+    operator fun set(key: K, value: V & Any) = put(key, value)
 
     operator fun contains(key: K): Boolean = read {
         cache.getIfPresent(key) != null

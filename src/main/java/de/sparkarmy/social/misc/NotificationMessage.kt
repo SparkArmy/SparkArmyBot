@@ -13,7 +13,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel
 import net.dv8tion.jda.api.requests.RestAction
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -23,14 +24,14 @@ suspend fun createNotificationMessage(
     notificationLink: String,
     lastPublishing: Instant,
 ) {
-    val notificationChannelList = newSuspendedTransaction {
+    val notificationChannelList = suspendTransaction {
 
         GuildNotificationChannel.find {
             GuildNotificationChannels.contentCreator eq contentCreatorId
         }.toList()
     }
 
-    val restActions = newSuspendedTransaction {
+    val restActions = suspendTransaction {
         notificationChannelList.stream()
             .map { notificationChannel ->
                 val time = notificationChannel.lastTime

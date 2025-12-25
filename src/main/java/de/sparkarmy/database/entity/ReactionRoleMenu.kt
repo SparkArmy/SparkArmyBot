@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.dao.EntityClass
 class ReactionRoleMenu(id: EntityID<Long>) : Entity<Long>(id) {
     companion object : EntityClass<Long, ReactionRoleMenu>(ReactionRoleMenus)
 
+    var description by ReactionRoleMenus.description
     var entries by ReactionRoleMenus.entries
 
 }

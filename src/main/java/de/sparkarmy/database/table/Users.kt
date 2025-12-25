@@ -3,6 +3,7 @@ package de.sparkarmy.database.table
 import de.sparkarmy.data.bitField
 import de.sparkarmy.model.UserFlag
 import org.jetbrains.exposed.v1.core.ShortColumnType
+import org.jetbrains.exposed.v1.core.between
 import org.jetbrains.exposed.v1.core.charLength
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 

@@ -16,7 +16,8 @@ import de.sparkarmy.model.PlatformType
 import de.sparkarmy.social.misc.createNotificationMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.koin.core.annotation.Single
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -49,7 +50,7 @@ class TwitchEventSubHandler(
 
     init {
         scope.launch {
-            newSuspendedTransaction {
+            suspendTransaction {
                 ContentCreator.find {
                     ContentCreators.platform eq PlatformType.TWITCH
                 }.forEach { contentCreator ->

@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.events.guild.GuildReadyEvent
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -36,7 +36,7 @@ class AppCommandHandler(
     private val db: DBContext,
     private val guildCacheView: GuildCacheView,
     private val userCacheView: UserCacheView,
-    private val config: Config,
+    config: Config,
 ) : JDAEventListener {
     private val defaultFeatures = config.defaultGuildFeaturesParsed
     private val ready = AtomicBoolean(false)

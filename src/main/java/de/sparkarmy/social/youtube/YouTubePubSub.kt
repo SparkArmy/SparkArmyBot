@@ -19,14 +19,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.json.XML
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-val logger = KotlinLogging.logger { "YouTubePubSub" }
+val logger = KotlinLogging.logger {}
 
 fun Application.youTubePubSub(jdaService: JDAService, config: YouTubeConfig) {
     routing {
@@ -58,7 +59,7 @@ private suspend fun youTubeResubscriber(leaseSeconds: Int?, topicUrl: String?, c
 
     logger.info { "ContentCreatorId: $id" }
 
-    newSuspendedTransaction {
+    suspendTransaction {
         GuildNotificationChannel.find {
             GuildNotificationChannels.contentCreator eq id
         }
@@ -68,7 +69,7 @@ private suspend fun youTubeResubscriber(leaseSeconds: Int?, topicUrl: String?, c
     }
 
     delay((leaseSeconds - 60).seconds)
-    val notificationChannels = newSuspendedTransaction {
+    val notificationChannels = suspendTransaction {
         GuildNotificationChannel.find {
             GuildNotificationChannels.contentCreator eq id
         }

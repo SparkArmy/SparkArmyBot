@@ -6,6 +6,8 @@ roleSelectPlaceholder = "Please select a role"
 channelSelectPlaceholder = "Please select a channel"
 update = "Update"
 featureNotImplemented = "Feature is currently not implemented"
+noEntries = "There are no entries"
+description = "Descriptionö"
 
 [commands.avatar]
 userProfile = "{0}''s avatar"
@@ -52,6 +54,10 @@ title = "Punishment-Config - WarnRoleConfig"
 channelSelectDescription = "Select a channel, you would like to configure"
 channelSelectViewHeader = "Configuration"
 channelSelectViewDescription = "Please select channel below. The selected channel will become the log channel of the selected type"
+
+[commands.reactionRoles]
+header = "Reaction Roles"
+messageId = "Message-ID"
 
 [command.mod.modCase.fields]
 offenderName = "Offender"

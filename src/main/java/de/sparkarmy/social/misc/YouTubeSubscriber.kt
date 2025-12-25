@@ -13,7 +13,8 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.koin.core.annotation.Single
 
 @Single(createdAtStart = true)
@@ -23,7 +24,7 @@ class YouTubeSubscriber(
 ) {
     init {
         scope.launch {
-            newSuspendedTransaction {
+            suspendTransaction {
                 ContentCreator.find { ContentCreators.platform eq PlatformType.YOUTUBE }
                     .forEach {
                         val topicUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=${it.id.value}"

@@ -1,7 +1,7 @@
 package de.sparkarmy.jda.listeners
 
+import de.sparkarmy.data.cache.MessageCacheView
 import de.sparkarmy.jda.JDAEventListener
-import kotlinx.coroutines.future.await
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -11,7 +11,9 @@ import org.koin.core.annotation.Single
 import java.util.*
 
 @Single
-class MessageUpdateListener : JDAEventListener {
+class MessageListener(
+    private val messageRepo: MessageCacheView
+) : JDAEventListener {
     override val intents: EnumSet<GatewayIntent> =
         EnumSet.of(GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
 
@@ -23,16 +25,15 @@ class MessageUpdateListener : JDAEventListener {
         }
     }
 
-    private fun messageDeleteEvent(event: MessageDeleteEvent) {
-        TODO("Not yet implemented")
+    private suspend fun messageDeleteEvent(event: MessageDeleteEvent) {
+        messageRepo.setDeleted(event.messageIdLong)
     }
 
     private suspend fun messageUpdateEvent(event: MessageUpdateEvent) {
-        event.message.attachments[0].proxy.download().await().readAllBytes()
-        TODO("Not yet implemented")
+        messageRepo.save(event.message)
     }
 
-    private fun messageCreateEvent(event: MessageReceivedEvent) {
-        TODO("Not yet implemented")
+    private suspend fun messageCreateEvent(event: MessageReceivedEvent) {
+        messageRepo.save(event.message)
     }
 }

@@ -21,5 +21,6 @@ class Message(id: EntityID<Long>) : Entity<Long>(id) {
     var msgChannel by Messages.msgChannel provideUsing channelCacheView
     var msgAttachments by Messages.msgAttachments
     var lastUpdate by Messages.lastUpdate
+    var isDeleted by Messages.msgIsDeleted
     var reactionRoleMenu by optionalRelated(ReactionRoleMenu)
 }

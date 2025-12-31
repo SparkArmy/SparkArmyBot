@@ -15,7 +15,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("de.sparkarmy.Main")
+    mainClass.set("de.sparkarmy.MainKt")
 }
 
 
@@ -47,6 +47,7 @@ dependencies {
     implementation(platform(libs.ktor.bom))
     implementation(libs.bundles.ktor)
 
+    ksp(libs.koin.ksp.compiler)
 
     // Other Dependencies
     implementation(libs.json)

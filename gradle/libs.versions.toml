@@ -8,7 +8,7 @@ flyway = "11.20.0"
 aedile = "3.0.1"
 koin-bom = "4.1.1"
 koin-annotations = "2.3.1"
-ksp = "2.3.2"
+ksp = "2.3.4"
 exposed-bom = "1.0.0-rc-4"
 ktor-bom = "3.3.3"
 logback-classic = "1.5.23"
@@ -88,7 +88,7 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 data-exposed = ["data-exposed-core", "data-exposed-crypt", "data-exposed-dao", "data-exposed-jdbc", "data-exposed-json", "data-exposed-kotlin-datetime"]
 data-flyway = ["data-flyway-core", "data-flyway-database"]
 jda = ["jda-core", "jda-jdui", "jda-ktx"]
-koin = ["koin-core", "koin-annotations", "koin-ksp-compiler"]
+koin = ["koin-core", "koin-annotations"]
 ktor = ["ktor-client-cio", "ktor-client-core", "ktor-serialization-gson", "ktor-serialization-kotlinx-json", "ktor-serialization-kotlinx-xml", "ktor-server-content-negotiation", "ktor-server-core-jvm", "ktor-server-netty"]
 twitch4j = ["twitch4j", "twitch4j-kotlin"]
 logging = ["logback-classic", "slf4j-api", "kotlin-logging-jvm"]

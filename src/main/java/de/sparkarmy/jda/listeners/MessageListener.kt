@@ -15,7 +15,7 @@ class MessageListener(
     private val messageRepo: MessageCacheView
 ) : JDAEventListener {
     override val intents: EnumSet<GatewayIntent> =
-        EnumSet.of(GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
+        EnumSet.of(GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
 
     override suspend fun onEvent(event: GenericEvent) {
         when (event) {

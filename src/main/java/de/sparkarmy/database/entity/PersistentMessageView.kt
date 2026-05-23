@@ -6,7 +6,8 @@ import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 
 class PersistentMessageView(id: EntityID<Long>) : Entity<Long>(id) {
+    companion object : EntityClass<Long, PersistentMessageView>(PersistentMessageViews)
+
     var data: ByteArray by PersistentMessageViews.data
     var className: String by PersistentMessageViews.className
-    companion object : EntityClass<Long, PersistentMessageView>(PersistentMessageViews)
 }

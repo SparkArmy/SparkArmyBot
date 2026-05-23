@@ -17,10 +17,12 @@ import de.sparkarmy.interaction.command.model.slash.Handler
 import de.sparkarmy.interaction.command.model.slash.SlashCommand
 import de.sparkarmy.interaction.command.model.slash.Subcommand
 import de.sparkarmy.interaction.command.model.slash.dsl.subcommand.option
+import de.sparkarmy.model.JsonReactionRoleMenu
 import de.sparkarmy.util.getLocalizedString
 import de.sparkarmy.util.headerFirst
 import de.sparkarmy.util.roleMention
 import dev.minn.jda.ktx.coroutines.await
+import kotlinx.serialization.json.Json
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.components.separator.Separator
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -45,9 +47,33 @@ class ReactionRoleConfiguration(
     }
 
     inner class Create : Subcommand("create", "Create a new reaction-role menu") {
+
+        init {
+            option<String>("json","JSON-String to create a Reaction-Role Menu")
+        }
+
         @Handler(ephemeral = true)
-        suspend fun run(event: SlashCommandInteractionEvent) {
-            executeEvent(event)
+        suspend fun run(event: SlashCommandInteractionEvent,json: String) {
+            if (json.isEmpty()) {
+                executeEvent(event)
+                return
+            }
+
+            val menu = runCatching {
+                Json.decodeFromString<JsonReactionRoleMenu>(json)
+            }.getOrElse {
+                event.reply(event.getLocalizedString("error"))
+                    .setEphemeral(true)
+                    .await()
+                return
+            }
+
+            val context = context {
+                +menu
+            }
+
+            event.replyView(::reactionRole,false,context).await()
+
         }
     }
 

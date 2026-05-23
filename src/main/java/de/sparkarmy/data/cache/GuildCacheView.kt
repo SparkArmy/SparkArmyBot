@@ -3,12 +3,9 @@ package de.sparkarmy.data.cache
 
 import de.sparkarmy.data.DBContext
 import de.sparkarmy.database.entity.Guild
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
-
-private val log = KotlinLogging.logger { }
 
 @Single(createdAtStart = true)
 class GuildCacheView(

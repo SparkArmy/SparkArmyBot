@@ -1,5 +1,6 @@
 [action]
 success = "Der Vorgang wurde erfolgreich durchgeführt"
+error = "Es ist ein Fehler aufgetreten"
 backButton = "Zurück"
 disableButton = "Deaktivieren"
 roleSelectPlaceholder = "Bitte eine Rolle auswählen"

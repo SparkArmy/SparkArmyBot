@@ -1,0 +1,6 @@
+{
+  "ban.description" : "Bannt einen Benutzer",
+  "ban.user.description" : "Das zu bannende Mitglied des Servers",
+  "ban.reason.description" : "Der Grund für den Ban",
+  "ban.time.description" : "Der Zeitraum, in welchem Nachrichten gelöscht werden"
+}

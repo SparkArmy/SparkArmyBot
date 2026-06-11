@@ -1,0 +1,26 @@
+{
+  "standard": {
+    "success": "Die Aktion wurde ausgeführt",
+    "failure": "Die Aktion konnte aufgrund eines Fehlers nicht ausgeführt werden",
+    "warning": "Es ist ein Fehler aufgetreten. Die Aktion wurde trotzdem ausgeführt. Siehe Logs"
+  },
+
+  "punishment": {
+    "modal" : {
+      "name": "Stellungnahme",
+      "complaint" : "Text",
+      "pictures" : "Dateien"
+    },
+    "event" : {
+      "success": "{punishment_member} wurde erfolgreich {punishment_action}.",
+      "failure": "{punishment_member} konnte nicht {punishment_action} werden."
+  },
+    "createUserCaseEmbed" : {
+      "guildText" : "Du hast auf {guild_name} einen Regelverstoß begangen",
+      "effect" : "Konsequenz: {effect}",
+      "reasonHeader" : "Grund: {reason}",
+      "complainsText" : "Möchtest du Einspruch erheben? Nutze den Button unten.",
+      "buttonLabel" : "Ticket erstellen"
+}
+  }
+}

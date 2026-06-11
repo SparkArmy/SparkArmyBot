@@ -1,0 +1,6 @@
+{
+  "ban" : {
+    "name" : "ban",
+    "description" : "Bannt einen Benutzer"
+  }
+}

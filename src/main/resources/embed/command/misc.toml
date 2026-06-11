@@ -1,6 +1,0 @@
-[avatar]
-color = "${embedColor}"
-[avatar.author]
-name = "${title}"
-[avatar.image]
-url = "${avatarUrl}"

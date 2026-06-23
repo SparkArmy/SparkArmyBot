@@ -1,13 +1,13 @@
 package de.sparkarmy.data.cache
 
-import de.sparkarmy.config.DatabaseSource
+import de.sparkarmy.data.DBContext
 import de.sparkarmy.database.entity.Guild
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
 
 @BService(name = "guildCacheView")
 class GuildCacheView(
-    private val db: DatabaseSource,
+    private val db: DBContext,
 ) : CacheView<Long, Guild>(1000) {
     suspend fun save(jdaGuild: JDAGuild, edit: Guild.() -> Unit = {}): Guild = db.doTransaction {
         val id = jdaGuild.idLong

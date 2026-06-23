@@ -1,13 +1,12 @@
 package de.sparkarmy.data.cache
 
-import de.sparkarmy.config.DatabaseSource
+import de.sparkarmy.data.DBContext
 import de.sparkarmy.database.entity.User
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-
 import net.dv8tion.jda.api.entities.User as JDAUser
 
 @BService("userCacheView")
-class UserCacheView(private val db: DatabaseSource) : CacheView<Long, User>(1000) {
+class UserCacheView(private val db: DBContext) : CacheView<Long, User>(1000) {
     suspend fun save(jdaUser: JDAUser, edit: User.() -> Unit = {}): User = db.doTransaction {
         val id = jdaUser.idLong
 

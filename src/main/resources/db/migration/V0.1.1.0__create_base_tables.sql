@@ -45,21 +45,3 @@ create table table_member
     constraint pk_table_member
         primary key (pk_fk_mbr_user_id, pk_fk_mbr_guild_id)
 );
-
-
-create table table_guild_commands
-(
-    "pk_gcd_guild"      bigint       not null,
-    "pk_gcd_identifier" varchar(100) not null,
-    "gcd_hash"          char(64)     not null,
-    constraint pk_table_guild_commands
-        primary key (pk_gcd_guild, pk_gcd_identifier)
-);
-
-
-create table table_command_hashes
-(
-    pk_cmh_identifier varchar(100) not null
-        primary key,
-    cmh_hash          char(64)     not null
-);

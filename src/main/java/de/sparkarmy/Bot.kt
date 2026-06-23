@@ -14,7 +14,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag
 /**
  * Service to start JDA at the appropriate time
  */
-@BService
+@BService()
 class Bot(private val config: Config) : JDAService() {
     override val intents: Set<GatewayIntent> = defaultIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES)
 

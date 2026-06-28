@@ -10,4 +10,5 @@ class BotStatus(id: EntityID<Long>) : Entity<Long>(id) {
 
     var status by BotStatuses.status
     var activity by BotStatuses.activity
+    var url by BotStatuses.url
 }

@@ -28,6 +28,16 @@ create table table_user
     "usr_flags"       bigint      not null default 0
 );
 
+create table table_bot_status
+(
+    "pk_bts_id"    bigserial    not null
+        primary key,
+    "bts_status"   varchar(128) not null
+        constraint check_table_bot_status_in_range
+            check ( (char_length((bts_status)::text) >= 1) AND (char_length((bts_status)::text) <= 128) ),
+    "bts_activity" bigint       not null default 0
+);
+
 
 create table table_member
 (

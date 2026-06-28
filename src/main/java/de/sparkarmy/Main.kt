@@ -1,17 +1,14 @@
 package de.sparkarmy
 
 import de.sparkarmy.config.Config
-import de.sparkarmy.config.Discord
-import ch.qos.logback.classic.ClassicConstants as LogbackConstants
 import de.sparkarmy.config.Environment
-import dev.freya02.botcommands.restarter.api.BotCommandsRestarter
-import dev.freya02.botcommands.restarter.api.annotations.ExperimentalRestartApi
 import io.github.freya022.botcommands.api.core.BotCommands
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import java.time.Duration
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
+import ch.qos.logback.classic.ClassicConstants as LogbackConstants
 
 private val logger by lazy { KotlinLogging.logger {} }
 

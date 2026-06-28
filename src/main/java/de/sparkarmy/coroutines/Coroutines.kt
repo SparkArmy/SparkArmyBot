@@ -2,13 +2,12 @@ package de.sparkarmy.coroutines
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
-import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
-import kotlin.jvm.java
+import kotlin.time.Duration
 
 val virtualExecutor: ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
 val virtualScheduledExecutor: ScheduledExecutorService = Executors.newScheduledThreadPool(0, Thread.ofVirtual().factory())
@@ -33,4 +32,17 @@ inline fun <reified T> newCoroutineScope(
     }
 
     return CoroutineScope(dispatcher + job + errorHandler + context)
+}
+
+fun CoroutineScope.timer(
+    interval: Duration = Duration.ZERO,
+    startDelay: Duration = interval,
+    context: CoroutineContext = EmptyCoroutineContext,
+    block: suspend () -> Unit
+): Job = launch(context) {
+    delay(startDelay)
+    do {
+        block()
+        delay(interval)
+    } while (interval > Duration.ZERO)
 }

@@ -11,7 +11,6 @@ import io.github.freya022.botcommands.api.core.service.annotations.BService
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import java.util.*
 import kotlin.random.Random
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
@@ -32,9 +31,9 @@ class ActivityManager {
                 }
                 val randomEntry = BotStatus.findById(randomNumber) ?: BotStatus.findById(0) ?: BotStatus.new(0) {
                     status = "Music"
-                    activity += EnumSet.of(BotActivity.LISTENING)
+                    activity = BotActivity.LISTENING
                 }
-                val botActivity = when (val activity = randomEntry.activity.first()) {
+                val botActivity = when (val activity = randomEntry.activity) {
                     BotActivity.STREAMING -> Activity.streaming(randomEntry.status, randomEntry.url)
 
                     else -> Activity.of(Activity.ActivityType.fromKey(activity.offset - 1), randomEntry.status)

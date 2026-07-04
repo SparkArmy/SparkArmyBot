@@ -1,8 +1,6 @@
 package de.sparkarmy.model
 
-import de.sparkarmy.data.BitField
-
-enum class BotActivity(override val offset: Int) : BitField {
+enum class BotActivity(val offset: Int) {
     UNKNOWN(0),
     PLAYING(1),
     STREAMING(2),

@@ -6,6 +6,7 @@ enum class GuildFeature(override val offset: Int, val identifier: String) : BitF
     LEVELING(0, "Leveling"),
     MOD_TICKET(1, "Ticket-Function"),
     FEEDBACK(2, "Feedback-Function"),
-    PUNISHMENT(3, "Punishment-Function")
+    MODERATION(3, "Moderation-Feature"),
+    PUNISHMENT(4, "Punishment-Function")
 
 }

@@ -12,8 +12,9 @@
       "pictures" : "Dateien"
     },
     "event" : {
-      "success": "{punishment_member} wurde erfolgreich {punishment_action}.",
-      "failure": "{punishment_member} konnte nicht {punishment_action} werden."
+      "success": "Die Aktion '{punishment_action}' wurde erfolgreich an {punishment_member} ausgeführt.",
+      "failure": "Die Aktion '{punishment_action}' konnte nicht an {punishment_member} ausgeführt werden.",
+      "permissionFailure": "Die Aktion '{punishment_action}' konnte nicht ausgeführt werden, da du {punishment_member} nicht moderieren kannst."
   },
     "createUserCaseEmbed" : {
       "guildText" : "Du hast auf {guild_name} einen Regelverstoß begangen",
@@ -21,6 +22,6 @@
       "reasonHeader" : "Grund: {reason}",
       "complainsText" : "Möchtest du Einspruch erheben? Nutze den Button unten.",
       "buttonLabel" : "Ticket erstellen"
-}
+    }
   }
 }

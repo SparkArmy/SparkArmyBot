@@ -1,6 +1,22 @@
 {
   "ban" : {
     "name" : "ban",
-    "description" : "Bannt einen Benutzer"
+    "description": "Bannt einen Benutzer",
+    "offender": {
+      "name": "target",
+      "description": "Benutzer, welcher gebannt werden soll"
+    },
+    "reason": {
+      "name": "begründung",
+      "description": "Warum wurde der Benutzer gebannt?"
+    },
+    "time": {
+      "name": "zeit",
+      "description": "Zeit, für welche Nachrichten gelöscht werden sollen"
+    },
+    "unit": {
+      "name": "einheit",
+      "description": "Einheit der Zeit, für welche Nachrichten gelöscht werden sollen"
+    }
   }
 }

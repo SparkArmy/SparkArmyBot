@@ -1,16 +1,16 @@
 [versions]
-jda-core = "6.4.1"
-jda-freya-bc = "3.1.0"
-postgres = "42.7.8"
-hikari = "7.0.2"
-aedile = "3.0.1"
-kotlin-bom = "2.3.0"
-data-caffeine = "3.2.4"
+jda-core = "6.7.0"
+jda-freya-bc = "3.4.0"
+postgres = "42.7.14"
+hikari = "7.1.0"
+aedile = "3.0.4"
+kotlin-bom = "2.4.21"
+data-caffeine = "3.3.1"
 flyway = "13.10.0"
 exposed-bom = "1.5.1"
-logback-classic = "1.5.23"
-slf4j-api = "2.0.17"
-kotlin-logging-jvm = "7.0.13"
+logback-classic = "1.6.5"
+slf4j-api = "2.0.20"
+kotlin-logging-jvm = "8.0.4"
 
 
 [libraries]

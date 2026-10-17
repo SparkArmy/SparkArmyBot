@@ -1,0 +1,19 @@
+package de.sparkarmy.database.table
+
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+
+object Members: CompositeIdTable("table_member") {
+    val user: Column<EntityID<Long>> = reference("pk_fk_mbr_user_id", Users, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+    val guild: Column<EntityID<Long>> = reference("pk_fk_mbr_guild_id", Guilds, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+    @Suppress("unused")  val memberFlags: Column<Long> = long("mbr_flags").default(0)
+
+    init {
+        addIdColumn(user)
+        addIdColumn(guild)
+    }
+
+    override val primaryKey: PrimaryKey = PrimaryKey(user,guild)
+}

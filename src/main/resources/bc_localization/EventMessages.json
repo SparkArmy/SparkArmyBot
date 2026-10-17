@@ -3,25 +3,5 @@
     "success": "Die Aktion wurde ausgeführt",
     "failure": "Die Aktion konnte aufgrund eines Fehlers nicht ausgeführt werden",
     "warning": "Es ist ein Fehler aufgetreten. Die Aktion wurde trotzdem ausgeführt. Siehe Logs"
-  },
-
-  "punishment": {
-    "modal" : {
-      "name": "Stellungnahme",
-      "complaint" : "Text",
-      "pictures" : "Dateien"
-    },
-    "event" : {
-      "success": "Die Aktion '{punishment_action}' wurde erfolgreich an {punishment_member} ausgeführt.",
-      "failure": "Die Aktion '{punishment_action}' konnte nicht an {punishment_member} ausgeführt werden.",
-      "permissionFailure": "Die Aktion '{punishment_action}' konnte nicht ausgeführt werden, da du {punishment_member} nicht moderieren kannst."
-  },
-    "createUserCaseEmbed" : {
-      "guildText" : "Du hast auf {guild_name} einen Regelverstoß begangen",
-      "effect" : "Konsequenz: {effect}",
-      "reasonHeader" : "Grund: {reason}",
-      "complainsText" : "Möchtest du Einspruch erheben? Nutze den Button unten.",
-      "buttonLabel" : "Ticket erstellen"
-    }
   }
 }

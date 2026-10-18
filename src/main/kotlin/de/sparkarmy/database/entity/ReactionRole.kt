@@ -13,4 +13,6 @@ class ReactionRole(id: EntityID<Long>) : Entity<Long>(id) {
     var channelId by ReactionRoles.channelId
     var roleId by ReactionRoles.roleId
     var emoji by ReactionRoles.emoji
+    var description by ReactionRoles.description
+    var buttonText by ReactionRoles.buttonText
 }

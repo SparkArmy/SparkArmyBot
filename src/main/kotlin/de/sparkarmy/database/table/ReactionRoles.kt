@@ -10,6 +10,8 @@ object ReactionRoles : IdTable<Long>("table_reaction_role") {
     val channelId = long("rr_channel_id")
     val roleId = long("rr_role_id")
     val emoji  = varchar("rr_emoji", 100).nullable()
+    val description = varchar("rr_description", 500).nullable()
+    val buttonText = varchar("rr_button_text", 80).nullable()
 
     override val primaryKey = PrimaryKey(id, name = "table_reaction_role_id_pk")
 }

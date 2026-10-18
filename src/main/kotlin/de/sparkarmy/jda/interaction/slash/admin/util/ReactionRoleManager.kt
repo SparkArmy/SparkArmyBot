@@ -9,9 +9,7 @@ import io.github.freya022.botcommands.api.core.BContext
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import net.dv8tion.jda.api.components.actionrow.ActionRow
 import net.dv8tion.jda.api.components.buttons.Button
-import net.dv8tion.jda.api.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.emoji.Emoji
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
@@ -34,7 +32,9 @@ class ReactionRoleManager(
         messageId: Long,
         channelId: Long,
         roleId: Long,
-        emoji: String
+        emoji: String?,
+        description: String? = null,
+        buttonText: String? = null
     ): Long {
         val dbGuild = guildCacheView.save(guild)
         val reactionRoleId = suspendTransaction {
@@ -44,6 +44,8 @@ class ReactionRoleManager(
                 this.channelId = channelId
                 this.roleId = roleId
                 this.emoji = emoji
+                this.description = description
+                this.buttonText = buttonText
             }
             return@suspendTransaction reactionRole.id.value
         }
@@ -52,17 +54,31 @@ class ReactionRoleManager(
     }
 
     suspend fun deleteReactionRole(guildId: Long, messageId: Long, roleId: Long): Boolean {
-        return suspendTransaction {
+        val channelId = suspendTransaction {
             val entities = ReactionRole.find {
                 ReactionRoles.guildId eq guildId and
                     ReactionRoles.messageId.eq(messageId) and
                     ReactionRoles.roleId.eq(roleId)
             }
-            entities.forEach { it.delete()}
-            updateMessageComponents(guildId, messageId)
-
-            return@suspendTransaction true
+            val cid = entities.firstOrNull()?.channelId
+            entities.forEach { it.delete() }
+            return@suspendTransaction cid
         }
+        if (channelId != null) {
+            val channel = context.jda.getTextChannelById(channelId) ?: return true
+            try {
+                val message = channel.retrieveMessageById(messageId).await()
+                val remaining = getReactionRolesForMessage(guildId, messageId)
+                if (remaining.isEmpty()) {
+                    message.editMessageComponents().queue()
+                } else {
+                    message.editMessageComponents(buildActionRows(remaining)).queue()
+                }
+            } catch (_: Exception) {
+                return false
+            }
+        }
+        return true
     }
 
     suspend fun getReactionRolesForMessage(guildId: Long, messageId: Long): List<ReactionRole> {
@@ -94,11 +110,16 @@ class ReactionRoleManager(
 
         val message = try {
             channel.retrieveMessageById(messageId).await()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return
         }
 
-        message.editMessageComponents(rows).queue()
+        val content = roles.joinToString("\n") { r ->
+            val role = context.jda.getRoleById(r.roleId)
+            val name = role?.name ?: r.roleId.toString()
+            if (r.description.isNullOrBlank()) name else "$name — ${r.description}"
+        }
+        message.editMessage(content).setComponents(rows).queue()
     }
 
     private suspend fun removeMessageComponents(guildId: Long, messageId: Long) {
@@ -110,7 +131,7 @@ class ReactionRoleManager(
 
         val message = try {
             channel.retrieveMessageById(messageId).await()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return
         }
 
@@ -128,7 +149,10 @@ class ReactionRoleManager(
             }
             if (rows.size >= MAX_ROWS) break
 
-            val button = buttons.secondary(role.emoji ?: "•")
+            val roleName = context.jda.getRoleById(role.roleId)?.name ?: role.roleId.toString()
+            val label = role.buttonText ?: roleName
+
+            val button = buttons.secondary(label)
                 .withEmoji(
                     when {
                         !role.emoji.isNullOrEmpty() -> net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode(role.emoji!!)

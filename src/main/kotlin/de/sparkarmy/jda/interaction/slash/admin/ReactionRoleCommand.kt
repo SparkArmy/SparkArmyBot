@@ -4,19 +4,17 @@ import de.sparkarmy.database.entity.Guild
 import de.sparkarmy.database.table.Guilds
 import de.sparkarmy.jda.interaction.slash.admin.util.ReactionRoleManager
 import de.sparkarmy.model.GuildFeature
+import dev.freya02.botcommands.jda.ktx.coroutines.await
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
-import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-
-private val logger = KotlinLogging.logger {}
 
 @Command
 @BService
@@ -36,9 +34,11 @@ class ReactionRoleCommand(
             subcommand("create", ::create) {
                 description = "Erstellt eine Reaction-Role für eine Nachricht"
 
-                option("message") { description = "Die Nachricht (Link oder ID)" }
+                option("message") { description = "Die Nachricht (Link oder ID, optional)" }
                 option("emoji") { description = "Das Emoji für den Button" }
                 option("role") { description = "Die Rolle die vergeben werden soll" }
+                option("description") { description = "Beschreibung der Reaction-Role" }
+                option("buttonText") { description = "Text auf dem Button" }
             }
 
             subcommand("delete", ::delete) {
@@ -58,9 +58,11 @@ class ReactionRoleCommand(
 
     suspend fun create(
         event: GuildSlashEvent,
-        message: String,
-        emoji: String,
-        role: Role
+        message: String? = null,
+        emoji: String?,
+        role: Role,
+        description: String? = null,
+        buttonText: String? = null
     ) {
         val member = event.member
         if (!member.hasPermission(Permission.MANAGE_ROLES)) {
@@ -68,23 +70,28 @@ class ReactionRoleCommand(
             return
         }
 
-        val messageId = parseMessageId(message, event.guild) ?: run {
-            event.reply("Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.").setEphemeral(true).queue()
-            return
-        }
-
         val guild = event.guild
-        val targetRole = guild.getRoleById(role.idLong) ?: run {
+        guild.getRoleById(role.idLong) ?: run {
             event.reply("Die angegebene Rolle wurde nicht gefunden.").setEphemeral(true).queue()
             return
         }
 
-        val channelId = getChannelIdForMessage(guild, messageId) ?: run {
-            event.reply("Die Nachricht wurde nicht gefunden oder der Bot hat keinen Zugriff darauf.").setEphemeral(true).queue()
-            return
+        val (_, messageId) = if (message != null) {
+            val messageId = parseMessageId(message) ?: run {
+                event.reply("Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.").setEphemeral(true).queue()
+                return
+            }
+            val channelId = getChannelIdForMessage(guild, messageId) ?: run {
+                event.reply("Die Nachricht wurde nicht gefunden oder der Bot hat keinen Zugriff darauf.").setEphemeral(true).queue()
+                return
+            }
+            channelId to messageId
+        } else {
+            val sent = event.channel.sendMessage("Reaction-Role wird erstellt...").await()
+            sent.channelId to sent.idLong
         }
 
-        manager.createReactionRole(guild, messageId, channelId, role.idLong, emoji)
+        manager.createReactionRole(guild, messageId, event.channelIdLong, role.idLong, emoji, description, buttonText)
         event.reply("Reaction-Role wurde erfolgreich erstellt.").setEphemeral(true).queue()
     }
 
@@ -99,7 +106,7 @@ class ReactionRoleCommand(
             return
         }
 
-        val messageId = parseMessageId(message, event.guild) ?: run {
+        val messageId = parseMessageId(message) ?: run {
             event.reply("Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.").setEphemeral(true).queue()
             return
         }
@@ -123,7 +130,7 @@ class ReactionRoleCommand(
         val guild = event.guild
 
         if (message != null) {
-            val messageId = parseMessageId(message, guild) ?: run {
+            val messageId = parseMessageId(message) ?: run {
                 event.reply("Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.").setEphemeral(true).queue()
                 return
             }
@@ -167,7 +174,7 @@ class ReactionRoleCommand(
         event.reply(content).setEphemeral(true).queue()
     }
 
-    private fun parseMessageId(input: String, guild: JDAGuild): Long? {
+    private fun parseMessageId(input: String): Long? {
         val id = input.toLongOrNull()
         if (id != null) return id
 
@@ -186,7 +193,7 @@ class ReactionRoleCommand(
                 try {
                     channel.retrieveMessageById(messageId).complete()
                     channel.idLong
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }

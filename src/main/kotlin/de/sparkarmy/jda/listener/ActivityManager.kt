@@ -1,4 +1,4 @@
-package de.sparkarmy.jda
+package de.sparkarmy.jda.listener
 
 import de.sparkarmy.coroutines.newCoroutineScope
 import de.sparkarmy.coroutines.timer

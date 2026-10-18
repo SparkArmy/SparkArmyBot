@@ -108,11 +108,8 @@ class ReactionRoleManager(
 
         val channel = context.jda.getTextChannelById(channelId) ?: return
 
-        val message = try {
-            channel.retrieveMessageById(messageId).await()
-        } catch (_: Exception) {
-            return
-        }
+        val message = channel.retrieveMessageById(messageId).await() ?: return
+
 
         val content = roles.joinToString("\n") { r ->
             val role = context.jda.getRoleById(r.roleId)
@@ -129,11 +126,7 @@ class ReactionRoleManager(
         val channelId = roles.first().channelId
         val channel = context.jda.getTextChannelById(channelId) ?: return
 
-        val message = try {
-            channel.retrieveMessageById(messageId).await()
-        } catch (_: Exception) {
-            return
-        }
+        val message = channel.retrieveMessageById(messageId).await() ?: return
 
         message.editMessageComponents().queue()
     }

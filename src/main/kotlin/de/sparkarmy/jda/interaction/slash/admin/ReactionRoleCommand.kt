@@ -6,15 +6,15 @@ import de.sparkarmy.jda.interaction.slash.admin.util.ReactionRoleManager
 import de.sparkarmy.model.GuildFeature
 import dev.freya02.botcommands.jda.ktx.coroutines.await
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Role
-import net.dv8tion.jda.api.entities.Guild as JDAGuild
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import net.dv8tion.jda.api.entities.Guild as JDAGuild
 
 @Command
 @BService
@@ -187,16 +187,9 @@ class ReactionRoleCommand(
         return null
     }
 
-    private fun getChannelIdForMessage(guild: JDAGuild, messageId: Long): Long? {
-        return guild.textChannels.asSequence()
-            .mapNotNull { channel ->
-                try {
-                    channel.retrieveMessageById(messageId).complete()
-                    channel.idLong
-                } catch (_: Exception) {
-                    null
-                }
-            }
-            .firstOrNull()
+    private suspend fun getChannelIdForMessage(guild: JDAGuild, messageId: Long): Long? {
+        return guild.textChannels.firstNotNullOfOrNull { channel ->
+            channel.retrieveMessageById(messageId).await().channelIdLong
+        }
     }
 }

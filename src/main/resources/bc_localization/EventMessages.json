@@ -1,7 +1,19 @@
 {
   "standard": {
-    "success": "Die Aktion wurde ausgeführt",
-    "failure": "Die Aktion konnte aufgrund eines Fehlers nicht ausgeführt werden",
-    "warning": "Es ist ein Fehler aufgetreten. Die Aktion wurde trotzdem ausgeführt. Siehe Logs"
+    "success": "The action was executed",
+    "failure": "The action could not be executed due to an error",
+    "warning": "An error occurred. The action was still executed. See logs"
+  },
+  "reactionrole": {
+    "permission_denied": "You do not have permission to manage roles.",
+    "role_not_found": "The specified role was not found.",
+    "message_id_parse_failed": "Could not determine the message ID from the input.",
+    "message_not_found": "The message was not found or the bot has no access to it.",
+    "created": "Reaction role created successfully.",
+    "deleted": "Reaction role deleted successfully.",
+    "not_found_combo": "No reaction role found for this combination.",
+    "delete_error": "Error deleting reaction role: {error}",
+    "list_empty_message": "No reaction roles configured for this message.",
+    "list_empty_guild": "No reaction roles configured for this server."
   }
 }

@@ -10,6 +10,7 @@ import io.github.freya022.botcommands.api.commands.application.provider.GuildApp
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.freya022.botcommands.api.localization.Localization
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Role
 import org.jetbrains.exposed.v1.core.eq
@@ -29,29 +30,21 @@ class ReactionRoleCommand(
         if (guildEntity?.guildFeatures?.contains(GuildFeature.MOD_TICKET) != true) return
 
         manager.ofSubcommands("reactionrole") {
-            description = "Verwaltet Reaction-Roles für Nachrichten"
-
             subcommand("create", ::create) {
-                description = "Erstellt eine Reaction-Role für eine Nachricht"
-
-                option("message") { description = "Die Nachricht (Link oder ID, optional)" }
-                option("emoji") { description = "Das Emoji für den Button" }
-                option("role") { description = "Die Rolle die vergeben werden soll" }
-                option("description") { description = "Beschreibung der Reaction-Role" }
-                option("buttonText") { description = "Text auf dem Button" }
+                option("message") { }
+                option("emoji") { }
+                option("role") { }
+                option("description") { }
+                option("buttonText") { }
             }
 
             subcommand("delete", ::delete) {
-                description = "Löscht eine Reaction-Role von einer Nachricht"
-
-                option("message") { description = "Die Nachricht (Link oder ID)" }
-                option("role") { description = "Die Rolle die entfernt werden soll" }
+                option("message") { }
+                option("role") { }
             }
 
             subcommand("list", ::list) {
-                description = "Listet alle Reaction-Roles des Servers"
-
-                option("message") { description = "Die Nachricht (Link oder ID, optional)" }
+                option("message") { }
             }
         }
     }
@@ -72,17 +65,17 @@ class ReactionRoleCommand(
 
         val guild = event.guild
         guild.getRoleById(role.idLong) ?: run {
-            event.reply("Die angegebene Rolle wurde nicht gefunden.").setEphemeral(true).queue()
+            event.replyUser("reactionrole.role_not_found").setEphemeral(true).queue()
             return
         }
 
         val (_, messageId) = if (message != null) {
             val messageId = parseMessageId(message) ?: run {
-                event.reply("Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.").setEphemeral(true).queue()
+                event.replyUser("reactionrole.message_id_parse_failed").setEphemeral(true).queue()
                 return
             }
             val channelId = getChannelIdForMessage(guild, messageId) ?: run {
-                event.reply("Die Nachricht wurde nicht gefunden oder der Bot hat keinen Zugriff darauf.").setEphemeral(true).queue()
+                event.replyUser("reactionrole.message_not_found").setEphemeral(true).queue()
                 return
             }
             channelId to messageId
@@ -92,7 +85,7 @@ class ReactionRoleCommand(
         }
 
         manager.createReactionRole(guild, messageId, event.channelIdLong, role.idLong, emoji, description, buttonText)
-        event.reply("Reaction-Role wurde erfolgreich erstellt.").setEphemeral(true).queue()
+        event.replyUser("reactionrole.created").setEphemeral(true).queue()
     }
 
     suspend fun delete(
@@ -107,19 +100,20 @@ class ReactionRoleCommand(
         }
 
         val messageId = parseMessageId(message) ?: run {
-            event.reply("Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.").setEphemeral(true).queue()
+            event.replyUser("reactionrole.message_id_parse_failed").setEphemeral(true).queue()
             return
         }
 
         try {
             val deleted = manager.deleteReactionRole(event.guild.idLong, messageId, role.idLong)
             if (deleted) {
-                event.reply("Reaction-Role wurde erfolgreich gelöscht.").setEphemeral(true).queue()
+                event.replyUser("reactionrole.deleted").setEphemeral(true).queue()
             } else {
-                event.reply("Keine Reaction-Role für diese Kombination gefunden.").setEphemeral(true).queue()
+                event.replyUser("reactionrole.not_found_combo").setEphemeral(true).queue()
             }
         } catch (e: Exception) {
-            event.reply("Fehler beim Löschen der Reaction-Role: ${e.message}").setEphemeral(true).queue()
+            event.replyUser("reactionrole.delete_error", Localization.Entry("error", e.message ?: ""))
+                .setEphemeral(true).queue()
         }
     }
 
@@ -131,7 +125,7 @@ class ReactionRoleCommand(
 
         if (message != null) {
             val messageId = parseMessageId(message) ?: run {
-                event.reply("Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.").setEphemeral(true).queue()
+                event.replyUser("reactionrole.message_id_parse_failed").setEphemeral(true).queue()
                 return
             }
             listForMessage(guild.idLong, messageId, event)
@@ -143,12 +137,12 @@ class ReactionRoleCommand(
     private suspend fun listForMessage(guildId: Long, messageId: Long, event: GuildSlashEvent) {
         val roles = manager.getReactionRolesForMessage(guildId, messageId)
         val content = if (roles.isEmpty()) {
-            "Für diese Nachricht sind keine Reaction-Roles konfiguriert."
+            "FÃ¼r diese Nachricht sind keine Reaction-Roles konfiguriert."
         } else {
-            "Reaction-Roles für diese Nachricht:\n" +
+            "Reaction-Roles fÃ¼r diese Nachricht:\n" +
                 roles.joinToString("\n") { r ->
                     val role = event.jda.getRoleById(r.roleId) ?: return@joinToString "Unbekannte Rolle (${r.roleId})"
-                    "• ${r.emoji} → ${role.name}"
+                    "â€¢ ${r.emoji} â†’ ${role.name}"
                 }
         }
         event.reply(content).setEphemeral(true).queue()
@@ -157,9 +151,9 @@ class ReactionRoleCommand(
     private suspend fun listForGuild(guildId: Long, event: GuildSlashEvent) {
         val roles = manager.getReactionRolesForGuild(guildId)
         val content = if (roles.isEmpty()) {
-            "Für diesen Server sind keine Reaction-Roles konfiguriert."
+            "FÃ¼r diesen Server sind keine Reaction-Roles konfiguriert."
         } else {
-            "Reaction-Roles für diesen Server:\n" +
+            "Reaction-Roles fÃ¼r diesen Server:\n" +
                 roles.groupBy { it.messageId }
                     .map { (messageId, messageRoles) ->
                         val channel = event.jda.getTextChannelById(messageRoles.first().channelId)

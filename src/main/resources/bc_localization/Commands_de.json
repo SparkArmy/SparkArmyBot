@@ -1,2 +1,58 @@
 {
+  "reactionrole": {
+    "name": "reactionrole",
+    "description": "Verwaltet Reaction-Roles fuer Nachrichten",
+    "subcommands": {
+      "create": {
+        "name": "create",
+        "description": "Erstellt eine Reaction-Role fuer eine Nachricht",
+        "options": {
+          "message": {
+            "name": "message",
+            "description": "Die Nachricht (Link oder ID, optional)"
+          },
+          "emoji": {
+            "name": "emoji",
+            "description": "Das Emoji fuer den Button"
+          },
+          "role": {
+            "name": "role",
+            "description": "Die Rolle die vergeben werden soll"
+          },
+          "description": {
+            "name": "description",
+            "description": "Beschreibung der Reaction-Role"
+          },
+          "buttonText": {
+            "name": "buttonText",
+            "description": "Text auf dem Button"
+          }
+        }
+      },
+      "delete": {
+        "name": "delete",
+        "description": "Loescht eine Reaction-Role von einer Nachricht",
+        "options": {
+          "message": {
+            "name": "message",
+            "description": "Die Nachricht (Link oder ID)"
+          },
+          "role": {
+            "name": "role",
+            "description": "Die Rolle die entfernt werden soll"
+          }
+        }
+      },
+      "list": {
+        "name": "list",
+        "description": "Listet alle Reaction-Roles des Servers",
+        "options": {
+          "message": {
+            "name": "message",
+            "description": "Die Nachricht (Link oder ID, optional)"
+          }
+        }
+      }
+    }
+  }
 }

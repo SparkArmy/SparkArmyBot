@@ -1,0 +1,19 @@
+{
+  "standard": {
+    "success": "Die Aktion wurde ausgeführt",
+    "failure": "Die Aktion konnte aufgrund eines Fehlers nicht ausgeführt werden",
+    "warning": "Es ist ein Fehler aufgetreten. Die Aktion wurde trotzdem ausgeführt. Siehe Logs"
+  },
+  "reactionrole": {
+    "permission_denied": "Du hast keine Berechtigung, Rollen zu verwalten.",
+    "role_not_found": "Die angegebene Rolle wurde nicht gefunden.",
+    "message_id_parse_failed": "Konnte die Nachrichten-ID nicht aus der Eingabe ermitteln.",
+    "message_not_found": "Die Nachricht wurde nicht gefunden oder der Bot hat keinen Zugriff darauf.",
+    "created": "Reaction-Role wurde erfolgreich erstellt.",
+    "deleted": "Reaction-Role wurde erfolgreich gelöscht.",
+    "not_found_combo": "Keine Reaction-Role für diese Kombination gefunden.",
+    "delete_error": "Fehler beim Löschen der Reaction-Role: {error}",
+    "list_empty_message": "Für diese Nachricht sind keine Reaction-Roles konfiguriert.",
+    "list_empty_guild": "Für diesen Server sind keine Reaction-Roles konfiguriert."
+  }
+}

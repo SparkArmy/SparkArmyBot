@@ -1,2 +1,14 @@
 {
+  "reactionrole": {
+    "description": "Manages reaction roles for messages"
+  },
+  "reactionrole.create": {
+    "description": "Creates a reaction role for a message"
+  },
+  "reactionrole.delete": {
+    "description": "Deletes a reaction role from a message"
+  },
+  "reactionrole.list": {
+    "description": "Lists all reaction roles of the server"
+  }
 }

@@ -8,7 +8,7 @@ kotlin-bom = "2.4.21"
 data-caffeine = "3.3.1"
 flyway = "13.10.0"
 exposed-bom = "1.5.1"
-logback-classic = "1.6.5"
+logback-classic = "1.6.6"
 slf4j-api = "2.0.20"
 kotlin-logging-jvm = "8.0.4"
 

@@ -11,6 +11,9 @@ import io.github.freya022.botcommands.api.commands.application.provider.GuildApp
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.core.service.annotations.BService
 import io.github.freya022.botcommands.api.localization.Localization
+import io.github.freya022.botcommands.api.localization.annotations.LocalizationBundle
+import io.github.freya022.botcommands.api.localization.context.AppLocalizationContext
+import io.github.freya022.botcommands.api.localization.context.sendLocalized
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Role
 import org.jetbrains.exposed.v1.core.eq
@@ -27,13 +30,17 @@ class ReactionRoleCommand(
         val guildEntity = transaction {
             Guild.find { Guilds.id eq manager.guild.idLong }.firstOrNull()
         }
-        if (guildEntity?.guildFeatures?.contains(GuildFeature.MOD_TICKET) != true) return
+        if (guildEntity?.guildFeatures?.contains(GuildFeature.REACTIONROLE) != true) return
 
         manager.ofSubcommands("reactionrole") {
+
+            userPermissions += Permission.MANAGE_CHANNEL
+
             subcommand("create", ::create) {
-                option("message") { }
+                customOption("localizationContext")
                 option("emoji") { }
                 option("role") { }
+                option("message") { }
                 option("description") { }
                 option("buttonText") { }
             }
@@ -44,6 +51,7 @@ class ReactionRoleCommand(
             }
 
             subcommand("list", ::list) {
+                customOption("localizationContext")
                 option("message") { }
             }
         }
@@ -51,15 +59,16 @@ class ReactionRoleCommand(
 
     suspend fun create(
         event: GuildSlashEvent,
-        message: String? = null,
+        @LocalizationBundle("EventMessages", prefix = "reactionrole") localizationContext: AppLocalizationContext,
         emoji: String?,
         role: Role,
+        message: String? = null,
         description: String? = null,
         buttonText: String? = null
     ) {
         val member = event.member
         if (!member.hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply("Du hast keine Berechtigung, Rollen zu verwalten.").setEphemeral(true).queue()
+            event.replyUser("reactionrole.permission_denied").queue()
             return
         }
 
@@ -80,7 +89,7 @@ class ReactionRoleCommand(
             }
             channelId to messageId
         } else {
-            val sent = event.channel.sendMessage("Reaction-Role wird erstellt...").await()
+            val sent = event.channel.sendLocalized(localizationContext, "create").await()
             sent.channelId to sent.idLong
         }
 
@@ -91,11 +100,11 @@ class ReactionRoleCommand(
     suspend fun delete(
         event: GuildSlashEvent,
         message: String,
-        role: Role
+        role: Role,
     ) {
         val member = event.member
         if (!member.hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply("Du hast keine Berechtigung, Rollen zu verwalten.").setEphemeral(true).queue()
+            event.replyUser("reactionrole.permission_denied").setEphemeral(true).queue()
             return
         }
 
@@ -119,6 +128,7 @@ class ReactionRoleCommand(
 
     suspend fun list(
         event: GuildSlashEvent,
+        @LocalizationBundle("EventMessages") localizationContext: AppLocalizationContext,
         message: String? = null
     ) {
         val guild = event.guild
@@ -128,18 +138,24 @@ class ReactionRoleCommand(
                 event.replyUser("reactionrole.message_id_parse_failed").setEphemeral(true).queue()
                 return
             }
-            listForMessage(guild.idLong, messageId, event)
+            listForMessage(guild.idLong, messageId, event, localizationContext)
         } else {
             listForGuild(guild.idLong, event)
         }
     }
 
-    private suspend fun listForMessage(guildId: Long, messageId: Long, event: GuildSlashEvent) {
+    private suspend fun listForMessage(
+        guildId: Long,
+        messageId: Long,
+        event: GuildSlashEvent,
+        localizationContext: AppLocalizationContext
+    ) {
         val roles = manager.getReactionRolesForMessage(guildId, messageId)
         val content = if (roles.isEmpty()) {
-            "FÃ¼r diese Nachricht sind keine Reaction-Roles konfiguriert."
+            localizationContext.localizeUser("reactionrole.list_empty_message")
+//            "FÃ¼r diese Nachricht sind keine Reaction-Roles konfiguriert."
         } else {
-            "Reaction-Roles fÃ¼r diese Nachricht:\n" +
+            "Reaction-Roles für diese Nachricht:\n" +
                 roles.joinToString("\n") { r ->
                     val role = event.jda.getRoleById(r.roleId) ?: return@joinToString "Unbekannte Rolle (${r.roleId})"
                     "â€¢ ${r.emoji} â†’ ${role.name}"

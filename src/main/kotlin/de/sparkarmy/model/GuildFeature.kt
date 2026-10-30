@@ -8,6 +8,6 @@ enum class GuildFeature(override val offset: Int, val identifier: String) : BitF
     MOD_TICKET(1, "Ticket-Function"),
     FEEDBACK(2, "Feedback-Function"),
     MODERATION(3, "Moderation-Feature"),
-    PUNISHMENT(4, "Punishment-Function")
-
+    PUNISHMENT(4, "Punishment-Function"),
+    REACTIONROLE(5, "Reaction-Role"),
 }

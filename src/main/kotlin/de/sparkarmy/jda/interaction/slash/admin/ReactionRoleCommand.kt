@@ -1,7 +1,9 @@
 package de.sparkarmy.jda.interaction.slash.admin
 
 import de.sparkarmy.database.entity.Guild
+import de.sparkarmy.database.entity.ReactionRole
 import de.sparkarmy.database.table.Guilds
+import de.sparkarmy.database.table.ReactionRoles
 import de.sparkarmy.jda.interaction.slash.admin.util.ReactionRoleManager
 import de.sparkarmy.model.GuildFeature
 import dev.freya02.botcommands.jda.ktx.coroutines.await
@@ -17,6 +19,7 @@ import io.github.freya022.botcommands.api.localization.context.sendLocalized
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Role
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
 
@@ -198,8 +201,15 @@ class ReactionRoleCommand(
     }
 
     private suspend fun getChannelIdForMessage(guild: JDAGuild, messageId: Long): Long? {
-        return guild.textChannels.firstNotNullOfOrNull { channel ->
-            channel.retrieveMessageById(messageId).await().channelIdLong
+
+        val channelId = suspendTransaction {
+            val reactionRole = ReactionRole.find { ReactionRoles.messageId eq messageId }.firstOrNull()
+            when (reactionRole) {
+                null -> null
+                else -> reactionRole.channelId
+            }
         }
+
+        return guild.textChannels.findLast { channel -> channel.idLong == channelId }?.idLong
     }
 }

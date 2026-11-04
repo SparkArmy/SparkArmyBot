@@ -15,6 +15,7 @@
     "delete_error": "Error deleting reaction role: {error}",
     "list_empty_message": "No reaction roles configured for this message.",
     "list_empty_guild": "No reaction roles configured for this server.",
-    "create": "Reaction-Role creating..."
+    "create": "Reaction-Role creating...",
+    "list_reaction_role_message": "Reaction-Roles for the message:"
   }
 }

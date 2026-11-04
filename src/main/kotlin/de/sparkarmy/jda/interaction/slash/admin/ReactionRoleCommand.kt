@@ -7,6 +7,7 @@ import de.sparkarmy.database.table.ReactionRoles
 import de.sparkarmy.jda.interaction.slash.admin.util.ReactionRoleManager
 import de.sparkarmy.model.GuildFeature
 import dev.freya02.botcommands.jda.ktx.coroutines.await
+import dev.freya02.botcommands.jda.ktx.messages.MessageCreate
 import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GuildApplicationCommandProvider
@@ -21,6 +22,7 @@ import net.dv8tion.jda.api.entities.Role
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.awt.Color
 import net.dv8tion.jda.api.entities.Guild as JDAGuild
 
 @Command
@@ -143,7 +145,7 @@ class ReactionRoleCommand(
             }
             listForMessage(guild.idLong, messageId, event, localizationContext)
         } else {
-            listForGuild(guild.idLong, event)
+            listForGuild(guild.idLong, event, localizationContext)
         }
     }
 
@@ -155,34 +157,66 @@ class ReactionRoleCommand(
     ) {
         val roles = manager.getReactionRolesForMessage(guildId, messageId)
         val content = if (roles.isEmpty()) {
-            localizationContext.localizeUser("reactionrole.list_empty_message")
-//            "FÃ¼r diese Nachricht sind keine Reaction-Roles konfiguriert."
-        } else {
-            "Reaction-Roles für diese Nachricht:\n" +
-                roles.joinToString("\n") { r ->
-                    val role = event.jda.getRoleById(r.roleId) ?: return@joinToString "Unbekannte Rolle (${r.roleId})"
-                    "â€¢ ${r.emoji} â†’ ${role.name}"
+            MessageCreate {
+                container {
+                    text(localizationContext.localizeUser("reactionrole.list_empty_message"))
                 }
+                builder.useComponentsV2(true)
+            }
+        } else {
+            MessageCreate {
+                builder.useComponentsV2(true)
+                container {
+                    accentColor = Color(129, 63, 203)
+                    text(localizationContext.localizeUser("reactionrole.list_reaction_role_message"))
+                    separator()
+                    text(roles.joinToString("\n") { r ->
+                        val role =
+                            event.jda.getRoleById(r.roleId) ?: return@joinToString "Unbekannte Rolle (${r.roleId})"
+                        "| ${r.emoji} | ${role.name}"
+                    }
+                    )
+                }
+            }
         }
         event.reply(content).setEphemeral(true).queue()
     }
 
-    private suspend fun listForGuild(guildId: Long, event: GuildSlashEvent) {
+    private suspend fun listForGuild(
+        guildId: Long,
+        event: GuildSlashEvent,
+        localizationContext: AppLocalizationContext
+    ) {
         val roles = manager.getReactionRolesForGuild(guildId)
         val content = if (roles.isEmpty()) {
-            "FÃ¼r diesen Server sind keine Reaction-Roles konfiguriert."
+            MessageCreate {
+                container {
+                    text(localizationContext.localizeUser("reactionrole.list_empty_guild"))
+                }
+                builder.useComponentsV2(true)
+            }
         } else {
-            "Reaction-Roles fÃ¼r diesen Server:\n" +
-                roles.groupBy { it.messageId }
-                    .map { (messageId, messageRoles) ->
-                        val channel = event.jda.getTextChannelById(messageRoles.first().channelId)
-                        val channelName = channel?.name ?: "Unbekannter Kanal"
-                        "- Kanal #$channelName (Nachricht $messageId): ${messageRoles.joinToString(", ") { r ->
-                            val role = event.jda.getRoleById(r.roleId) ?: return@joinToString "?"
-                            "${r.emoji} ${role.name}"
-                        }}"
-                    }
-                    .joinToString("\n")
+            MessageCreate {
+                container {
+                    accentColor = Color(129, 63, 203)
+                    text(localizationContext.localizeUser("reactionrole.list_reaction_role_message"))
+                    separator()
+                    text(roles.groupBy { it.messageId }
+                        .map { (messageId, messageRoles) ->
+                            val channel = event.jda.getTextChannelById(messageRoles.first().channelId)
+                            val channelName = channel?.name ?: "Unbekannter Kanal"
+                            "- Kanal #$channelName (Nachricht $messageId): ${
+                                messageRoles.joinToString(", ") { r ->
+                                    val role = event.jda.getRoleById(r.roleId) ?: return@joinToString "?"
+                                    "${r.emoji} ${role.name}"
+                                }
+                            }"
+                        }
+                        .joinToString("\n")
+                    )
+                }
+                builder.useComponentsV2(true)
+            }
         }
         event.reply(content).setEphemeral(true).queue()
     }

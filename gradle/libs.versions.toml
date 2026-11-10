@@ -10,7 +10,7 @@ flyway = "13.10.0"
 exposed-bom = "1.5.1"
 logback-classic = "1.6.5"
 slf4j-api = "2.0.20"
-kotlin-logging-jvm = "8.0.4"
+kotlin-logging-jvm = "8.0.6"
 
 
 [libraries]
